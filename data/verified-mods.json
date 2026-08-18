@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "game": "stardewvalley",
+  "mods": [
+    {
+      "name": "SMAPI - Stardew Modding API",
+      "nexusModId": 2400,
+      "latestVerifiedVersion": "4.5.2",
+      "languageEvidence": ["Russian"],
+      "localizationStatus": "builtin_ru",
+      "checked": "2026-08-18"
+    },
+    {
+      "name": "Stardew Valley Expanded",
+      "nexusModId": 3753,
+      "localizationStatus": "needs_review",
+      "checked": "2026-08-18"
+    }
+  ]
+}
