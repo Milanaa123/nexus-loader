@@ -23,8 +23,24 @@
       "desktopVersion": "4.24.4",
       "androidVersion": "4.24.3",
       "requires": ["SMAPI 4.1.10+"],
-      "languageEvidence": ["Russian"],
+      "languageEvidence": ["Russian", "Base mod includes translations for non-English players"],
       "localizationStatus": "builtin_ru",
+      "checked": "2026-08-18"
+    },
+    {
+      "name": "East Scarp",
+      "russianTranslationNexusModId": 8163,
+      "translationVersion": "3.0.8",
+      "translationAuthor": "6squad",
+      "localizationStatus": "translation_verified",
+      "checked": "2026-08-18"
+    },
+    {
+      "name": "Ridgeside Village",
+      "russianTranslationNexusModId": 8401,
+      "translationVersion": "2.5.16",
+      "translationAuthor": "6squad",
+      "localizationStatus": "translation_verified",
       "checked": "2026-08-18"
     }
   ]
