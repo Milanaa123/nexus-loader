@@ -1,0 +1,117 @@
+type	name	version
+mod	(C#) Sunberry Village	1.1.2
+mod	*SorryLabCore*	1.0.14
+mod	AimonsWitchSwampOverhaulPatches	2.2.9
+mod	Alternative Textures	8.1.1
+mod	Better Truffles	1.0.5
+mod	BirbCore	1.1.0
+mod	Button's Extra Trigger Action Stuff	3.4.0
+mod	Calcifer	0.1.0
+mod	Central Station	1.7.0
+mod	Cold Pets	1.1.1
+mod	Content Patcher	2.9.1
+mod	Cross-Mod Compatibility Tokens	1.1.2
+mod	Custom Companions	5.1.0
+mod	Custom NPC Exclusions	1.6.0
+mod	Custom Tokens	1.6.2
+mod	Dynamic Reflections	4.0.1
+mod	DynamicShader	1.0.25
+mod	East Scarp: Barber Shop	3.0.9
+mod	East Scarp: C#	3.0.9
+mod	Expanded Preconditions Utility	1.1.2
+mod	ExtraAnimalConfig	1.9.13
+mod	ExtraMachineConfig	1.17.12
+mod	Farm Type Manager (FTM) RUS	1.26.1
+mod	Furniture Framework	3.3.0
+mod	Generic Mod Config Menu	1.16.0
+mod	GNMTokens	3.2.0
+mod	Horse Overhaul	1.5.9
+mod	Item extensions	1.16.0
+mod	Like a Duck to Water	0.5.1
+mod	Livestock Bazaar	1.6.2
+mod	Machine Terrain Framework	1.11.7
+mod	Mail Framework Mod	1.20.0
+mod	Mapping Extensions and Extra Properties (MEEP)	2.5.3
+mod	Misc Map Actions & Properties	1.14.1
+mod	Pet Bed	0.7.0
+mod	Pet While Sleeping	1.1.0
+mod	Petting Animation	0.1.4
+mod	Pi Core	0.4.0
+mod	PoohCore	1.0.1
+mod	Producer Framework Mod	1.9.8
+mod	Ridgeside Village (SMAPI component)	2.5.17
+mod	Secret Note Framework	1.2.1
+mod	Shop Tile Framework	1.0.13
+mod	SpaceCore	1.28.4
+mod	Special Power Utilities	2.3.3
+mod	Stardew Valley Expanded	1.15.11
+mod	StardewHack	7.4.0
+mod	StardewUI	0.6.3-unofficial-mushymato.1
+mod	StardustCore	3.1.1
+mod	Unlockable Bundles	4.3.1
+content_pack	(CP) Roosters!	1.7.4
+content_pack	(CP) Staffy dog	1.0.0
+content_pack	(FTM) Berry Woods	2.0.3
+content_pack	(FTM) More Content for Central Station	2.0.2
+content_pack	(FTM) Rose and the Alchemist	2.0.3
+content_pack	(NPC) Rodney O'Brien	3.3.1
+content_pack	Adventurer's Guild Expanded for 1.6	2.3.2
+content_pack	Alpacas	2.3.0
+content_pack	Alvadeas Tilesheet	2.2.1
+content_pack	Archie's Tilesheets of Miscellaneous Stuff	2.4.2
+content_pack	Bean's Pet Overhaul	2.1.0
+content_pack	Berry Woods	2.0.3
+content_pack	Central Station content	1.7.0
+content_pack	CP Dog House and Cat Tree	0.2.0
+content_pack	DaisyNiko's Tilesheets	1.12.0
+content_pack	Distant Lands - Witch Swamp Overhaul	2.2.9
+content_pack	Distant Lands - Witch Swamp Overhaul FTM	2.2.9
+content_pack	East Scarp: Locations	3.0.9
+content_pack	East Scarp: NPCs	3.0.9
+content_pack	Elle's New Barn Animals	1.1.3
+content_pack	Elle's New Coop Animals	1.1.5
+content_pack	Elle's Town Animals	1.4.2
+content_pack	Em's Pet Adoption	1.0.0
+content_pack	Em's SVE Animals	1.2.0
+content_pack	Forage Settings East Scarp	3.0.9
+content_pack	HxW Tilesheets	2.0.0
+content_pack	Ichor's Cat	1.2.0
+content_pack	Immersive Farm 2 Remastered	1.15.11
+content_pack	Izabelleanne's Sheltie Collie dog	1.1.0
+content_pack	Large Quail Mayonnaise	1.1.0
+content_pack	Leilani	1.5.0
+content_pack	Livestock Guardian Dogs	2.0.0
+content_pack	Luan Indoor Tilesheets	2.8.1
+content_pack	Lumisteria Tilesheets - Indoor	1.4.0
+content_pack	Lumisteria Tilesheets - Outdoor	1.4.0
+content_pack	Lurking in the Dark	3.0.11
+content_pack	Mizu's Quail	1.4.7
+content_pack	Mizu's Turkey	1.3.4
+content_pack	More Content for Central Station	2.0.5
+content_pack	NightMarketExpansion	1.1.2
+content_pack	NPC Mr Ginger	1.6.6
+content_pack	Otters Horse mod	3.0.0
+content_pack	PlatinumCats' Tilesheets	1.1.0
+content_pack	Prettier Parrots	1.0.0
+content_pack	psychrolute!	1.0.0
+content_pack	Rats!	1.0.3
+content_pack	Ridgeside Village (Content Patcher component)	2.5.17
+content_pack	Ridgeside Village (Custom Companions component)	2.5.17
+content_pack	Ridgeside Village (Farm Type Manager component)	2.5.17
+content_pack	Rose and the Alchemist - NPCs for Sunberry Village	2.0.4
+content_pack	Sharogg's Panoramas for MMAP	1.0.0
+content_pack	SmolHooman's Beach Crabs and Snails Spawns	1.1.0
+content_pack	SmolHooman's Beach Crabs and Snails Spawns	1.1.0
+content_pack	SmolHooman's Wild Animals	1.3.2
+content_pack	Solarium at the Spa Revisited	1.1.0
+content_pack	Sophia Dialogue Expansion	1.3.1
+content_pack	Stardew Valley Expanded	1.15.11
+content_pack	Stardew Valley Expanded Farm Type Manager	1.15.11
+content_pack	Stardew Valley Expanded Forage Locations - Immersive Farm 2	1.15.11
+content_pack	Sunberry NPC - Dao	1.0.4
+content_pack	Sunberry Village - Content Patcher	1.1.2
+content_pack	Sunberry Village - Custom Companions	1.1.2
+content_pack	Sunberry Village - Farm Type Manager	1.1.2
+content_pack	Wild Animals	1.3.0
+content_pack	Xiddav's Little Red School House - Students and Teachers	2.3.0-SNT
+content_pack	Xiddav's Tilesheet	2.1.0
