@@ -1,9 +1,9 @@
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
-  if (req.method !== "POST") return res.status(405).json({ok:false,error:"POST required"});
+  if (!["POST","GET"].includes(req.method)) return res.status(405).json({ok:false,error:"GET/POST required"});
   const key = process.env.NEXUS_API_KEY;
   if (!key) return res.status(500).json({ok:false,error:"NEXUS_API_KEY is not configured"});
-  const body=req.body||{};
+  const body=req.method==="GET"?(req.query||{}):(req.body||{});
   const game=String(body.game||"stardewvalley").replace(/[^a-z0-9_-]/gi,"");
   const headers={apikey:key,"User-Agent":"nexus-loader/1.6"};
   const json=async url=>{const r=await fetch(url,{headers});let data=null;try{data=await r.json()}catch{}if(!r.ok){const e=new Error("Nexus request failed");e.status=r.status;throw e}return data};
@@ -12,6 +12,7 @@ module.exports = async function handler(req, res) {
       const data=await json("https://api.nexusmods.com/v1/users/validate.json");
       return res.json({ok:true,data:{valid:true,isPremium:Boolean(data && data.is_premium)}})
     }
+    if(req.method==="GET") return res.status(400).json({ok:false,error:"GET only supports action=validate"});
     if(body.action==="mod"||body.action==="files"){
       const id=Number(body.modId);if(!Number.isInteger(id)||id<=0)return res.status(400).json({ok:false,error:"Invalid modId"});
       const suffix=body.action==="files"?"/files.json":".json";
