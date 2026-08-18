@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "game": "stardewvalley",
   "target": "PC-SteamDeck",
   "note": "Full PC/Steam Deck build queue. Phone is download/storage only. Never filter by Android compatibility. Preserve all source components; one Nexus archive may supply multiple SMAPI components.",
@@ -116,7 +116,7 @@
     {"name":"Machine Terrain Framework","mod_id":22975},
     {"name":"Mapping Extensions and Extra Properties (MEEP)","mod_id":14493},
     {"name":"Extra Machine Configs","mod_id":22256},
-    {"name":"Extra Animal Configs","mod_id":25328,"source_version":"1.9.13","note":"Nexus page currently exposes 1.9.12/metadata discrepancy; preserve source target and resolve exact file before final download"},
+    {"name":"Extra Animal Configs","mod_id":25328,"source_version":"1.9.13","note":"resolve exact source file before final download"},
     {"name":"Misc Map Actions & Properties","mod_id":28423,"source_version":"1.14.1"},
     {"name":"Mail Framework Mod","mod_id":1536,"source_version":"1.20.0"},
     {"name":"Producer Framework Mod","mod_id":4970,"source_version":"1.9.8"},
@@ -124,10 +124,22 @@
     {"name":"Unlockable Bundles","mod_id":17265,"source_version":"4.3.1"}
   ],
   "translations": [
+    {"name":"Stardew Valley Expanded Russian","mod_id":5509,"for_mod_id":3753,"source_version":"1.15.8"},
+    {"name":"Ridgeside Village Russian","mod_id":8401,"for_mod_id":7286,"source_version":"2.5.16"},
+    {"name":"East Scarp Russian","mod_id":8163,"for_mod_id":5787,"source_version":"3.0.8"},
+    {"name":"Eli and Dylan Russian","mod_id":30021,"for_mod_id":13883,"source_version":"1.2.4"},
     {"name":"Cornucopia - Artisan Machines Russian","mod_id":45531,"for_mod_id":24842},
     {"name":"Cornucopia - More Crops Russian","mod_id":45484,"for_mod_id":19508},
     {"name":"Cornucopia - More Flowers Russian","mod_id":45485,"for_mod_id":20290},
     {"name":"Alpacas Russian","mod_id":33513,"for_mod_id":8515}
+  ],
+  "verified_translation_candidates": [
+    {"name":"Always Raining in the Valley Russian","mod_id":11114,"note":"verified Nexus translation; add when matching original is resolved in source list"},
+    {"name":"Never Ending Adventure and Circle of Thorns Russian","mod_id":18993,"source_version":"1.9.96","note":"verified translation for 1.6-era original"},
+    {"name":"Lurking in the Dark - NPC Sen Russian","mod_id":17988,"source_version":"3.0.7"},
+    {"name":"Lavril - East Scarp NPC Russian","mod_id":11070,"source_version":"2.2.0"},
+    {"name":"Fievel Goes East Scarp Russian","mod_id":17521,"source_version":"1.1.3"},
+    {"name":"Sword and Sorcery Russian","mod_id":44738,"source_version":"2.3.10"}
   ],
   "held_for_review": [
     {"name":"Better Friendship","mod_id":10287,"reason":"compatibility review"},
@@ -138,6 +150,6 @@
     {"name":"CP H&W Farmers Market set","mod_id":21767,"reason":"installed 2.1.1 vs Nexus 1.0.2"},
     {"name":"Cuter Slimes Refreshed","mod_id":21889,"reason":"installed 1.2.8 vs Nexus 1.2"},
     {"name":"Drawberry's Seasonal Cute Characters for ESR","mod_id":43012,"reason":"installed 1.0.11 vs Nexus 1.0.10"},
-    {"name":"Extra Animal Configs exact file","mod_id":25328,"reason":"source log says 1.9.13 while current Nexus page/file indexing is inconsistent; do not silently substitute"}
+    {"name":"Extra Animal Configs exact file","mod_id":25328,"reason":"source log says 1.9.13 while current Nexus indexing is inconsistent"}
   ]
 }
