@@ -15,6 +15,17 @@
       "nexusModId": 3753,
       "localizationStatus": "needs_review",
       "checked": "2026-08-18"
+    },
+    {
+      "name": "Tractor Mod",
+      "nexusModId": 1401,
+      "author": "Pathoschild",
+      "desktopVersion": "4.24.4",
+      "androidVersion": "4.24.3",
+      "requires": ["SMAPI 4.1.10+"],
+      "languageEvidence": ["Russian"],
+      "localizationStatus": "builtin_ru",
+      "checked": "2026-08-18"
     }
   ]
 }
