@@ -1,0 +1,14 @@
+{
+  "version":"1.9",
+  "game":"stardewvalley",
+  "batch":10,
+  "source":"source-lock-windows116 + live Nexus verification",
+  "items":[
+    {"name":"Alpacas","source_version":"2.3.0","status":"verified","nexus_mod_id":8515,"nexus_version":"2.3","compatibility":"stardew_1.6_compatible","requires":["Content Patcher","SMAPI"],"localization":"separate_ru_available","translation_nexus_mod_id":33513,"translation_version":"1.0"},
+    {"name":"Alvadea's Tilesheets","source_version":"2.2.1","status":"verified","nexus_mod_id":13743,"nexus_version":"2.2.1","requires":["Content Patcher"],"localization":"resource_no_text_translation_needed"},
+    {"name":"AToMS - Archie's Tilesheets of Miscellaneous Stuff","source_version":"2.4.2","status":"verified","nexus_mod_id":28480,"nexus_version":"2.4.2","requires":["Content Patcher","Cross-Mod Compatibility Tokens"],"localization":"resource_no_ru_needed"},
+    {"name":"Bean's Pet Overhaul","source_version":"2.1.0","status":"verified","nexus_mod_id":21080,"nexus_version":"2.1.0","compatibility":"stardew_1.6_compatible","requires":["SMAPI","Content Patcher"],"localization":"no_ru_translation_listed"},
+    {"name":"Cold Pets","source_version":"1.1.1","status":"verified","nexus_mod_id":14379,"nexus_version":"1.1.1","requires":["SMAPI"],"localization":"needs_ru_audit"},
+    {"name":"Custom Companions","source_version":"5.1.0","status":"verified","nexus_mod_id":8626,"nexus_version":"5.1.0","requires":["SMAPI"],"localization":"framework_no_translation_needed"}
+  ]
+}
