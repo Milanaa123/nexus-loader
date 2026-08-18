@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "game": "stardewvalley",
+  "note": "Initial deduplicated Android queue generated only from batch-009 entries with verified Nexus IDs. Entries flagged version-conflict are intentionally excluded until package review.",
+  "mods": [
+    {"name":"Bigger Silo Size","mod_id":21021},
+    {"name":"Birdie Hut Interior","mod_id":11731},
+    {"name":"CP Dog House and Cat Tree","mod_id":46316},
+    {"name":"DaisyNiko's Tilesheets","mod_id":4736},
+    {"name":"Distant Lands - Witch Swamp Overhaul","mod_id":18109},
+    {"name":"Drawberry's Seasonal Cute Characters for Eli and Dylan","mod_id":44660},
+    {"name":"Drawberry's Seasonal Cute Outfits for Nora","mod_id":46211},
+    {"name":"Dwarf Portrait Replacement","mod_id":14916},
+    {"name":"East Scarp Remastered","mod_id":5787},
+    {"name":"Eli & Dylan","mod_id":13883},
+    {"name":"Elle's New Barn Animals","mod_id":3167},
+    {"name":"Elle's New Coop Animals","mod_id":3168},
+    {"name":"Elle's Town Animals","mod_id":1965}
+  ],
+  "held_for_review": [
+    {"name":"CP H&W Farmers Market set","mod_id":21767,"reason":"installed version 2.1.1 vs Nexus 1.0.2"},
+    {"name":"Cuter Slimes Refreshed","mod_id":21889,"reason":"installed version 1.2.8 vs Nexus 1.2"},
+    {"name":"Drawberry's Seasonal Cute Characters for ESR","mod_id":43012,"reason":"installed version 1.0.11 vs Nexus 1.0.10"}
+  ]
+}
