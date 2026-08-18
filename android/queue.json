@@ -1,7 +1,7 @@
 {
-  "version": 3,
+  "version": 4,
   "game": "stardewvalley",
-  "note": "Deduplicated queue from verified batches 001-009 plus verified core expansion/framework mods and Tractor Mod. Unresolved/conflicting entries stay in held_for_review.",
+  "note": "Full-build queue. Existing verified queue retained; added source-lock frameworks verified against Nexus. Do not remove source components; one Nexus archive may supply multiple SMAPI components.",
   "mods": [
     {"name":"SMAPI dependency placeholder - install separately from smapi.io","external":true},
     {"name":"Content Patcher","mod_id":1915},
@@ -101,12 +101,26 @@
     {"name":"Eli & Dylan","mod_id":13883},
     {"name":"Elle's New Barn Animals","mod_id":3167},
     {"name":"Elle's New Coop Animals","mod_id":3168},
-    {"name":"Elle's Town Animals","mod_id":1965}
+    {"name":"Elle's Town Animals","mod_id":1965},
+    {"name":"Alpacas","mod_id":8515},
+    {"name":"Alvadea's Tilesheets","mod_id":13743},
+    {"name":"AToMS","mod_id":28480},
+    {"name":"Bean's Pet Overhaul","mod_id":21080},
+    {"name":"Cold Pets","mod_id":14379},
+    {"name":"Custom Companions","mod_id":8626},
+    {"name":"Furniture Framework","mod_id":23458},
+    {"name":"Horse Overhaul","mod_id":7911},
+    {"name":"Item Extensions","mod_id":20357},
+    {"name":"Livestock Bazaar","mod_id":29997},
+    {"name":"Machine Terrain Framework","mod_id":22975},
+    {"name":"Mapping Extensions and Extra Properties (MEEP)","mod_id":14493},
+    {"name":"Extra Machine Configs","mod_id":22256,"android_note":"Nexus author says Android should use EMC 1.6.0 or earlier unless using the newer Android beta port"}
   ],
   "translations": [
     {"name":"Cornucopia - Artisan Machines Russian","mod_id":45531,"for_mod_id":24842},
     {"name":"Cornucopia - More Crops Russian","mod_id":45484,"for_mod_id":19508},
-    {"name":"Cornucopia - More Flowers Russian","mod_id":45485,"for_mod_id":20290}
+    {"name":"Cornucopia - More Flowers Russian","mod_id":45485,"for_mod_id":20290},
+    {"name":"Alpacas Russian","mod_id":33513,"for_mod_id":8515}
   ],
   "held_for_review": [
     {"name":"Better Friendship","mod_id":10287,"reason":"compatibility review"},
@@ -116,6 +130,7 @@
     {"name":"Grapes of Ferngill","mod_id":8684,"reason":"installed 5.0.8 vs Nexus 5.0.7"},
     {"name":"CP H&W Farmers Market set","mod_id":21767,"reason":"installed 2.1.1 vs Nexus 1.0.2"},
     {"name":"Cuter Slimes Refreshed","mod_id":21889,"reason":"installed 1.2.8 vs Nexus 1.2"},
-    {"name":"Drawberry's Seasonal Cute Characters for ESR","mod_id":43012,"reason":"installed 1.0.11 vs Nexus 1.0.10"}
+    {"name":"Drawberry's Seasonal Cute Characters for ESR","mod_id":43012,"reason":"installed 1.0.11 vs Nexus 1.0.10"},
+    {"name":"Extra Animal Configs","reason":"source-lock requires 1.9.13; exact Nexus page/Android compatibility still being verified"}
   ]
 }
