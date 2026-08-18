@@ -13,7 +13,11 @@
     {
       "name": "Stardew Valley Expanded",
       "nexusModId": 3753,
-      "localizationStatus": "needs_review",
+      "russianTranslationNexusModId": 5509,
+      "translationVersion": "1.15.8",
+      "translationName": "Stardew Valley Expanded - Russian",
+      "localizationStatus": "translation_verified",
+      "notes": "Nexus lists this Russian translation for SVE; translation page requires the original SVE mod and is marked Stardew Valley 1.6 compatible.",
       "checked": "2026-08-18"
     },
     {
@@ -41,6 +45,16 @@
       "translationVersion": "2.5.16",
       "translationAuthor": "6squad",
       "localizationStatus": "translation_verified",
+      "checked": "2026-08-18"
+    },
+    {
+      "name": "Sunberry Village",
+      "nexusModId": 11111,
+      "currentOriginalVersionObserved": "1.1.2",
+      "russianTranslationNexusModId": 32518,
+      "translationVersion": "1.0.2",
+      "localizationStatus": "needs_current_ru",
+      "notes": "Nexus labels translation 32518 Outdated; do not auto-install it for the current 1.1.2 original. A current Russian source must be independently verified before marking ready.",
       "checked": "2026-08-18"
     }
   ]
