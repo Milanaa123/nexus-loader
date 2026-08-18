@@ -1,7 +1,8 @@
 {
-  "version": 4,
+  "version": 5,
   "game": "stardewvalley",
-  "note": "Full-build queue. Existing verified queue retained; added source-lock frameworks verified against Nexus. Do not remove source components; one Nexus archive may supply multiple SMAPI components.",
+  "target": "PC-SteamDeck",
+  "note": "Full PC/Steam Deck build queue. Phone is download/storage only. Never filter by Android compatibility. Preserve all source components; one Nexus archive may supply multiple SMAPI components.",
   "mods": [
     {"name":"SMAPI dependency placeholder - install separately from smapi.io","external":true},
     {"name":"Content Patcher","mod_id":1915},
@@ -114,7 +115,13 @@
     {"name":"Livestock Bazaar","mod_id":29997},
     {"name":"Machine Terrain Framework","mod_id":22975},
     {"name":"Mapping Extensions and Extra Properties (MEEP)","mod_id":14493},
-    {"name":"Extra Machine Configs","mod_id":22256,"android_note":"Nexus author says Android should use EMC 1.6.0 or earlier unless using the newer Android beta port"}
+    {"name":"Extra Machine Configs","mod_id":22256},
+    {"name":"Extra Animal Configs","mod_id":25328,"source_version":"1.9.13","note":"Nexus page currently exposes 1.9.12/metadata discrepancy; preserve source target and resolve exact file before final download"},
+    {"name":"Misc Map Actions & Properties","mod_id":28423,"source_version":"1.14.1"},
+    {"name":"Mail Framework Mod","mod_id":1536,"source_version":"1.20.0"},
+    {"name":"Producer Framework Mod","mod_id":4970,"source_version":"1.9.8"},
+    {"name":"Secret Note Framework","mod_id":25055,"source_version":"1.2.1"},
+    {"name":"Unlockable Bundles","mod_id":17265,"source_version":"4.3.1"}
   ],
   "translations": [
     {"name":"Cornucopia - Artisan Machines Russian","mod_id":45531,"for_mod_id":24842},
@@ -131,6 +138,6 @@
     {"name":"CP H&W Farmers Market set","mod_id":21767,"reason":"installed 2.1.1 vs Nexus 1.0.2"},
     {"name":"Cuter Slimes Refreshed","mod_id":21889,"reason":"installed 1.2.8 vs Nexus 1.2"},
     {"name":"Drawberry's Seasonal Cute Characters for ESR","mod_id":43012,"reason":"installed 1.0.11 vs Nexus 1.0.10"},
-    {"name":"Extra Animal Configs","reason":"source-lock requires 1.9.13; exact Nexus page/Android compatibility still being verified"}
+    {"name":"Extra Animal Configs exact file","mod_id":25328,"reason":"source log says 1.9.13 while current Nexus page/file indexing is inconsistent; do not silently substitute"}
   ]
 }
