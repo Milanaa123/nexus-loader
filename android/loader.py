@@ -11,7 +11,7 @@ def load_state():
     except:return {"done":[],"failed":[]}
 
 def api(url,key):
-    r=urllib.request.Request(url,headers={"apikey":key,"User-Agent":"stardew-ru-android-loader/0.2"})
+    r=urllib.request.Request(url,headers={"apikey":key,"User-Agent":"stardew-ru-android-loader/0.3"})
     with urllib.request.urlopen(r,timeout=90) as x:return json.load(x)
 
 def validate(key): return api("https://api.nexusmods.com/v1/users/validate.json",key)
@@ -32,10 +32,16 @@ def unpack(src,target_root):
         with zipfile.ZipFile(src) as z:z.extractall(target)
     else: shutil.copy2(src,target/src.name)
 
-def norm_id(item): return int(item.get("mod_id") or item.get("modId"))
+def norm_id(item):
+    raw=item.get("mod_id") or item.get("modId")
+    return int(raw) if raw else None
 
 def fetch_one(item,key,target_root,label,index,total,done,st):
+    if item.get("external"):
+        print(f"[{index}/{total}] {label}: пропуск внешней зависимости {item.get('name')}")
+        return
     mid=norm_id(item)
+    if not mid: raise RuntimeError("нет Nexus mod ID")
     if mid in done:
         print(f"[{index}/{total}] {label} {mid}: уже скачан")
         return
@@ -68,7 +74,8 @@ def main():
     st=load_state(); done=set(st.get("done",[]))
     jobs=[("MOD",x,MODS) for x in mods]+[("RU",x,ru_root) for x in translations]
     total=len(jobs)
-    print(f"Очередь загрузки: {len(mods)} модов + {len(translations)} русификаторов = {total} файлов")
+    downloadable=sum(1 for _,x,_ in jobs if not x.get("external"))
+    print(f"Очередь: {downloadable} Nexus-файлов; внешних зависимостей: {total-downloadable}")
     if held: print(f"Отложено на проверку: {len(held)}")
     for i,(label,item,target_root) in enumerate(jobs,1):
         try: fetch_one(item,key,target_root,label,i,total,done,st)
