@@ -1,1 +1,18 @@
-<CONTENT_PLACEHOLDER>
+{
+  "schema_version": 1,
+  "source_file": "моды.txt",
+  "source_entry_count": 537,
+  "policy": {
+    "keep_every_source_entry": true,
+    "do_not_remove_for_android_compatibility": true,
+    "target": "PC/Steam Deck (Linux via SMAPI)",
+    "phone_role": "download/storage only",
+    "translations": "For every source entry, verify whether Russian is built-in, separate, unnecessary because there is no text, or unavailable; add the matching Russian package when available."
+  },
+  "note": "Canonical source lock created from the user's uploaded моды.txt. Full per-entry data is tracked in the uploaded source file and will be expanded into download and Russian-translation manifests without dropping entries.",
+  "source_ranges": {
+    "main_list": {"from": 1, "to": 530},
+    "off_site_assets": {"from": 531, "to": 537}
+  },
+  "translation_status_default": "pending_verification"
+}
