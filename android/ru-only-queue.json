@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "game": "stardewvalley",
+  "target": "existing-PC-SteamDeck-modpack",
+  "note": "Download only Russian translation overlays for the user's existing modpack, plus Tractor Mod. Do not redownload original mods.",
+  "mods": [
+    {"name":"Tractor Mod","mod_id":1401}
+  ],
+  "translations": [
+    {"name":"Stardew Valley Expanded Russian","mod_id":45278,"for_mod_id":3753,"for_name":"Stardew Valley Expanded"},
+    {"name":"Ridgeside Village Russian","mod_id":8401,"for_mod_id":7286,"for_name":"Ridgeside Village","source_version":"2.5.16"},
+    {"name":"East Scarp Russian","mod_id":8163,"for_mod_id":5787,"for_name":"East Scarp REMASTERED","source_version":"3.0.8"},
+    {"name":"Cornucopia - Artisan Machines Russian","mod_id":45531,"for_mod_id":24842,"for_name":"Cornucopia - Artisan Machines"},
+    {"name":"Cornucopia - More Crops Russian","mod_id":45484,"for_mod_id":19508,"for_name":"Cornucopia - More Crops"},
+    {"name":"Cornucopia - More Flowers Russian","mod_id":45485,"for_mod_id":20290,"for_name":"Cornucopia - More Flowers"},
+    {"name":"Alpacas Russian","mod_id":33513,"for_mod_id":8515,"for_name":"Alpacas"}
+  ],
+  "held_for_review": []
+}
