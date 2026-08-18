@@ -8,7 +8,10 @@ module.exports = async function handler(req, res) {
   const headers={apikey:key,"User-Agent":"nexus-loader/1.6"};
   const json=async url=>{const r=await fetch(url,{headers});let data=null;try{data=await r.json()}catch{}if(!r.ok){const e=new Error("Nexus request failed");e.status=r.status;throw e}return data};
   try {
-    if(body.action==="validate"){await json("https://api.nexusmods.com/v1/users/validate.json");return res.json({ok:true,data:{valid:true}})}
+    if(body.action==="validate"){
+      const data=await json("https://api.nexusmods.com/v1/users/validate.json");
+      return res.json({ok:true,data:{valid:true,isPremium:Boolean(data && data.is_premium)}})
+    }
     if(body.action==="mod"||body.action==="files"){
       const id=Number(body.modId);if(!Number.isInteger(id)||id<=0)return res.status(400).json({ok:false,error:"Invalid modId"});
       const suffix=body.action==="files"?"/files.json":".json";
