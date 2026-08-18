@@ -1,0 +1,13 @@
+{
+  "version": "1.8",
+  "game": "stardewvalley",
+  "platform": "desktop",
+  "items": [
+    {"name":"Tractor Mod","modId":1401,"kind":"mod","localization":"builtin_ru"},
+    {"name":"Stardew Valley Expanded","modId":3753,"kind":"mod","localization":"translation_verified","translationModId":5509},
+    {"name":"Stardew Valley Expanded - Russian","modId":5509,"kind":"translation","forModId":3753},
+    {"name":"East Scarp - Russian","modId":8163,"kind":"translation","localization":"translation_verified"},
+    {"name":"Ridgeside Village - Russian","modId":8401,"kind":"translation","localization":"translation_verified"},
+    {"name":"Sunberry Village","modId":11111,"kind":"mod","localization":"needs_current_ru"}
+  ]
+}
