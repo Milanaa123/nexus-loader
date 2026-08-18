@@ -5,18 +5,34 @@ module.exports = async function handler(req, res) {
   if (!key) return res.status(500).json({ok:false,error:"NEXUS_API_KEY is not configured"});
   const body=req.method==="GET"?(req.query||{}):(req.body||{});
   const game=String(body.game||"stardewvalley").replace(/[^a-z0-9_-]/gi,"");
-  const headers={apikey:key,"User-Agent":"nexus-loader/1.6"};
-  const json=async url=>{const r=await fetch(url,{headers});let data=null;try{data=await r.json()}catch{}if(!r.ok){const e=new Error("Nexus request failed");e.status=r.status;throw e}return data};
+  const headers={apikey:key,"User-Agent":"nexus-loader/1.7"};
+  const json=async url=>{const r=await fetch(url,{headers});let data=null;try{data=await r.json()}catch{}if(!r.ok){const e=new Error("Nexus request failed");e.status=r.status;e.data=data;throw e}return data};
+  const positiveInt=v=>{const n=Number(v);return Number.isInteger(n)&&n>0?n:null};
   try {
     if(body.action==="validate"){
       const data=await json("https://api.nexusmods.com/v1/users/validate.json");
-      return res.json({ok:true,data:{valid:true,isPremium:Boolean(data && data.is_premium)}})
+      return res.json({ok:true,data:{valid:true,isPremium:Boolean(data&&data.is_premium)}});
     }
-    if(req.method==="GET") return res.status(400).json({ok:false,error:"GET only supports action=validate"});
-    if(body.action==="mod"||body.action==="files"){
-      const id=Number(body.modId);if(!Number.isInteger(id)||id<=0)return res.status(400).json({ok:false,error:"Invalid modId"});
-      const suffix=body.action==="files"?"/files.json":".json";
-      return res.json({ok:true,data:await json(`https://api.nexusmods.com/v1/games/${game}/mods/${id}${suffix}`)});
+    if(body.action==="files"){
+      const modId=positiveInt(body.modId);if(!modId)return res.status(400).json({ok:false,error:"Invalid modId"});
+      return res.json({ok:true,data:await json(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files.json`)});
+    }
+    if(req.method==="GET"&&body.action==="download"){
+      const modId=positiveInt(body.modId),fileId=positiveInt(body.fileId);
+      if(!modId||!fileId)return res.status(400).json({ok:false,error:"Invalid modId/fileId"});
+      const user=await json("https://api.nexusmods.com/v1/users/validate.json");
+      if(!user||!user.is_premium)return res.status(403).json({ok:false,error:"Nexus Premium required"});
+      const links=await json(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files/${fileId}/download_link.json`);
+      const first=Array.isArray(links)?links.find(x=>x&&(x.URI||x.uri)):null;
+      const uri=first&&(first.URI||first.uri);
+      if(!uri)return res.status(502).json({ok:false,error:"Nexus returned no downloadable mirror"});
+      res.setHeader("Location",uri);
+      return res.status(302).end();
+    }
+    if(req.method==="GET") return res.status(400).json({ok:false,error:"Unsupported GET action"});
+    if(body.action==="mod"){
+      const id=positiveInt(body.modId);if(!id)return res.status(400).json({ok:false,error:"Invalid modId"});
+      return res.json({ok:true,data:await json(`https://api.nexusmods.com/v1/games/${game}/mods/${id}.json`)});
     }
     if(body.action==="batchMods"){
       const ids=Array.isArray(body.modIds)?[...new Set(body.modIds.map(Number).filter(x=>Number.isInteger(x)&&x>0))]:[];
@@ -27,10 +43,11 @@ module.exports = async function handler(req, res) {
       return res.json({ok:true,data:out});
     }
     if(body.action==="downloadLinks"){
-      const modId=Number(body.modId),fileId=Number(body.fileId);if(!Number.isInteger(modId)||modId<=0||!Number.isInteger(fileId)||fileId<=0)return res.status(400).json({ok:false,error:"Invalid modId/fileId"});
+      const modId=positiveInt(body.modId),fileId=positiveInt(body.fileId);if(!modId||!fileId)return res.status(400).json({ok:false,error:"Invalid modId/fileId"});
       let url=`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files/${fileId}/download_link.json`;
       if(body.nxmKey&&body.expires)url+=`?key=${encodeURIComponent(body.nxmKey)}&expires=${encodeURIComponent(body.expires)}`;
-      return res.json({ok:true,data:await json(url)});
+      const links=await json(url);
+      return res.json({ok:true,data:{available:Array.isArray(links)&&links.length>0,mirrorCount:Array.isArray(links)?links.length:0}});
     }
     return res.status(400).json({ok:false,error:"Unknown action"});
   }catch(e){return res.status(e.status||500).json({ok:false,error:"Nexus request failed",status:e.status||500})}
