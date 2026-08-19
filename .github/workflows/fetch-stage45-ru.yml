@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/fetch-stage45-ru.yml'
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
