@@ -1,0 +1,39 @@
+name: Fetch ready RU translations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fetch-ready-ru.yml'
+  workflow_dispatch:
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download verified Russian translations from Nexus through bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p downloads
+          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 \
+            -o "downloads/Creative Differences RU 3.2.6.zip" \
+            "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=42405&fileId=156948"
+          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 \
+            -o "downloads/Lurking in the Dark RU 3.0.7.rar" \
+            "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=17988&fileId=130745"
+          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 \
+            -o "downloads/Law and Order SV RU 1.4.11.zip" \
+            "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=37449&fileId=178200"
+          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 \
+            -o "downloads/Penny Event Expansion RU 2.4.0.zip" \
+            "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=25751&fileId=105661"
+          ls -lh downloads
+
+      - name: Upload translations artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ready-russian-translations
+          path: downloads/*
+          if-no-files-found: error
+          retention-days: 7
