@@ -1,0 +1,52 @@
+{
+  "stage": 46,
+  "platform": "PC/Steam Deck",
+  "rule": "ready RU first; patch only version delta; self-translate only when no compatible RU exists",
+  "verifiedMods": 14,
+  "verifiedI18nComponents": 16,
+  "verified": [
+    "Canon Friendly Dialogue Expansion",
+    "Date Night Redux",
+    "Eli and Dylan",
+    "Haley Ever After - Sweet Edition",
+    "Haywrite's Dialogue",
+    "Jorts and Jean",
+    "Lani",
+    "Nora the Herpetologist",
+    "Part of a Saloon Breakfast",
+    "Rekindle - Kent and Jodi Event Expansion",
+    "The Arcanian Exchange",
+    "The Last Smoluanu",
+    "Unique Winter Star",
+    "Wren the Plumber"
+  ],
+  "stage46BeforeJorts": {
+    "missingKeysTranslated": 400,
+    "englishUserFacingStringsFixed": 386
+  },
+  "jortsAndJean": {
+    "originalVersion": "1.5.5",
+    "existingTranslationVersion": "1.3.0",
+    "currentKeys": 1110,
+    "recoveredFromExistingTranslation": 486,
+    "selfTranslatedCurrentKeys": 624,
+    "oldTranslationStructuralCorrections": 22,
+    "finalMissingKeys": 0,
+    "tokenMismatches": 0
+  },
+  "remainingLargeStage46": {
+    "Always Raining in the Valley": {
+      "originalVersion": "1.5.1",
+      "existingTranslationVersion": "1.0.7",
+      "status": "needs large delta"
+    },
+    "Sword and Sorcery": {
+      "originalVersion": "2.3.10",
+      "existingTranslationVersion": "2.3.10",
+      "initialMissingCPKeys": 1150,
+      "safelyRecoveredByExactEnglishValueReuse": 109,
+      "remainingMissingCPKeys": 1041,
+      "status": "published RU version matches but CP i18n is incomplete"
+    }
+  }
+}
