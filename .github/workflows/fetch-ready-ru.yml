@@ -13,42 +13,76 @@ jobs:
   download:
     runs-on: ubuntu-latest
     steps:
-      - name: Download verified Russian translations and matching reference originals
+      - name: Download ready Russian translations and Tractor Mod
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p downloads reference
-          # Ready Russian translations
-          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o "downloads/Creative Differences RU 3.2.6.zip" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=42405&fileId=156948"
-          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o "downloads/Lurking in the Dark RU 3.0.7.rar" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=17988&fileId=130745"
-          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o "downloads/Law and Order SV RU 1.4.11.zip" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=37449&fileId=178200"
-          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o "downloads/Penny Event Expansion RU 2.4.0.zip" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=25751&fileId=105661"
-          # Original versions corresponding to the translation baselines; used only for delta comparison.
+
+          download_latest() {
+            local modid="$1"
+            local label="$2"
+            local info fid ver orig ext
+            info="$(curl -fsSL --retry 4 --retry-all-errors --connect-timeout 30 "https://nexus-loader.vercel.app/api/nexus?action=files&game=stardewvalley&modId=${modid}")"
+            fid="$(printf '%s' "$info" | jq -r '.data.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].file_id')"
+            ver="$(printf '%s' "$info" | jq -r '.data.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].version // .[0].mod_version // "unknown"')"
+            orig="$(printf '%s' "$info" | jq -r '.data.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].file_name')"
+            test -n "$fid" && test "$fid" != "null"
+            ext="${orig##*.}"
+            case "$ext" in zip|rar|7z) ;; *) ext=zip ;; esac
+            echo -e "${label}\t${modid}\t${fid}\t${ver}\t${orig}" >> downloads/READY_SOURCE_MANIFEST.tsv
+            curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o "downloads/${label}.${ext}" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=${modid}&fileId=${fid}"
+          }
+
+          # Ready Russian translation pages found for mods in the user's pack.
+          download_latest 42405 "Creative Differences RU"
+          download_latest 17988 "Lurking in the Dark RU"
+          download_latest 37449 "Law and Order SV RU"
+          download_latest 25751 "Penny Event Expansion RU"
+          download_latest 37369 "Roosters RU"
+          download_latest 40459 "Social Page Order Redux RU"
+          download_latest 32054 "Camping Tent RU"
+          download_latest 23102 "Spam Mail RU"
+          download_latest 32080 "Help Wanted Redux RU"
+          download_latest 44960 "Pen Pals RU"
+          download_latest 32046 "HW Greenhouse Furniture RU"
+          download_latest 21679 "Farmers Market Core RU"
+          download_latest 37102 "Night Market Expansion RU"
+          download_latest 36661 "Customize Dresser RU"
+          download_latest 24632 "More Warp Points v2 RU"
+          # Old Deluxe Journal translation retained only as a reference, not auto-installed.
+          download_latest 11759 "Deluxe Journal RU reference"
+
+          # PC / Steam Deck Tractor Mod. Latest MAIN is selected; Android-specific old MAIN is not selected.
+          download_latest 1401 "Tractor Mod"
+
+          # Original versions corresponding to the four large translation baselines.
           curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o "reference/Creative Differences ORIGINAL 3.2.6.zip" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=13437&fileId=154812"
           curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o "reference/Lurking in the Dark ORIGINAL 3.0.7.zip" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=10770&fileId=130730"
           curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o "reference/Penny Event Expansion ORIGINAL 2.4.0.zip" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=16279&fileId=105233"
           ls -lh downloads reference
 
-      - name: Normalize RAR translation to ZIP
+      - name: Normalize any RAR or 7z translations to ZIP copies
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p lurking_extracted
-          if command -v 7z >/dev/null 2>&1; then
-            7z x -y "downloads/Lurking in the Dark RU 3.0.7.rar" -olurking_extracted >/dev/null
-          else
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq p7zip-full >/dev/null
-            7z x -y "downloads/Lurking in the Dark RU 3.0.7.rar" -olurking_extracted >/dev/null
-          fi
-          cd lurking_extracted
-          zip -qr "../downloads/Lurking in the Dark RU 3.0.7 normalized.zip" .
-          cd ..
+          shopt -s nullglob
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full >/dev/null
+          mkdir -p normalized
+          for f in downloads/*.rar downloads/*.7z; do
+            base="$(basename "$f")"
+            stem="${base%.*}"
+            tmp="normalized/${stem}"
+            mkdir -p "$tmp"
+            7z x -y "$f" -o"$tmp" >/dev/null
+            (cd "$tmp" && zip -qr "../../downloads/${stem} normalized.zip" .)
+          done
 
       - name: Upload translations artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ready-russian-translations-and-reference-originals
+          name: ready-first-stage44-sources
           path: |
             downloads/*
             reference/*
