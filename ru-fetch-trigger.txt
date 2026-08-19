@@ -1,1 +1,2 @@
 Trigger ready Russian translation download artifact.
+Normalize Lurking RAR to ZIP.
