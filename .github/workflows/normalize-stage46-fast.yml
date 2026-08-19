@@ -1,0 +1,44 @@
+name: Normalize Stage 46 RU fast
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and normalize Stage 46 RAR and 7z translations
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v 7z
+          mkdir -p raw out tmp
+          dl(){
+            local modid="$1" fileid="$2" label="$3" ext="$4"
+            curl -fL --retry 2 --connect-timeout 20 --max-time 180 \
+              -o "raw/${label}.${ext}" \
+              "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=${modid}&fileId=${fileid}"
+            mkdir -p "tmp/${label}"
+            7z x -y "raw/${label}.${ext}" -o"tmp/${label}" >/dev/null
+            (cd "tmp/${label}" && zip -qr "../../out/${label}.zip" .)
+          }
+          dl 30021 123219 "Eli and Dylan RU 1.2.4" rar
+          dl 11114 124027 "Always Raining in the Valley RU 1.0.7" 7z
+          dl 42397 160765 "Haywrites Dialogue RU 1.0.1" rar
+          dl 43799 160930 "Part of a Saloon Breakfast RU 1.0.0" rar
+          dl 18106 75792 "Jorts and Jean RU 1.3.0" rar
+          dl 37138 142181 "Unique Winter Star RU 2.0.6" rar
+          dl 32980 129250 "Wren the Plumber RU 1.0.4" rar
+          dl 44822 163923 "The Arcanian Exchange RU 1.0.0" rar
+          dl 33522 153730 "Lani RU 1.1.7" rar
+          dl 44532 163101 "Rekindle Kent and Jodi RU" rar
+          ls -lh out
+      - name: Upload normalized Stage 46 translations
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage46-normalized-fast
+          path: out/*.zip
+          if-no-files-found: error
+          retention-days: 7
