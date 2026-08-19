@@ -32,6 +32,22 @@ jobs:
             "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=25751&fileId=105661"
           ls -lh downloads
 
+      - name: Normalize RAR translation to ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p lurking_extracted
+          if command -v 7z >/dev/null 2>&1; then
+            7z x -y "downloads/Lurking in the Dark RU 3.0.7.rar" -olurking_extracted >/dev/null
+          else
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq p7zip-full >/dev/null
+            7z x -y "downloads/Lurking in the Dark RU 3.0.7.rar" -olurking_extracted >/dev/null
+          fi
+          cd lurking_extracted
+          zip -qr "../downloads/Lurking in the Dark RU 3.0.7 normalized.zip" .
+          cd ..
+
       - name: Upload translations artifact
         uses: actions/upload-artifact@v4
         with:
