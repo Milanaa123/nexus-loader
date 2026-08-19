@@ -2,3 +2,4 @@ Trigger ready Russian translation download artifact.
 Normalize Lurking RAR to ZIP.
 Download matching original baselines for delta audit.
 Stage 44 ready-first bulk download.
+Trigger baselines and Tractor download: 2026-08-19.
