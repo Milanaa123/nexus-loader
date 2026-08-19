@@ -1,0 +1,75 @@
+name: Fetch Stage 46 RU translations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fetch-stage46-ru.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Stage 46 Russian translations
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p downloads normalized
+
+          download_latest() {
+            local modid="$1"
+            local label="$2"
+            local info fid ver orig ext
+            info="$(curl -fsSL --retry 4 --retry-all-errors --connect-timeout 30 "https://nexus-loader.vercel.app/api/nexus?action=files&game=stardewvalley&modId=${modid}")"
+            fid="$(printf '%s' "$info" | jq -r '.data.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].file_id')"
+            ver="$(printf '%s' "$info" | jq -r '.data.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].version // .[0].mod_version // "unknown"')"
+            orig="$(printf '%s' "$info" | jq -r '.data.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].file_name')"
+            test -n "$fid" && test "$fid" != "null"
+            ext="${orig##*.}"
+            case "$ext" in zip|rar|7z) ;; *) ext=zip ;; esac
+            echo -e "${label}\t${modid}\t${fid}\t${ver}\t${orig}" >> downloads/STAGE46_MANIFEST.tsv
+            curl -fL --retry 4 --retry-all-errors --connect-timeout 30 \
+              -o "downloads/${label}.${ext}" \
+              "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=${modid}&fileId=${fid}"
+          }
+
+          download_latest 42319 "Haley Ever After Sweet Edition RU"
+          download_latest 5539 "Canon Friendly Dialogue Expansion RU"
+          download_latest 30021 "Eli and Dylan RU"
+          download_latest 11114 "Always Raining in the Valley RU"
+          download_latest 42397 "Haywrites Dialogue RU"
+          download_latest 43799 "Part of a Saloon Breakfast RU"
+          download_latest 18106 "Jorts and Jean RU"
+          download_latest 37666 "Date Night Redux RU"
+          download_latest 37138 "Unique Winter Star RU"
+          download_latest 32980 "Wren the Plumber RU"
+          download_latest 33571 "Nora the Herpetologist RU"
+          download_latest 44738 "Sword and Sorcery RU"
+          download_latest 44822 "The Arcanian Exchange RU"
+          download_latest 18932 "The Last Smoluanu RU"
+          download_latest 33522 "Lani RU"
+          download_latest 44532 "Rekindle Kent and Jodi RU"
+
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full unrar-free >/dev/null
+          shopt -s nullglob
+          for f in downloads/*.7z downloads/*.rar; do
+            base="$(basename "$f")"
+            stem="${base%.*}"
+            tmp="normalized/${stem}"
+            mkdir -p "$tmp"
+            7z x -y "$f" -o"$tmp" >/dev/null
+            (cd "$tmp" && zip -qr "../../downloads/${stem} normalized.zip" .)
+          done
+          ls -lh downloads
+
+      - name: Upload Stage 46 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage46-official-ru-sources
+          path: downloads/*
+          if-no-files-found: error
+          retention-days: 7
