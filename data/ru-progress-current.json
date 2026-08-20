@@ -13,16 +13,13 @@
   "stage52VerifiedCount": 3,
   "stage53VerifiedCount": 4,
   "stage54VerifiedCount": 3,
-  "verifiedTotal": 227,
-  "remaining": 308,
+  "stage55VerifiedCount": 2,
+  "verifiedTotal": 229,
+  "remaining": 306,
   "tractorMod": "separate; not included in 535",
   "rules": "built-in complete RU first; otherwise exact ready RU; otherwise patch only version delta; self-translate only when no ready RU exists; preserve IDs/tokens/placeholders; validate keys and JSON",
-  "stage46": [
-    "Always Raining in the Valley","Canon Friendly Dialogue Expansion","Date Night Redux","Eli and Dylan","Haley Ever After - Sweet Edition","Haywrite's Dialogue","Jorts and Jean","Lani - Custom NPC for Sunberry Village","Nora the Herpetologist","Part of a Saloon Breakfast","Rekindle - Kent and Jodi Event Expansion","Sword and Sorcery for East Scarp Remastered","The Arcanian Exchange","The Last Smoluanu","Unique Winter Star","Wren the Plumber"
-  ],
-  "stage47": [
-    "What Does Trash Bear Want 1.0.1","Searchable Collections Page 1.0.2","Seasonal Town Lamp Posts 2.0.0","Better Signs 4.0.0","Em's Pet Adoptions 1.0","Extra Animal Config 1.9.10","Kitty Furniture CP 1.0","Save Mod Info 0.2.0","Safe Lightning Updated 1.1.1","Waterproof Items 1.0.3","Armory Cabinet 2.0.0","Mini Wind Turbines 1.0.0","Orangeblossom's Furniture Catalogue 1.0.2","Secret Note Framework 1.2.1"
-  ],
+  "stage46": ["Always Raining in the Valley","Canon Friendly Dialogue Expansion","Date Night Redux","Eli and Dylan","Haley Ever After - Sweet Edition","Haywrite's Dialogue","Jorts and Jean","Lani - Custom NPC for Sunberry Village","Nora the Herpetologist","Part of a Saloon Breakfast","Rekindle - Kent and Jodi Event Expansion","Sword and Sorcery for East Scarp Remastered","The Arcanian Exchange","The Last Smoluanu","Unique Winter Star","Wren the Plumber"],
+  "stage47": ["What Does Trash Bear Want 1.0.1","Searchable Collections Page 1.0.2","Seasonal Town Lamp Posts 2.0.0","Better Signs 4.0.0","Em's Pet Adoptions 1.0","Extra Animal Config 1.9.10","Kitty Furniture CP 1.0","Save Mod Info 0.2.0","Safe Lightning Updated 1.1.1","Waterproof Items 1.0.3","Armory Cabinet 2.0.0","Mini Wind Turbines 1.0.0","Orangeblossom's Furniture Catalogue 1.0.2","Secret Note Framework 1.2.1"],
   "stage47Validation": {"mods":14,"jsonFiles":14,"keys":35,"readyExactSources":{"Orangeblossom's Furniture Catalogue":{"nexusModId":26723,"fileId":108562,"keys":1},"Secret Note Framework":{"nexusModId":48797,"fileId":174029,"keys":3}}},
   "stage48": ["More Vanilla Bookcase 1.1","More Vanilla Table 1.1","Paddy Fields 1.2.1","Pixie's MCM Rugs 1.1.1","More Giant Crop Locations 1.0.0"],
   "stage48Validation": {"mods":5,"overlayFiles":6,"bookcaseKeys":27,"tableKeys":33,"paddyKeys":10,"rugDisplayNames":39,"giantCropConfigOptions":2,"sourceFileIds":[121082,120260,133367,158954,93505]},
@@ -37,5 +34,7 @@
   "stage53": ["Pixie's Mid-Century Modern Catalogue 1.0.2","The Orangerie's Potion Shelf 1.0","Upgradable Bombs 1.0.1","Skip or Socialize 0.0.7"],
   "stage53Validation": {"mods":4,"overlayFiles":5,"remainingVisibleLatin":0,"items":[{"name":"Pixie's Mid-Century Modern Catalogue","displayNamesTranslated":1,"idsChanged":0,"sourceFileId":158956},{"name":"The Orangerie's Potion Shelf","displayNamesTranslated":2,"idsChanged":0,"sourceFileId":110690},{"name":"Upgradable Bombs","keys":6,"missing":0,"extra":0,"tokensPreserved":2,"sourceFileId":107211},{"name":"Skip or Socialize","originalKeys":5,"baseRuVersion":"0.0.6","dropdownLabelsTranslated":21,"internalAllowValuesChanged":0,"sourceFileId":169172,"translationFileId":163921}]},
   "stage54": ["Berry Woods 2.0.3","6480's Giant Crops 2.1.2","Aimon's Bus Interior 2.0.7"],
-  "stage54Validation": {"mods":3,"overlayFiles":5,"remainingVisibleLatin":0,"items":[{"name":"Berry Woods","keys":12,"missing":0,"extra":0,"rawFallbacksTranslated":2,"sourceFileId":133841},{"name":"6480's Giant Crops","readyRuKeys":87,"currentRequiredKeys":43,"missingRequired":0,"invalidKeys":0,"booleanLabelsLocalized":44,"sourceFileId":92148,"translationFileId":126459},{"name":"Aimon's Bus Interior","currentKeys":11,"baseRuVersion":"2.0.3","reusedReadyRuKeys":4,"recoveredReadyEventStrings":2,"newCurrentStringsTranslated":5,"missing":0,"extra":0,"rawFallbacksTranslated":2,"sourceFileId":159124,"translationFileId":96068}]}
+  "stage54Validation": {"mods":3,"overlayFiles":5,"remainingVisibleLatin":0,"items":[{"name":"Berry Woods","keys":12,"missing":0,"extra":0,"rawFallbacksTranslated":2,"sourceFileId":133841},{"name":"6480's Giant Crops","readyRuKeys":87,"currentRequiredKeys":43,"missingRequired":0,"invalidKeys":0,"booleanLabelsLocalized":44,"sourceFileId":92148,"translationFileId":126459},{"name":"Aimon's Bus Interior","currentKeys":11,"baseRuVersion":"2.0.3","reusedReadyRuKeys":4,"recoveredReadyEventStrings":2,"newCurrentStringsTranslated":5,"missing":0,"extra":0,"rawFallbacksTranslated":2,"sourceFileId":159124,"translationFileId":96068}]},
+  "stage55": ["Yagisan's Custom NPCs for NPC Map Locations 1.2.1","More Content for Central Station 2.0.5"],
+  "stage55Validation": {"mods":2,"overlayFiles":1,"items":[{"name":"Yagisan's Custom NPCs for NPC Map Locations","rawCommentedMapTextOccurrences":14,"activeUserFacingMapText":0,"localizationNeeded":false,"sourceFileId":101078},{"name":"More Content for Central Station","defaultKeys":95,"ruKeys":95,"missing":0,"extra":0,"visibleLatinFixed":5,"remainingVisibleLatin":0,"sourceFileId":156469}]}
 }
