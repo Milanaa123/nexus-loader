@@ -42,11 +42,13 @@ jobs:
           download_latest 18932 "The Last Smoluanu RU"
           download_latest 33522 "Lani RU"
           download_latest 44532 "Rekindle Kent and Jodi RU"
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 -A 'Mozilla/5.0' -o downloads/ARV-1.5.1-current-RU-source.zip 'https://stardewmods.ru/uploads/public_files/2025-05/arvsunberry.zip'
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 -A 'Mozilla/5.0' -o downloads/Jorts-Jean-1.5.5-current-RU-source.zip 'https://stardewmods.ru/uploads/public_files/2025-03/jorts-and-jean.zip'
           ls -lh downloads
       - name: Upload Stage 46 raw artifact
         uses: actions/upload-artifact@v4
         with:
-          name: stage46-raw-ru-sources
+          name: stage46-raw-ru-sources-current
           path: downloads/*
           if-no-files-found: error
           retention-days: 7
