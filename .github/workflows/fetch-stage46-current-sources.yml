@@ -1,0 +1,30 @@
+name: Fetch Stage 46 current RU sources
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download current translated source packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p downloads
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 -A 'Mozilla/5.0' \
+            -o downloads/arv-1.5.1-ru-source.zip \
+            'https://stardewmods.ru/uploads/public_files/2025-05/arvsunberry.zip'
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 -A 'Mozilla/5.0' \
+            -o downloads/jorts-jean-1.5.5-ru-source.zip \
+            'https://stardewmods.ru/uploads/public_files/2025-03/jorts-and-jean.zip'
+          ls -lh downloads
+      - name: Upload sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage46-current-ru-sources
+          path: downloads/*
+          if-no-files-found: error
+          retention-days: 7
