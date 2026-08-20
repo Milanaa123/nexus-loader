@@ -1,0 +1,44 @@
+{
+  "version": "1.9",
+  "game": "stardewvalley",
+  "batch": 11,
+  "source": "unclosed Batch 9 entries + exact installed versions + live Nexus verification",
+  "items": [
+    {
+      "name": "HxW Farmer's Market Furniture - Core",
+      "source_version": "2.1.1",
+      "status": "verified_source_and_ready_ru",
+      "nexus_mod_id": 18814,
+      "source_file_id": 115006,
+      "nexus_version": "2.1.1",
+      "requires": [
+        "Calcifer",
+        "Content Patcher"
+      ],
+      "localization": "separate_ru_exact",
+      "translation_nexus_mod_id": 21679,
+      "translation_file_id": 123310,
+      "translation_version": "2.1.1",
+      "notes": "Corrected the prior false match to Nexus 21767, which is the separate Wildflour add-on v1.0.2."
+    },
+    {
+      "name": "Distant Lands - Witch Swamp Overhaul",
+      "source_version": "2.2.9",
+      "status": "audit_prepared",
+      "nexus_mod_id": 18109,
+      "source_file_id": 164748,
+      "nexus_version": "2.2.9",
+      "requires": [
+        "Content Patcher",
+        "Farm Type Manager",
+        "SpaceCore",
+        "SMAPI"
+      ],
+      "localization": "separate_ru_with_verified_zero_version_delta",
+      "translation_nexus_mod_id": 40475,
+      "translation_file_id": 156226,
+      "translation_file_version": "2.2.8",
+      "notes": "Ready RU has exact 805/805 key parity against original 2.2.9; the 2.2.9 original update is technical. Production validator also repairs four control-token defects, two visible Latin fragments, and completes GMCM labels."
+    }
+  ]
+}
