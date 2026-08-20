@@ -7,8 +7,11 @@
   "stage46VerifiedCount": 16,
   "stage47VerifiedCount": 14,
   "stage48VerifiedCount": 5,
-  "verifiedTotal": 214,
-  "remaining": 321,
+  "stage49VerifiedCount": 1,
+  "stage50VerifiedCount": 1,
+  "stage51VerifiedCount": 1,
+  "verifiedTotal": 217,
+  "remaining": 318,
   "tractorMod": "separate; not included in 535",
   "rules": "built-in complete RU first; otherwise exact ready RU; otherwise patch only version delta; self-translate only when no ready RU exists; preserve IDs/tokens/placeholders; validate keys and JSON",
   "stage46": [
@@ -70,5 +73,11 @@
     "rugDisplayNames": 39,
     "giantCropConfigOptions": 2,
     "sourceFileIds": [121082,120260,133367,158954,93505]
-  }
+  },
+  "stage49": ["Cozy Chocolate Furniture 1.0.2"],
+  "stage49Validation": {"sourceKeys":197,"translatedKeys":197,"missing":0,"englishUserFacingValues":0,"idsChanged":0,"sourceFileId":118893},
+  "stage50": ["More Bar Transmutations 1.2.0"],
+  "stage50Validation": {"recipesTranslated":6,"configUiStrings":8,"internalRecipeKeysChanged":0,"tokensPreserved":2,"sourceFileId":36703},
+  "stage51": ["JP More Warp Points v2 1.1.0"],
+  "stage51Validation": {"baseRuVersion":"1.0.6","originalKeys":339,"finalRuKeys":339,"missing":0,"extra":0,"tokenMismatch":0,"remainingLatin":0,"sourceFileId":120778,"translationFileId":113601}
 }
