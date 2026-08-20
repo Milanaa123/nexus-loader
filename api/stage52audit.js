@@ -6,7 +6,8 @@ const S={
 };
 async function dl(x){const u=`https://nexus-loader.vercel.app/api/nexus?action=proxyDownload&game=stardewvalley&modId=${x.m}&fileId=${x.f}`;const q=await fetch(u);if(!q.ok)throw Error(`download ${x.m}/${x.f}: ${q.status}`);return Buffer.from(await q.arrayBuffer())}
 function ents(b){return new AdmZip(b).getEntries().filter(e=>!e.isDirectory)}
-function parse(e){return JSON.parse(e.getData().toString('utf8').replace(/^\uFEFF/,''))}
+function strip(s){let o='',q=false,e=false;for(let i=0;i<s.length;i++){const c=s[i],n=s[i+1];if(q){o+=c;if(e)e=false;else if(c==='\\')e=true;else if(c==='"')q=false;continue}if(c==='"'){q=true;o+=c;continue}if(c==='/'&&n==='/'){while(i<s.length&&s[i]!=='\n')i++;o+='\n';continue}if(c==='/'&&n==='*'){i+=2;while(i<s.length-1&&!(s[i]==='*'&&s[i+1]==='/'))i++;i++;continue}o+=c}return o.replace(/,\s*([}\]])/g,'$1')}
+function parse(e){return JSON.parse(strip(e.getData().toString('utf8').replace(/^\uFEFF/,'')))}
 function find(es,re){return es.filter(e=>re.test('/'+e.entryName)).sort((a,b)=>b.header.size-a.header.size)[0]}
 const tok=x=>(String(x).match(/\{\{[^}]+\}\}|\{\d+\}|\^[A-Za-z0-9_.-]+/g)||[]).sort().join('|');
 function latin(v){return /[A-Za-z]{3,}/.test(String(v).replace(/\{\{[^}]+\}\}/g,'').replace(/\{[^}]+\}/g,'').replace(/\^[A-Za-z0-9_.-]+/g,''))}
