@@ -19,8 +19,8 @@
   "stage58VerifiedCount": 1,
   "stage59VerifiedCount": 2,
   "stage60VerifiedCount": 6,
-  "verifiedTotal": 249,
-  "remaining": 286,
+  "verifiedTotal": 258,
+  "remaining": 277,
   "tractorMod": "separate; not included in 535",
   "rules": "built-in complete RU first; otherwise exact ready RU; otherwise patch only version delta; self-translate only when no ready RU exists; preserve IDs/tokens/placeholders; validate keys and JSON",
   "stage46": [
@@ -603,6 +603,104 @@
         "internalAllowValuesChanged": 0,
         "technicalCommandsChanged": 0,
         "remainingVisibleLatin": 0
+      }
+    ]
+  },
+  "stage63VerifiedCount": 9,
+  "stage63": [
+    "Em's SVE Animals 1.2.0",
+    "HxW Tilesheets 2.0.0",
+    "Ichor's Cat 1.2.0",
+    "Izabelleanne's Sheltie Collie dog 1.1.0",
+    "Large Quail Mayonnaise 1.1.0",
+    "Livestock Guardian Dogs 2.0.0",
+    "Luan Indoor Tilesheets 2.8.1",
+    "Lumisteria Tilesheets - Indoor 1.4.0",
+    "Lumisteria Tilesheets - Outdoor 1.4.0"
+  ],
+  "stage63Validation": {
+    "mods": 9,
+    "overlayFiles": 25,
+    "complete": true,
+    "validatorCommit": "8503f4246dc4a3e412b0c65f7cf920a166049d18",
+    "productionDeploymentId": "dpl_GJBm7ixwW7NTmgM8awBFjKpmJ4Ff",
+    "items": [
+      {
+        "name": "Em's SVE Animals",
+        "sourceFileIds": [
+          173371,
+          173372
+        ],
+        "auditedVariants": 2,
+        "ruKeys": 50,
+        "missing": 0,
+        "extra": 0,
+        "internalConfigKeysChanged": 0,
+        "internalAllowValuesChanged": 0,
+        "remainingVisibleLatin": 0
+      },
+      {
+        "name": "HxW Tilesheets",
+        "sourceFileId": 137494,
+        "localizationNeeded": false,
+        "activeUserFacingTextFiles": 0
+      },
+      {
+        "name": "Ichor's Cat",
+        "sourceFileId": 110717,
+        "localizationNeeded": false,
+        "activeUserFacingTextFiles": 0
+      },
+      {
+        "name": "Izabelleanne's Sheltie Collie dog",
+        "sourceFileId": 124310,
+        "configOptions": 2,
+        "allowValues": 8,
+        "ruKeys": 12,
+        "remainingVisibleLatin": 0
+      },
+      {
+        "name": "Large Quail Mayonnaise",
+        "sourceFileId": 141016,
+        "sourceKeys": 27,
+        "ruKeys": 27,
+        "missing": 0,
+        "extra": 0,
+        "remainingVisibleLatin": 0
+      },
+      {
+        "name": "Livestock Guardian Dogs",
+        "sourceFileId": 137191,
+        "configOptions": 14,
+        "allowValues": 28,
+        "ruKeys": 72,
+        "localizedAnimalFiles": 14,
+        "displayNamesTranslated": 14,
+        "shopStringsTranslated": 28,
+        "technicalAnimalFieldsChanged": 0,
+        "remainingVisibleLatin": 0
+      },
+      {
+        "name": "Luan Indoor Tilesheets",
+        "sourceFileId": 171068,
+        "configOptions": 1,
+        "allowValues": 5,
+        "ruKeys": 7,
+        "remainingVisibleLatin": 0
+      },
+      {
+        "name": "Lumisteria Tilesheets - Indoor",
+        "sourceFileId": 83792,
+        "configOptions": 1,
+        "allowValues": 5,
+        "ruKeys": 7,
+        "remainingVisibleLatin": 0
+      },
+      {
+        "name": "Lumisteria Tilesheets - Outdoor",
+        "sourceFileId": 83413,
+        "localizationNeeded": false,
+        "activeUserFacingTextFiles": 0
       }
     ]
   }
