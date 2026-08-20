@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "updated": "2026-08-20",
+  "platform": "PC/Steam Deck",
+  "assemblyTotal": 535,
+  "baselinePriorStagesVerifiedCount": 179,
+  "stage46VerifiedCount": 16,
+  "stage47VerifiedCount": 14,
+  "verifiedTotal": 209,
+  "remaining": 326,
+  "tractorMod": "separate; not included in 535",
+  "rules": "built-in complete RU first; otherwise exact ready RU; otherwise patch only version delta; self-translate only when no ready RU exists; preserve IDs/tokens/placeholders; validate keys and JSON",
+  "stage46": [
+    "Always Raining in the Valley",
+    "Canon Friendly Dialogue Expansion",
+    "Date Night Redux",
+    "Eli and Dylan",
+    "Haley Ever After - Sweet Edition",
+    "Haywrite's Dialogue",
+    "Jorts and Jean",
+    "Lani - Custom NPC for Sunberry Village",
+    "Nora the Herpetologist",
+    "Part of a Saloon Breakfast",
+    "Rekindle - Kent and Jodi Event Expansion",
+    "Sword and Sorcery for East Scarp Remastered",
+    "The Arcanian Exchange",
+    "The Last Smoluanu",
+    "Unique Winter Star",
+    "Wren the Plumber"
+  ],
+  "stage47": [
+    "What Does Trash Bear Want 1.0.1",
+    "Searchable Collections Page 1.0.2",
+    "Seasonal Town Lamp Posts 2.0.0",
+    "Better Signs 4.0.0",
+    "Em's Pet Adoptions 1.0",
+    "Extra Animal Config 1.9.10",
+    "Kitty Furniture CP 1.0",
+    "Save Mod Info 0.2.0",
+    "Safe Lightning Updated 1.1.1",
+    "Waterproof Items 1.0.3",
+    "Armory Cabinet 2.0.0",
+    "Mini Wind Turbines 1.0.0",
+    "Orangeblossom's Furniture Catalogue 1.0.2",
+    "Secret Note Framework 1.2.1"
+  ],
+  "stage47Validation": {
+    "mods": 14,
+    "jsonFiles": 14,
+    "keys": 35,
+    "readyExactSources": {
+      "Orangeblossom's Furniture Catalogue": {"nexusModId": 26723, "fileId": 108562, "keys": 1},
+      "Secret Note Framework": {"nexusModId": 48797, "fileId": 174029, "keys": 3}
+    }
+  }
+}
