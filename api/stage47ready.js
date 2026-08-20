@@ -4,6 +4,7 @@ const os=require('os');
 const {execFileSync}=require('child_process');
 const {path7za}=require('7zip-bin');
 const unrar=require('node-unrar-js');
+const unrarWasm=fs.readFileSync(require.resolve('node-unrar-js/esm/js/unrar.wasm'));
 
 const SRC={
   orange:{modId:26723,fileId:108562,expect:1,type:'7z'},
@@ -29,7 +30,8 @@ function from7z(buf,expect){
 }
 async function fromRar(buf,x){
   const data=Uint8Array.from(buf).buffer;
-  const extractor=await unrar.createExtractorFromData({data});
+  const wasmBinary=Uint8Array.from(unrarWasm).buffer;
+  const extractor=await unrar.createExtractorFromData({data,wasmBinary});
   const result=extractor.extract({files:[x.rarPath]});
   const files=[...result.files];
   if(!files.length||!files[0].extraction)throw new Error('RAR target not extracted');
