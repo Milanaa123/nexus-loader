@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "updated": "2026-08-20",
+  "stage": 65,
+  "verifiedBefore": 261,
+  "verifiedStage": 4,
+  "verifiedTotal": 265,
+  "remaining": 270,
+  "assemblyTotal": 535,
+  "tractorMod": "separate; not included in 535",
+  "complete": true,
+  "validatorCommit": "a948d89c439a76d2f90f387d41554262f9a297f4",
+  "productionDeploymentId": "dpl_2EN9SHq699peCXxQKY6kbTKCyatc",
+  "mods": [
+    {"name":"A Secret Forest Walk 1.0.6","sourceKeys":210,"finalRuKeys":210,"missing":0,"extra":0,"tokenMismatch":0,"remainingVisibleLatin":0,"baseRuVersion":"1.0.5","translationFileId":101461,"deltaTranslated":7,"removedObsoleteKeys":3,"configKeysAdded":4},
+    {"name":"HxW Bathroom Furniture 2.0.3","sourceKeys":56,"finalRuKeys":56,"missing":0,"extra":0,"tokenMismatch":0,"remainingVisibleLatin":0,"sourceFileId":114998,"selfTranslated":true,"brokenSourceI18nAliasesFixed":2},
+    {"name":"Aimon's More Lively Farm Cave 1.0.3","sourceKeys":10,"finalRuKeys":10,"missing":0,"extra":0,"tokenMismatch":0,"remainingVisibleLatin":0,"sourceFileId":165543,"selfTranslated":true,"configBridgeAliasFixed":2},
+    {"name":"Aimon's More Lively Sewer Overhaul 2.1.0","sourceKeys":110,"finalRuKeys":110,"missing":0,"extra":0,"tokenMismatch":0,"remainingVisibleLatin":0,"baseRuVersion":"2.0.6","translationFileId":96395,"changedStringsRetranslated":13}
+  ]
+}
