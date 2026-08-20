@@ -3,13 +3,84 @@
   "updated": "2026-08-20",
   "platform": "PC/Steam Deck",
   "assemblyTotal": 535,
-  "verifiedTotal": 244,
-  "remaining": 291,
+  "verifiedTotal": 246,
+  "remaining": 289,
   "tractorMod": "separate; not included in 535",
+  "corrected": true,
+  "validatorCommit": "4cb90bf507bc982b6c4102e7cf6138e002db160c",
+  "productionDeploymentId": "dpl_GscPwVaFJc3pDLyLTzXtTZiguuAe",
+  "complete": true,
+  "overlayFiles": 8,
   "verified": [
-    {"name":"Alvadea's Tilesheets","version":"1.1.0","sourceFileId":65308,"configOptions":1,"allowValues":2,"ruKeys":3,"remainingVisibleLatin":0},
-    {"name":"Bean's Pet Overhaul","version":"1.0.1","sourceFileId":85585,"configOptions":4,"allowValues":17,"ruKeys":25,"remainingVisibleLatin":0,"note":"Nexus file 85585 is the 1.0.1 update; embedded manifest remains 1.0.0"},
-    {"name":"Cold Pets (Hats Away)","version":"1.0.0","sourceFileId":62442,"localizationNeeded":false},
-    {"name":"Custom Companions","version":"5.1.0","sourceFileId":150992,"localizationNeeded":false}
+    {
+      "name": "Alpacas",
+      "version": "2.3.0",
+      "sourceFileId": 152535,
+      "readyRuFileId": 130870,
+      "sourceKeys": 25,
+      "readyRuKeys": 6,
+      "translatedDelta": 19,
+      "ruKeys": 25,
+      "missing": 0,
+      "extra": 0,
+      "placeholdersChanged": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "Alvadea's Tilesheets",
+      "version": "2.2.1",
+      "sourceFileId": 107918,
+      "configOptions": 1,
+      "allowValues": 2,
+      "ruKeys": 3,
+      "internalConfigKeysChanged": 0,
+      "internalAllowValuesChanged": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "AToMS",
+      "version": "2.4.2",
+      "sourceFileId": 149187,
+      "configOptions": 42,
+      "allowValues": 213,
+      "sourceDefaultKeys": 144,
+      "addedValueLabels": 148,
+      "ruKeys": 292,
+      "missing": 0,
+      "extra": 0,
+      "internalConfigKeysChanged": 0,
+      "internalAllowValuesChanged": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "Bean's Pet Overhaul",
+      "version": "2.1.0",
+      "sourceFileId": 171811,
+      "configOptions": 40,
+      "allowValues": 80,
+      "sections": 11,
+      "ruKeys": 131,
+      "displayNamesTranslated": 10,
+      "technicalPetFieldsChanged": 0,
+      "missing": 0,
+      "extra": 0,
+      "internalConfigKeysChanged": 0,
+      "internalAllowValuesChanged": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "Cold Pets (Hats Away)",
+      "version": "1.1.1",
+      "sourceFileId": 87725,
+      "localizationNeeded": false,
+      "activeUserFacingTextFiles": 0
+    },
+    {
+      "name": "Custom Companions",
+      "version": "5.1.0",
+      "sourceFileId": 150992,
+      "localizationNeeded": false,
+      "activeUserFacingTextFiles": 0
+    }
   ]
 }
