@@ -6,8 +6,9 @@
   "baselinePriorStagesVerifiedCount": 179,
   "stage46VerifiedCount": 16,
   "stage47VerifiedCount": 14,
-  "verifiedTotal": 209,
-  "remaining": 326,
+  "stage48VerifiedCount": 5,
+  "verifiedTotal": 214,
+  "remaining": 321,
   "tractorMod": "separate; not included in 535",
   "rules": "built-in complete RU first; otherwise exact ready RU; otherwise patch only version delta; self-translate only when no ready RU exists; preserve IDs/tokens/placeholders; validate keys and JSON",
   "stage46": [
@@ -52,5 +53,22 @@
       "Orangeblossom's Furniture Catalogue": {"nexusModId": 26723, "fileId": 108562, "keys": 1},
       "Secret Note Framework": {"nexusModId": 48797, "fileId": 174029, "keys": 3}
     }
+  },
+  "stage48": [
+    "More Vanilla Bookcase 1.1",
+    "More Vanilla Table 1.1",
+    "Paddy Fields 1.2.1",
+    "Pixie's MCM Rugs 1.1.1",
+    "More Giant Crop Locations 1.0.0"
+  ],
+  "stage48Validation": {
+    "mods": 5,
+    "overlayFiles": 6,
+    "bookcaseKeys": 27,
+    "tableKeys": 33,
+    "paddyKeys": 10,
+    "rugDisplayNames": 39,
+    "giantCropConfigOptions": 2,
+    "sourceFileIds": [121082,120260,133367,158954,93505]
   }
 }
