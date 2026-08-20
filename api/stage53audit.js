@@ -1,52 +1,46 @@
 const AdmZip=require('adm-zip');
-const S={cat:{m:36735,f:158956},potion:{m:27523,f:110690},bombs:{m:26141,f:107211},skip:{m:42940,f:169172},skipru:{m:44817,f:163921}};
+const S={
+ berry:{m:25541,f:133841,version:'2.0.3'},
+ giant:{m:5221,f:92148,version:'2.1.2'},giantRu:{m:32043,f:126459},
+ bus:{m:20289,f:159124,version:'2.0.7'},busRu:{m:23379,f:96068,version:'2.0.3'}
+};
 async function dl(x){const u=`https://nexus-loader.vercel.app/api/nexus?action=proxyDownload&game=stardewvalley&modId=${x.m}&fileId=${x.f}`;const r=await fetch(u);if(!r.ok)throw Error(`download ${x.m}/${x.f}: ${r.status}`);return Buffer.from(await r.arrayBuffer())}
 function es(b){return new AdmZip(b).getEntries().filter(e=>!e.isDirectory)}
 function find(a,re){return a.find(e=>re.test('/'+e.entryName))}
-function parse(e){return JSON.parse(e.getData().toString('utf8').replace(/^\uFEFF/,''))}
+function strip(s){let o='',q=false,esc=false;for(let i=0;i<s.length;i++){const c=s[i],n=s[i+1];if(q){o+=c;if(esc)esc=false;else if(c==='\\')esc=true;else if(c==='"')q=false;continue}if(c==='"'){q=true;o+=c;continue}if(c==='/'&&n==='/'){while(i<s.length&&s[i]!=='\n')i++;o+='\n';continue}if(c==='/'&&n==='*'){i+=2;while(i<s.length-1&&!(s[i]==='*'&&s[i+1]==='/'))i++;i++;continue}o+=c}return o.replace(/,\s*([}\]])/g,'$1')}
+function parse(e){return JSON.parse(strip(e.getData().toString('utf8').replace(/^\uFEFF/,'')))}
 function add(z,p,o){z.addFile(p,Buffer.from(typeof o==='string'?o:JSON.stringify(o,null,2)+'\n','utf8'))}
-function visibleLatin(s){return /[A-Za-z]{3,}/.test(String(s))}
-const BOMB_RU={
- 'config.upgrade_bombs.description':'Включить рецепты улучшения бомб?',
- 'config.upgrade_bombs.name':'Улучшения бомб',
- 'config.upgrade_bombs.values.Enabled':'Включено',
- 'config.upgrade_bombs.values.Disabled':'Отключено',
- 'crafting.cherry_bomb_upgrade.display':'Улучшить вишнёвую бомбу',
- 'crafting.bomb_upgrade.display':'Улучшить бомбу'
-};
-const SKIP_VALUES={
- "Vanilla":'Оригинальный интерфейс',
- "Adventurer's Interface":'Интерфейс искателя приключений',
- "Bog's Forest UI":'Лесной интерфейс Богс',
- "Cat Valley":'Кошачья долина',
- "Citrus Interface":'Цитрусовый интерфейс',
- "DaisyNiko's Earthy Interface":'Земляной интерфейс ДейзиНико',
- "DBB's Victorian Gothic User Interface":'Викторианско-готический интерфейс ДББ',
- "Lavender Dreams UI":'Интерфейс «Лавандовые сны»',
- "Lynneas Witchy and Purple UI":'Ведьмин фиолетовый интерфейс Линнеи',
- "Magical Valley":'Волшебная долина',
- "Meow UI":'Интерфейс «Мяу»',
- "Natural Dark Wood Interface":'Интерфейс из натурального тёмного дерева',
- "Overgrown Flowery Interface":'Заросший цветочный интерфейс',
- "Pastel Pink Lolita Interface":'Пастельно-розовый интерфейс «Лолита»',
- "Starblue Valley":'Звёздно-синяя долина',
- "Starry Blue UI":'Звёздно-синий интерфейс',
- "Vanilla Accent Interface":'Оригинальный акцентный интерфейс',
- "Vintage Interface v1":'Винтажный интерфейс, версия 1',
- "Vintage Interface v2":'Винтажный интерфейс, версия 2',
- "Void's Weird Wonders":'Странные чудеса Пустоты',
- "VPR-Inspired UI":'Интерфейс в стиле ВПР'
+function sameKeys(a,b){const x=Object.keys(a).sort(),y=Object.keys(b).sort();return x.length===y.length&&x.every((k,i)=>k===y[i])}
+function visibleLatin(v){return /[A-Za-z]{3,}/.test(String(v))}
+const BERRY_RU={
+ 'Aos.BerryWoods.DisplayName':'Ягодный лес',
+ 'Aos.PillarStringMessage':'Эти древние столбы со временем разрушились и осыпались.',
+ 'Aos.CrystalStringMessage':'Похоже, кто-то специально разместил здесь эти странные кристаллы.',
+ 'Aos.PlantStringMessage':'За этим растением хорошо ухаживают.',
+ 'Aos.TreeRootStringMessage':'Корни этого пня глубоко уходят в землю.',
+ 'Aos.BigTreeStringMessage':'Должно быть, это дерево росло здесь веками, прежде чем его срубили.',
+ 'config.EnableFTM.name':'Включить появление объектов и монстров',
+ 'config.EnableFTM.description':'Включает появление собирательных предметов и монстров в Ягодном лесу.',
+ 'config.BerryWoodsMap.name':'Внешний вид Ягодного леса',
+ 'config.BerryWoodsMap.description':'Добавлять декоративные объекты в Ягодный лес?',
+ 'config.BerryWoodsMap.values.Decorated':'С декором',
+ 'config.BerryWoodsMap.values.Clear':'Без декора'
 };
 module.exports=async(req,res)=>{try{
- const[catB,potB,bombB,skipB,skipRuB]=await Promise.all([dl(S.cat),dl(S.potion),dl(S.bombs),dl(S.skip),dl(S.skipru)]);
- const report=[],z=new AdmZip();
- // Pixie's catalogue: patch only the visible furniture display name; internal IDs and shop keys stay unchanged.
- const catE=find(es(catB),/\/content\.json$/i);if(!catE)throw Error('catalogue content missing');const catSrc=catE.getData().toString('utf8'),catIds=(catSrc.match(/PixieMCM_Catalogue/g)||[]).length,catEnglish=(catSrc.match(/Pixie's MCM Catalogue/g)||[]).length;if(catEnglish!==1)throw Error(`catalogue display occurrences ${catEnglish}`);const catOut=catSrc.replace("Pixie's MCM Catalogue",'Каталог мебели Пикси в стиле модерн середины века');if((catOut.match(/PixieMCM_Catalogue/g)||[]).length!==catIds)throw Error('catalogue IDs changed');if(catOut.includes("Pixie's MCM Catalogue"))throw Error('catalogue English remains');add(z,"Mods/[CP] Pixie's MCM Catalogue/content.json",catOut);report.push({name:"Pixie's Mid-Century Modern Catalogue",version:'1.0.2',fileId:158956,displayNamesTranslated:1,idsChanged:0,visibleLatin:0,ok:true});
- // Potion Shelf: both furniture entries share one visible name; patch values only.
- const potE=find(es(potB),/\/content\.json$/i);if(!potE)throw Error('potion content missing');const potSrc=potE.getData().toString('utf8'),potIds1=(potSrc.match(/OB7\.potionshelf/g)||[]).length,potIds2=(potSrc.match(/ob7\.potionshelf/g)||[]).length,potEnglish=(potSrc.match(/Potion Shelf/g)||[]).length;if(potEnglish!==2)throw Error(`potion display occurrences ${potEnglish}`);const potOut=potSrc.replace(/Potion Shelf/g,'Полка с зельями');if((potOut.match(/OB7\.potionshelf/g)||[]).length!==potIds1||(potOut.match(/ob7\.potionshelf/g)||[]).length!==potIds2)throw Error('potion IDs changed');if(potOut.includes('Potion Shelf'))throw Error('potion English remains');add(z,'Mods/[CP] Potion Shelf/content.json',potOut);report.push({name:"The Orangerie's Potion Shelf",version:'1.0',fileId:110690,displayNamesTranslated:2,idsChanged:0,visibleLatin:0,ok:true});
- // Upgradable Bombs: exact current six-key dictionary + replace the raw ConfigSchema tooltip so no English fallback remains.
- const bombEs=es(bombB),bombD=find(bombEs,/\/i18n\/default\.json$/i),bombC=find(bombEs,/\/content\.json$/i);if(!bombD||!bombC)throw Error('bomb source missing');const bombDef=parse(bombD),bdk=Object.keys(bombDef).sort(),brk=Object.keys(BOMB_RU).sort();if(bdk.length!==6||bdk.length!==brk.length||!bdk.every((k,i)=>k===brk[i]))throw Error('bomb key parity failed');if(Object.values(BOMB_RU).some(visibleLatin))throw Error('bomb visible English remains');let bombContent=bombC.getData().toString('utf8');const raw='Do you want to enable bomb upgrade recipes?';if((bombContent.match(/Do you want to enable bomb upgrade recipes\?/g)||[]).length!==1)throw Error('bomb raw description changed');bombContent=bombContent.replace(raw,'Включить рецепты улучшения бомб?');if(!bombContent.includes('{{i18n:crafting.cherry_bomb_upgrade.display}}')||!bombContent.includes('{{i18n:crafting.bomb_upgrade.display}}'))throw Error('bomb i18n tokens lost');add(z,'Mods/[CP] Upgradable Bombs/content.json',bombContent);add(z,'Mods/[CP] Upgradable Bombs/i18n/ru.json',BOMB_RU);report.push({name:'Upgradable Bombs',version:'1.0.1',fileId:107211,keys:6,missing:0,extra:0,rawDescriptionsTranslated:1,tokensPreserved:2,visibleLatin:0,ok:true});
- // Skip or Socialize: 0.0.7 has the same five keys as the existing 0.0.6 RU. Add translated dropdown labels without changing the internal AllowValues used in paths.
- const skipEs=es(skipB),skipDefE=find(skipEs,/\/i18n\/default\.json$/i),skipContentE=find(skipEs,/\/content\.json$/i),srE=find(es(skipRuB),/\/i18n\/ru\.json$/i)||find(es(skipRuB),/\/ru\.json$/i);if(!skipDefE||!skipContentE||!srE)throw Error('skip source missing');const skipDef=parse(skipDefE),skipBase=parse(srE),sdk=Object.keys(skipDef).sort(),sbk=Object.keys(skipBase).sort();if(sdk.length!==5||sdk.length!==sbk.length||!sdk.every((k,i)=>k===sbk[i]))throw Error('skip base RU parity failed');const skipRu={...skipBase};for(const[v,label]of Object.entries(SKIP_VALUES))skipRu[`config.Recolor.values.${v}`]=label;const allow=JSON.parse(skipContentE.getData().toString('utf8')).ConfigSchema.Recolor.AllowValues.split(',').map(x=>x.trim());if(allow.length!==21||allow.some(v=>!(v in SKIP_VALUES)))throw Error('skip AllowValues changed');if(Object.values(skipRu).some(v=>visibleLatin(v)))throw Error('skip visible English remains');add(z,'Mods/[CP] Skip or Socialize/i18n/ru.json',skipRu);report.push({name:'Skip or Socialize',originalVersion:'0.0.7',baseRuVersion:'0.0.6',originalKeys:5,baseRuKeys:5,missing:0,extra:0,dropdownLabelsTranslated:21,internalAllowValuesChanged:0,visibleLatin:0,ok:true});
- const files=z.getEntries().filter(e=>!e.isDirectory),buf=z.toBuffer(),complete=report.length===4&&report.every(x=>x.ok);const status={ok:true,complete,stage:53,mods:complete?4:0,files:files.length,zipBytes:buf.length,verified:report};if(String(req.query.status||'')==='1')return res.json(status);if(!complete)return res.status(409).json(status);res.setHeader('Content-Type','application/zip');res.setHeader('Content-Disposition','attachment; filename="RU_STAGE53_VERIFIED_4.zip"');res.setHeader('Cache-Control','no-store');return res.status(200).send(buf)
+ const [berryB,giantB,giantRuB,busB,busRuB]=await Promise.all([dl(S.berry),dl(S.giant),dl(S.giantRu),dl(S.bus),dl(S.busRu)]),z=new AdmZip(),report=[];
+ // Berry Woods: no compatible ready RU exists, so translate the exact current 12-key dictionary and raw fallback descriptions only.
+ const be=es(berryB),bDefE=find(be,/\/i18n\/default\.json$/i),bContentE=find(be,/\/content\.json$/i);if(!bDefE||!bContentE)throw Error('Berry source missing');const bDef=parse(bDefE);if(Object.keys(bDef).length!==12||!sameKeys(bDef,BERRY_RU))throw Error('Berry key parity failed');if(Object.values(BERRY_RU).some(visibleLatin))throw Error('Berry visible Latin remains');let bContent=bContentE.getData().toString('utf8');const bRaw1='Toggle Farm Type Manager Forage spawns and Monsters.',bRaw2='Do you want the Berry Woods to have decorative objects?';if((bContent.match(/Toggle Farm Type Manager Forage spawns and Monsters\./g)||[]).length!==1||(bContent.match(/Do you want the Berry Woods to have decorative objects\?/g)||[]).length!==1)throw Error('Berry raw descriptions changed');bContent=bContent.replace(bRaw1,'Включает появление собирательных предметов и монстров.').replace(bRaw2,'Добавлять декоративные объекты в Ягодный лес?');add(z,'Mods/Berry Woods/[CP] Berry Woods/i18n/ru.json',BERRY_RU);add(z,'Mods/Berry Woods/[CP] Berry Woods/content.json',bContent);report.push({name:'Berry Woods',version:S.berry.version,fileId:S.berry.f,keys:12,missing:0,extra:0,rawFallbacksTranslated:2,visibleLatin:0,ok:true});
+ // 6480's Giant Crops: use the published RU as the baseline and validate it against every current config/section/value before packaging.
+ const ge=es(giantB),gr=es(giantRuB),gContentE=find(ge,/\/content\.json$/i),gRuE=find(gr,/\/i18n\/ru\.json$/i);if(!gContentE||!gRuE)throw Error('Giant source/RU missing');const gContent=JSON.parse(strip(gContentE.getData().toString('utf8'))),gBase=parse(gRuE),schema=gContent.ConfigSchema||{},sections=new Set(),required=new Set();for(const [name,cfg] of Object.entries(schema)){required.add(`config.${name}.name`);if(cfg.Description)required.add(`config.${name}.description`);if(cfg.Section)sections.add(cfg.Section);const vals=String(cfg.AllowValues||'').split(',').map(x=>x.trim()).filter(Boolean);if(vals.length&&!(vals.length===2&&vals.includes('true')&&vals.includes('false')))for(const v of vals)required.add(`config.${name}.values.${v}`)}for(const s of sections)required.add(`config.section.${s}.name`);const missingG=[...required].filter(k=>!(k in gBase)),invalidG=Object.keys(gBase).filter(k=>{if(k.startsWith('config.section.'))return !sections.has(k.slice('config.section.'.length,-'.name'.length));const m=k.match(/^config\.(.+?)\.(name|description|values\.(.+))$/);if(!m||!schema[m[1]])return true;if(m[2]==='description')return !schema[m[1]].Description;if(m[3])return !String(schema[m[1]].AllowValues||'').split(',').map(x=>x.trim()).includes(m[3]);return false});if(Object.keys(gBase).length!==87||missingG.length||invalidG.length)throw Error(`Giant RU compatibility failed keys=${Object.keys(gBase).length} missing=${missingG.length} invalid=${invalidG.length}`);const gRu={...gBase};let boolLabels=0;for(const k of Object.keys(gRu)){if(gRu[k]==='true'){gRu[k]='Да';boolLabels++}else if(gRu[k]==='false'){gRu[k]='Нет';boolLabels++}}if(Object.values(gRu).some(visibleLatin))throw Error('Giant visible Latin remains');add(z,"Mods/[CP] 6480's Giant Crops/i18n/ru.json",gRu);report.push({name:"6480's Giant Crops",version:S.giant.version,fileId:S.giant.f,readyRuFileId:S.giantRu.f,readyRuKeys:Object.keys(gBase).length,currentRequiredKeys:required.size,missingRequired:0,invalidKeys:0,booleanLabelsLocalized:boolLabels,visibleLatin:0,ok:true});
+ // Aimon's Bus Interior: preserve the published 2.0.3 RU entries, then migrate its translated event lines into the current 2.0.7 i18n dictionary.
+ const buse=es(busB),bre=es(busRuB),busDefE=find(buse,/\/i18n\/default\.json$/i),busContentE=find(buse,/\/content\.json$/i),oldRuE=find(bre,/\/i18n\/ru\.json$/i),oldEventsE=find(bre,/\/assets\/code\/Events\.json$/i);if(!busDefE||!busContentE||!oldRuE||!oldEventsE)throw Error('Bus source/RU missing');const busDef=parse(busDefE),oldRu=parse(oldRuE),oldEvents=oldEventsE.getData().toString('utf8');if(Object.keys(busDef).length!==11||Object.keys(oldRu).length!==4)throw Error('Bus key counts changed');for(const k of Object.keys(oldRu))if(!(k in busDef))throw Error('Bus old RU key not current: '+k);if(!oldEvents.includes('Выглядит заброшенным...')||!oldEvents.includes('...Мусорный бак.'))throw Error('Bus translated event baseline missing');const busRu={...oldRu,
+  'StringsFromMap.Aimon111businterior5':'Выглядит заброшенным...',
+  'StringsFromMap.Aimon111businterior6':'...Мусорный бак.',
+  'config.Cleaner Bus.name':'Чистый автобус',
+  'StringsFromMap.Aimon111businterior7':'Автобус',
+  'config.Cleaner Bus.description':'Убирает мусорный декор из салона автобуса.',
+  'config.Lootable Trash Bin.name':'Обыскиваемый мусорный бак',
+  'config.Lootable Trash Bin.description':'Добавляет в автобус мусорный бак, который можно обыскать.'
+};if(!sameKeys(busDef,busRu))throw Error('Bus final key parity failed');if(Object.values(busRu).some(visibleLatin))throw Error('Bus visible Latin remains');let busContent=busContentE.getData().toString('utf8');const busRaw1='Removes trash decor from bus interior.',busRaw2=' Adds lootable trash bin in bus.';if((busContent.match(/Removes trash decor from bus interior\./g)||[]).length!==1||(busContent.match(/ Adds lootable trash bin in bus\./g)||[]).length!==1)throw Error('Bus raw descriptions changed');busContent=busContent.replace(busRaw1,'Убирает мусорный декор из салона автобуса.').replace(busRaw2,' Добавляет в автобус мусорный бак, который можно обыскать.');add(z,"Mods/[CP] Aimon's Bus Interior/i18n/ru.json",busRu);add(z,"Mods/[CP] Aimon's Bus Interior/content.json",busContent);report.push({name:"Aimon's Bus Interior",version:S.bus.version,fileId:S.bus.f,baseRuVersion:S.busRu.version,readyRuFileId:S.busRu.f,currentKeys:11,reusedReadyRuKeys:4,recoveredReadyEventStrings:2,newCurrentStringsTranslated:5,missing:0,extra:0,rawFallbacksTranslated:2,visibleLatin:0,ok:true});
+ const files=z.getEntries().filter(e=>!e.isDirectory),buf=z.toBuffer(),complete=report.length===3&&report.every(x=>x.ok),status={ok:true,complete,stage:54,mods:complete?3:0,files:files.length,zipBytes:buf.length,verified:report};if(String(req.query.status||'')==='1')return res.json(status);if(!complete)return res.status(409).json(status);res.setHeader('Content-Type','application/zip');res.setHeader('Content-Disposition','attachment; filename="RU_STAGE54_VERIFIED_3.zip"');res.setHeader('Cache-Control','no-store');return res.status(200).send(buf)
  }catch(e){return res.status(500).json({ok:false,error:String(e.message||e)})}};
