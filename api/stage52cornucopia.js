@@ -1,0 +1,20 @@
+const AdmZip=require('adm-zip');
+const S=[
+ {id:'artisan',name:'Cornucopia - Artisan Machines',version:'1.0.16',o:{m:24842,f:162634},r:{m:45531,f:165800}},
+ {id:'crops',name:'Cornucopia - More Crops',version:'1.6.3',o:{m:19508,f:162633},r:{m:45484,f:165701}},
+ {id:'flowers',name:'Cornucopia - More Flowers',version:'1.5.7',o:{m:20290,f:152128},r:{m:45485,f:165703}}
+];
+async function dl(x){const u=`https://nexus-loader.vercel.app/api/nexus?action=proxyDownload&game=stardewvalley&modId=${x.m}&fileId=${x.f}`;const q=await fetch(u);if(!q.ok)throw Error(`download ${x.m}/${x.f}: ${q.status}`);return Buffer.from(await q.arrayBuffer())}
+function es(b){return new AdmZip(b).getEntries().filter(e=>!e.isDirectory)}
+function strip(s){let o='',q=0,e=0;for(let i=0;i<s.length;i++){const c=s[i],n=s[i+1];if(q){o+=c;if(e)e=0;else if(c==='\\')e=1;else if(c==='"')q=0;continue}if(c==='"'){q=1;o+=c;continue}if(c==='/'&&n==='/'){while(i<s.length&&s[i]!=='\n')i++;o+='\n';continue}if(c==='/'&&n==='*'){i+=2;while(i<s.length-1&&!(s[i]==='*'&&s[i+1]==='/'))i++;i++;continue}o+=c}return o.replace(/,\s*([}\]])/g,'$1')}
+function find(a,re){return a.filter(e=>re.test('/'+e.entryName)).sort((x,y)=>y.header.size-x.header.size)[0]}
+function parse(e){return JSON.parse(strip(e.getData().toString('utf8').replace(/^\uFEFF/,'')))}
+const curly=x=>(String(x).match(/\{\{[^}]+\}\}|\{\d+\}/g)||[]).sort().join('|');
+const cmds=x=>(String(x).match(/%item\s+[^%]*%%/g)||[]).sort();
+function visible(v){return String(v).replace(/%item\s+[^%]*%%/g,'').replace(/\{\{[^}]+\}\}/g,'').replace(/\{[^}]+\}/g,'').replace(/\^[A-Za-z0-9_.-]+/g,'')}
+function patch(id,r){if(id==='crops'){
+ if('PlantainSapling_description'in r)r.PlantainSapling_description=String(r.PlantainSapling_description).replace(/Ginger Island/g,'Имбирном острове');
+ if('Mail_JojaY1WinterCrops'in r)r.Mail_JojaY1WinterCrops=String(r.Mail_JojaY1WinterCrops).replace(/JojaMart/g,'ДжоджаМарт').replace(/Joja/g,'Джоджа');
+ if('Cornucopia_name'in r)r.Cornucopia_name='Корнукопия';
+ }return r}
+module.exports=async(req,res)=>{try{const out=new AdmZip(),report=[];for(const s of S){const[ob,rb]=await Promise.all([dl(s.o),dl(s.r)]),oe=es(ob),re=es(rb),dE=find(oe,/\/i18n\/default\.json$/i),rE=find(re,/\/i18n\/ru\.json$/i)||find(re,/\/ru\.json$/i);if(!dE||!rE)throw Error(`${s.id}: i18n missing`);const d=parse(dE),src=parse(rE),dk=Object.keys(d),ru={};for(const k of dk)if(k in src)ru[k]=src[k];patch(s.id,ru);const missing=dk.filter(k=>!(k in ru)),extra=Object.keys(ru).filter(k=>!(k in d)),curlyBad=dk.filter(k=>k in ru&&curly(d[k])!==curly(ru[k])),cmdBad=[];for(const k of dk)if(k in ru){for(const c of cmds(d[k]))if(!cmds(ru[k]).includes(c))cmdBad.push(k)}const lat=dk.filter(k=>k in ru&&/[A-Za-z]{3,}/.test(visible(ru[k]))).map(k=>({key:k,value:ru[k]}));const okay=!missing.length&&!extra.length&&!curlyBad.length&&!cmdBad.length&&!lat.length&&Object.keys(ru).length===dk.length;report.push({name:s.name,version:s.version,originalFileId:s.o.f,translationFileId:s.r.f,keys:dk.length,sourceRuKeys:Object.keys(src).length,filteredObsoleteKeys:Object.keys(src).filter(k=>!(k in d)).length,missing:missing.length,extra:extra.length,placeholderMismatch:curlyBad.length,commandMismatch:[...new Set(cmdBad)].length,remainingVisibleLatin:lat.length,latin:lat.slice(0,30),ok:okay});if(!okay)continue;out.addFile('Mods/'+rE.entryName,Buffer.from(JSON.stringify(ru,null,2)+'\n','utf8'))}const complete=report.length===3&&report.every(x=>x.ok),buf=out.toBuffer(),status={ok:true,complete,stage:52,mods:complete?3:0,files:out.getEntries().filter(e=>!e.isDirectory).length,zipBytes:buf.length,verified:report};if(String(req.query.status||'')==='1')return res.json(status);if(!complete)return res.status(409).json(status);res.setHeader('Content-Type','application/zip');res.setHeader('Content-Disposition','attachment; filename="RU_STAGE52_CORNUCOPIA_3_VERIFIED.zip"');res.setHeader('Cache-Control','no-store');return res.status(200).send(buf)}catch(e){return res.status(500).json({ok:false,error:String(e.message||e)})}};
