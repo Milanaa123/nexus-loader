@@ -9,7 +9,7 @@ jobs:
   normalize:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and normalize Stage 46 RAR and 7z translations
+      - name: Download and normalize Stage 46 translations
         shell: bash
         run: |
           set -euo pipefail
@@ -25,7 +25,7 @@ jobs:
             (cd "tmp/${label}" && zip -qr "../../out/${label}.zip" .)
           }
           dl 30021 123219 "Eli and Dylan RU 1.2.4" rar
-          dl 11114 124027 "Always Raining in the Valley RU 1.0.7" 7z
+          dl 42591 157469 "Always Raining in the Valley RU 1.5.1" zip
           dl 42397 160765 "Haywrites Dialogue RU 1.0.1" rar
           dl 43799 160930 "Part of a Saloon Breakfast RU 1.0.0" rar
           dl 18106 75792 "Jorts and Jean RU 1.3.0" rar
