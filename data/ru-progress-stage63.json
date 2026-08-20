@@ -1,0 +1,115 @@
+{
+  "stage": 63,
+  "updated": "2026-08-20",
+  "platform": "PC/Steam Deck",
+  "assemblyTotal": 535,
+  "verifiedTotal": 258,
+  "remaining": 277,
+  "tractorMod": "separate; not included in 535",
+  "validatorCommit": "8503f4246dc4a3e412b0c65f7cf920a166049d18",
+  "productionDeploymentId": "dpl_GJBm7ixwW7NTmgM8awBFjKpmJ4Ff",
+  "complete": true,
+  "overlayFiles": 25,
+  "verified": [
+    {
+      "name": "Em's SVE Animals",
+      "version": "1.2.0",
+      "sourceFileIds": [
+        173371,
+        173372
+      ],
+      "auditedVariants": 2,
+      "randomVariantConfigOptions": 6,
+      "randomVariantAllowValues": 16,
+      "fixedVariantConfigOptions": 8,
+      "fixedVariantAllowValues": 26,
+      "ruKeys": 50,
+      "missing": 0,
+      "extra": 0,
+      "internalConfigKeysChanged": 0,
+      "internalAllowValuesChanged": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "HxW Tilesheets",
+      "version": "2.0.0",
+      "sourceFileId": 137494,
+      "localizationNeeded": false,
+      "activeUserFacingTextFiles": 0
+    },
+    {
+      "name": "Ichor's Cat",
+      "version": "1.2.0",
+      "sourceFileId": 110717,
+      "localizationNeeded": false,
+      "activeUserFacingTextFiles": 0
+    },
+    {
+      "name": "Izabelleanne's Sheltie Collie dog",
+      "version": "1.1.0",
+      "sourceFileId": 124310,
+      "configOptions": 2,
+      "allowValues": 8,
+      "ruKeys": 12,
+      "internalConfigKeysChanged": 0,
+      "internalAllowValuesChanged": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "Large Quail Mayonnaise",
+      "version": "1.1.0",
+      "sourceFileId": 141016,
+      "sourceKeys": 27,
+      "ruKeys": 27,
+      "configOptions": 6,
+      "allowValues": 17,
+      "missing": 0,
+      "extra": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "Livestock Guardian Dogs",
+      "version": "2.0.0",
+      "sourceFileId": 137191,
+      "configOptions": 14,
+      "allowValues": 28,
+      "ruKeys": 72,
+      "localizedAnimalFiles": 14,
+      "displayNamesTranslated": 14,
+      "shopStringsTranslated": 28,
+      "technicalAnimalFieldsChanged": 0,
+      "internalConfigKeysChanged": 0,
+      "internalAllowValuesChanged": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "Luan Indoor Tilesheets",
+      "version": "2.8.1",
+      "sourceFileId": 171068,
+      "configOptions": 1,
+      "allowValues": 5,
+      "ruKeys": 7,
+      "internalConfigKeysChanged": 0,
+      "internalAllowValuesChanged": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "Lumisteria Tilesheets - Indoor",
+      "version": "1.4.0",
+      "sourceFileId": 83792,
+      "configOptions": 1,
+      "allowValues": 5,
+      "ruKeys": 7,
+      "internalConfigKeysChanged": 0,
+      "internalAllowValuesChanged": 0,
+      "remainingVisibleLatin": 0
+    },
+    {
+      "name": "Lumisteria Tilesheets - Outdoor",
+      "version": "1.4.0",
+      "sourceFileId": 83413,
+      "localizationNeeded": false,
+      "activeUserFacingTextFiles": 0
+    }
+  ]
+}
