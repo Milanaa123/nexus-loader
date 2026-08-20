@@ -1,0 +1,15 @@
+{
+  "stage": 60,
+  "updated": "2026-08-20",
+  "platform": "PC/Steam Deck",
+  "assemblyTotal": 535,
+  "verifiedTotal": 244,
+  "remaining": 291,
+  "tractorMod": "separate; not included in 535",
+  "verified": [
+    {"name":"Alvadea's Tilesheets","version":"1.1.0","sourceFileId":65308,"configOptions":1,"allowValues":2,"ruKeys":3,"remainingVisibleLatin":0},
+    {"name":"Bean's Pet Overhaul","version":"1.0.1","sourceFileId":85585,"configOptions":4,"allowValues":17,"ruKeys":25,"remainingVisibleLatin":0,"note":"Nexus file 85585 is the 1.0.1 update; embedded manifest remains 1.0.0"},
+    {"name":"Cold Pets (Hats Away)","version":"1.0.0","sourceFileId":62442,"localizationNeeded":false},
+    {"name":"Custom Companions","version":"5.1.0","sourceFileId":150992,"localizationNeeded":false}
+  ]
+}
