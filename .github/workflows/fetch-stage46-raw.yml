@@ -24,7 +24,7 @@ jobs:
             test "$fid" != "null"
             ext="${orig##*.}"; case "$ext" in zip|rar|7z) ;; *) ext=zip ;; esac
             printf '%s\t%s\t%s\t%s\t%s\n' "$label" "$modid" "$fid" "$ver" "$orig" >> downloads/STAGE46_CURRENT_MANIFEST.tsv
-            curl -fL --retry 3 --connect-timeout 20 --max-time 240 -o "downloads/${label}.${ext}" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=${modid}&fileId=${fid}"
+            curl -fL --retry 3 --connect-timeout 20 --max-time 240 -o "downloads/${label}.${ext}" "https://nexus-loader.vercel.app/api/nexus?action=proxyDownload&game=stardewvalley&modId=${modid}&fileId=${fid}"
           }
           download_latest 42591 "Always Raining in the Valley RU CURRENT"
           download_latest 5539 "Canon Friendly Dialogue Expansion RU CURRENT"
