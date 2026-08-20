@@ -12,8 +12,9 @@
   "stage51VerifiedCount": 1,
   "stage52VerifiedCount": 3,
   "stage53VerifiedCount": 4,
-  "verifiedTotal": 224,
-  "remaining": 311,
+  "stage54VerifiedCount": 3,
+  "verifiedTotal": 227,
+  "remaining": 308,
   "tractorMod": "separate; not included in 535",
   "rules": "built-in complete RU first; otherwise exact ready RU; otherwise patch only version delta; self-translate only when no ready RU exists; preserve IDs/tokens/placeholders; validate keys and JSON",
   "stage46": [
@@ -34,5 +35,7 @@
   "stage52": ["Cornucopia - Artisan Machines 1.0.16","Cornucopia - More Crops 1.6.3","Cornucopia - More Flowers 1.5.7"],
   "stage52Validation": {"mods":3,"remainingVisibleLatin":0,"placeholderMismatch":0,"commandMismatch":0,"items":[{"name":"Cornucopia - Artisan Machines","keys":313,"filteredObsoleteKeys":12,"sourceFileId":162634,"translationFileId":165800},{"name":"Cornucopia - More Crops","keys":539,"filteredObsoleteKeys":0,"sourceFileId":162633,"translationFileId":165701},{"name":"Cornucopia - More Flowers","keys":202,"filteredObsoleteKeys":0,"sourceFileId":152128,"translationFileId":165703}]},
   "stage53": ["Pixie's Mid-Century Modern Catalogue 1.0.2","The Orangerie's Potion Shelf 1.0","Upgradable Bombs 1.0.1","Skip or Socialize 0.0.7"],
-  "stage53Validation": {"mods":4,"overlayFiles":5,"remainingVisibleLatin":0,"items":[{"name":"Pixie's Mid-Century Modern Catalogue","displayNamesTranslated":1,"idsChanged":0,"sourceFileId":158956},{"name":"The Orangerie's Potion Shelf","displayNamesTranslated":2,"idsChanged":0,"sourceFileId":110690},{"name":"Upgradable Bombs","keys":6,"missing":0,"extra":0,"tokensPreserved":2,"sourceFileId":107211},{"name":"Skip or Socialize","originalKeys":5,"baseRuVersion":"0.0.6","dropdownLabelsTranslated":21,"internalAllowValuesChanged":0,"sourceFileId":169172,"translationFileId":163921}]}
+  "stage53Validation": {"mods":4,"overlayFiles":5,"remainingVisibleLatin":0,"items":[{"name":"Pixie's Mid-Century Modern Catalogue","displayNamesTranslated":1,"idsChanged":0,"sourceFileId":158956},{"name":"The Orangerie's Potion Shelf","displayNamesTranslated":2,"idsChanged":0,"sourceFileId":110690},{"name":"Upgradable Bombs","keys":6,"missing":0,"extra":0,"tokensPreserved":2,"sourceFileId":107211},{"name":"Skip or Socialize","originalKeys":5,"baseRuVersion":"0.0.6","dropdownLabelsTranslated":21,"internalAllowValuesChanged":0,"sourceFileId":169172,"translationFileId":163921}]},
+  "stage54": ["Berry Woods 2.0.3","6480's Giant Crops 2.1.2","Aimon's Bus Interior 2.0.7"],
+  "stage54Validation": {"mods":3,"overlayFiles":5,"remainingVisibleLatin":0,"items":[{"name":"Berry Woods","keys":12,"missing":0,"extra":0,"rawFallbacksTranslated":2,"sourceFileId":133841},{"name":"6480's Giant Crops","readyRuKeys":87,"currentRequiredKeys":43,"missingRequired":0,"invalidKeys":0,"booleanLabelsLocalized":44,"sourceFileId":92148,"translationFileId":126459},{"name":"Aimon's Bus Interior","currentKeys":11,"baseRuVersion":"2.0.3","reusedReadyRuKeys":4,"recoveredReadyEventStrings":2,"newCurrentStringsTranslated":5,"missing":0,"extra":0,"rawFallbacksTranslated":2,"sourceFileId":159124,"translationFileId":96068}]}
 }
