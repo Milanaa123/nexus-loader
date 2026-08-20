@@ -1,0 +1,87 @@
+{
+  "version": "1.9",
+  "game": "stardewvalley",
+  "batch": 13,
+  "source": "post-Batch 9 installed source-lock + exact installed versions + live Nexus verification",
+  "items": [
+    {
+      "name": "Em's SVE Animals",
+      "source_version": "1.2.0",
+      "status": "production_verified_config_localization",
+      "nexus_mod_id": 39719,
+      "source_file_ids": [
+        173371,
+        173372
+      ],
+      "localization": "custom_cp_i18n_for_both_installed_variants",
+      "notes": "Both CP variants share one logical mod and one compatible 50-key Russian config overlay."
+    },
+    {
+      "name": "HxW Tilesheets",
+      "source_version": "2.0.0",
+      "status": "production_verified_no_active_user_text",
+      "nexus_mod_id": 20139,
+      "source_file_id": 137494,
+      "localization": "not_required"
+    },
+    {
+      "name": "Ichor's Cat",
+      "source_version": "1.2.0",
+      "status": "production_verified_no_active_user_text",
+      "nexus_mod_id": 20557,
+      "source_file_id": 110717,
+      "localization": "not_required"
+    },
+    {
+      "name": "Izabelleanne's Sheltie Collie dog",
+      "source_version": "1.1.0",
+      "status": "production_verified_config_localization",
+      "nexus_mod_id": 31335,
+      "source_file_id": 124310,
+      "localization": "custom_cp_i18n",
+      "notes": "Exact installed replacing variant, not the Add dogs archive."
+    },
+    {
+      "name": "Large Quail Mayonnaise",
+      "source_version": "1.1.0",
+      "status": "production_verified_full_i18n",
+      "nexus_mod_id": 36021,
+      "source_file_id": 141016,
+      "localization": "custom_ru_from_default",
+      "notes": "No Russian translation is listed; all 27 source keys translated with exact parity."
+    },
+    {
+      "name": "Livestock Guardian Dogs",
+      "source_version": "2.0.0",
+      "status": "production_verified_full_visible_text_localization",
+      "nexus_mod_id": 29989,
+      "source_file_id": 137191,
+      "localization": "custom_cp_i18n_and_raw_field_tokens",
+      "notes": "Localized 14 config options, 14 breed names, and 28 shop strings; technical animal fields unchanged."
+    },
+    {
+      "name": "Luan Indoor Tilesheets",
+      "source_version": "2.8.1",
+      "status": "production_verified_config_localization",
+      "nexus_mod_id": 16168,
+      "source_file_id": 171068,
+      "localization": "custom_cp_i18n"
+    },
+    {
+      "name": "Lumisteria Tilesheets - Indoor",
+      "source_version": "1.4.0",
+      "status": "production_verified_config_localization",
+      "nexus_mod_id": 9599,
+      "source_file_id": 83792,
+      "localization": "custom_cp_i18n"
+    },
+    {
+      "name": "Lumisteria Tilesheets - Outdoor",
+      "source_version": "1.4.0",
+      "status": "production_verified_no_active_user_text",
+      "nexus_mod_id": 10448,
+      "source_file_id": 83413,
+      "localization": "not_required"
+    }
+  ]
+}
