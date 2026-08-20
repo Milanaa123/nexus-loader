@@ -1,0 +1,13 @@
+const AdmZip=require('adm-zip');
+const S={
+ artisan:{name:'Cornucopia - Artisan Machines',version:'1.0.16',o:{m:24842,f:162634},r:{m:45531,f:165800}},
+ crops:{name:'Cornucopia - More Crops',version:'1.6.3',o:{m:19508,f:162633},r:{m:45484,f:165701}},
+ flowers:{name:'Cornucopia - More Flowers',version:'1.5.7',o:{m:20290,f:152128},r:{m:45485,f:165703}}
+};
+async function dl(x){const u=`https://nexus-loader.vercel.app/api/nexus?action=proxyDownload&game=stardewvalley&modId=${x.m}&fileId=${x.f}`;const q=await fetch(u);if(!q.ok)throw Error(`download ${x.m}/${x.f}: ${q.status}`);return Buffer.from(await q.arrayBuffer())}
+function ents(b){return new AdmZip(b).getEntries().filter(e=>!e.isDirectory)}
+function parse(e){return JSON.parse(e.getData().toString('utf8').replace(/^\uFEFF/,''))}
+function find(es,re){return es.filter(e=>re.test('/'+e.entryName)).sort((a,b)=>b.header.size-a.header.size)[0]}
+const tok=x=>(String(x).match(/\{\{[^}]+\}\}|\{\d+\}|\^[A-Za-z0-9_.-]+/g)||[]).sort().join('|');
+function latin(v){return /[A-Za-z]{3,}/.test(String(v).replace(/\{\{[^}]+\}\}/g,'').replace(/\{[^}]+\}/g,'').replace(/\^[A-Za-z0-9_.-]+/g,''))}
+module.exports=async(req,res)=>{try{const k=String(req.query.source||''),s=S[k];if(!s)return res.status(400).json({ok:false,error:'source=artisan|crops|flowers'});const[ob,rb]=await Promise.all([dl(s.o),dl(s.r)]),oe=ents(ob),re=ents(rb),d=find(oe,/\/i18n\/default\.json$/i),ru=find(re,/\/i18n\/ru\.json$/i)||find(re,/\/ru\.json$/i),builtin=find(oe,/\/i18n\/ru\.json$/i);if(!d||!ru)throw Error('default/ru i18n not found');const D=parse(d),R=parse(ru),B=builtin?parse(builtin):null,dk=Object.keys(D),rk=Object.keys(R),miss=dk.filter(x=>!(x in R)),extra=rk.filter(x=>!(x in D)),tm=dk.filter(x=>x in R&&tok(D[x])!==tok(R[x])),same=dk.filter(x=>x in R&&String(D[x])===String(R[x])),la=dk.filter(x=>x in R&&latin(R[x])).map(x=>({key:x,value:R[x],en:D[x]})),bm=B?dk.filter(x=>!(x in B)).length:null,be=B?Object.keys(B).filter(x=>!(x in D)).length:null;return res.json({ok:true,name:s.name,version:s.version,originalFileId:s.o.f,translationFileId:s.r.f,defaultPath:d.entryName,translationPath:ru.entryName,builtinRuPath:builtin&&builtin.entryName,defaultKeys:dk.length,translationKeys:rk.length,missing:miss.length,missingRows:miss.slice(0,100).map(x=>({key:x,en:D[x]})),extra:extra.length,extraKeys:extra.slice(0,100),tokenMismatch:tm.length,tokenMismatchKeys:tm.slice(0,100),sameAsEnglish:same.length,sameRows:same.slice(0,80).map(x=>({key:x,value:R[x]})),latinCandidateCount:la.length,latinCandidates:la.slice(0,100),builtinMissing:bm,builtinExtra:be,translationArchiveFiles:re.map(e=>e.entryName)})}catch(e){return res.status(500).json({ok:false,error:String(e.message||e)})}};
