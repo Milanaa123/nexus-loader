@@ -1,6 +1,6 @@
 const fs=require('fs');const path=require('path');const os=require('os');const crypto=require('crypto');const{execFileSync}=require('child_process');const{path7za}=require('7zip-bin');
 const FIXED=new Set(['31849:166311']);
-const ALLOWED_MODS=new Set([20011,22815,30402,30312,34254,36256,8174,25541,31633,5221,20289]);
+const ALLOWED_MODS=new Set([20011,22815,30402,30312,34254,36256,8174,25541,31633,5221,20289,23379,32043]);
 async function nexusJson(url,key){const r=await fetch(url,{headers:{apikey:key,'User-Agent':'nexus-loader/2.1'}});const d=await r.json().catch(()=>null);if(!r.ok)throw new Error(`Nexus ${r.status}`);return d;}
 function walk(root,dir=root,out=[]){for(const ent of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,ent.name);if(ent.isDirectory())walk(root,p,out);else out.push({path:path.relative(root,p).split(path.sep).join('/'),size:fs.statSync(p).size});}return out;}
 function keySummary(s){const re=/^\s*"([^"\\]*(?:\\.[^"\\]*)*)"\s*:/gm,keys=[];let m;while((m=re.exec(s)))keys.push(m[1]);const sorted=[...keys].sort();return{keys:keys.length,uniqueKeys:new Set(keys).size,keysSha256:crypto.createHash('sha256').update(sorted.join('\n')).digest('hex')};}
