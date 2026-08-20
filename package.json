@@ -2,5 +2,8 @@
   "name": "nexus-loader",
   "version": "1.6.0",
   "private": true,
-  "engines": {"node": ">=20"}
+  "engines": {"node": ">=20"},
+  "dependencies": {
+    "7zip-bin": "5.2.0"
+  }
 }
