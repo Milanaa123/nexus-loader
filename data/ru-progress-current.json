@@ -19,8 +19,8 @@
   "stage58VerifiedCount": 1,
   "stage59VerifiedCount": 2,
   "stage60VerifiedCount": 6,
-  "verifiedTotal": 246,
-  "remaining": 289,
+  "verifiedTotal": 248,
+  "remaining": 287,
   "tractorMod": "separate; not included in 535",
   "rules": "built-in complete RU first; otherwise exact ready RU; otherwise patch only version delta; self-translate only when no ready RU exists; preserve IDs/tokens/placeholders; validate keys and JSON",
   "stage46": [
@@ -507,6 +507,57 @@
         "sourceFileId": 150992,
         "localizationNeeded": false,
         "activeUserFacingTextFiles": 0
+      }
+    ]
+  },
+  "stage61VerifiedCount": 2,
+  "stage61": [
+    "HxW Farmer's Market Furniture - Core 2.1.1",
+    "Distant Lands - Witch Swamp Overhaul 2.2.9"
+  ],
+  "stage61Validation": {
+    "mods": 2,
+    "overlayFiles": 4,
+    "complete": true,
+    "validatorCommit": "6be8afb836d476cc1859f604fa713bcd517e2b1f",
+    "productionDeploymentId": "dpl_FRRcpAE8NhwM8y4S3Z51Qyca1gZo",
+    "items": [
+      {
+        "name": "HxW Farmer's Market Furniture - Core",
+        "sourceFileId": 115006,
+        "readyRuFileId": 123310,
+        "sourceKeys": 95,
+        "readyRuKeys": 95,
+        "addedConfigLabels": 5,
+        "finalRuKeys": 100,
+        "visibleLatinFixed": 7,
+        "missing": 0,
+        "extra": 0,
+        "placeholderMismatch": 0,
+        "internalConfigKeysChanged": 0,
+        "internalAllowValuesChanged": 0,
+        "remainingVisibleLatin": 0
+      },
+      {
+        "name": "Distant Lands - Witch Swamp Overhaul",
+        "sourceFileId": 164748,
+        "readyRuFileId": 156226,
+        "sourceKeys": 805,
+        "readyRuKeys": 805,
+        "translatedVersionDelta": 0,
+        "tokenRepairs": 4,
+        "visibleLatinFixed": 2,
+        "addedConfigLabels": 23,
+        "finalRuKeys": 828,
+        "configOptions": 6,
+        "allowValues": 14,
+        "missing": 0,
+        "extra": 0,
+        "placeholderMismatch": 0,
+        "activePrimarySecondaryTextOutsideI18n": 0,
+        "internalConfigKeysChanged": 0,
+        "internalAllowValuesChanged": 0,
+        "remainingVisibleLatin": 0
       }
     ]
   }
