@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
   if (!key) return res.status(500).json({ok:false,error:"NEXUS_API_KEY is not configured"});
   const body=req.method==="GET"?(req.query||{}):(req.body||{});
   const game=String(body.game||"stardewvalley").replace(/[^a-z0-9_-]/gi,"");
-  const headers={apikey:key,"User-Agent":"nexus-loader/1.8"};
+  const headers={apikey:key,"User-Agent":"nexus-loader/1.9"};
   const json=async url=>{const r=await fetch(url,{headers});let data=null;try{data=await r.json()}catch{}if(!r.ok){const e=new Error("Nexus request failed");e.status=r.status;e.data=data;throw e}return data};
   const positiveInt=v=>{const n=Number(v);return Number.isInteger(n)&&n>0?n:null};
   const chooseMain=(files,platform="desktop")=>{
@@ -14,6 +14,15 @@ module.exports = async function handler(req, res) {
     const candidates=all.filter(f=>f.category_name==="MAIN" || f.category_id===1);
     const platformOk=platform==="android"?candidates.filter(isAndroid):candidates.filter(f=>!isAndroid(f));
     return platformOk.find(f=>f.is_primary) || platformOk.sort((a,b)=>(b.uploaded_timestamp||0)-(a.uploaded_timestamp||0))[0] || candidates.find(f=>f.is_primary) || candidates[0] || null;
+  };
+  const nexusMirror=async(modId,fileId)=>{
+    const user=await json("https://api.nexusmods.com/v1/users/validate.json");
+    if(!user||!user.is_premium){const e=new Error("Nexus Premium required");e.status=403;throw e}
+    const links=await json(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files/${fileId}/download_link.json`);
+    const first=Array.isArray(links)?links.find(x=>x&&(x.URI||x.uri)):null;
+    const uri=first&&(first.URI||first.uri);
+    if(!uri){const e=new Error("Nexus returned no downloadable mirror");e.status=502;throw e}
+    return uri;
   };
   try {
     if(body.action==="validate"){
@@ -27,13 +36,23 @@ module.exports = async function handler(req, res) {
     if(req.method==="GET"&&body.action==="download"){
       const modId=positiveInt(body.modId),fileId=positiveInt(body.fileId);
       if(!modId||!fileId)return res.status(400).json({ok:false,error:"Invalid modId/fileId"});
-      const user=await json("https://api.nexusmods.com/v1/users/validate.json");
-      if(!user||!user.is_premium)return res.status(403).json({ok:false,error:"Nexus Premium required"});
-      const links=await json(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files/${fileId}/download_link.json`);
-      const first=Array.isArray(links)?links.find(x=>x&&(x.URI||x.uri)):null;
-      const uri=first&&(first.URI||first.uri);
-      if(!uri)return res.status(502).json({ok:false,error:"Nexus returned no downloadable mirror"});
+      const uri=await nexusMirror(modId,fileId);
       res.setHeader("Location",uri); return res.status(302).end();
+    }
+    if(req.method==="GET"&&body.action==="proxyDownload"){
+      const modId=positiveInt(body.modId),fileId=positiveInt(body.fileId);
+      if(!modId||!fileId)return res.status(400).json({ok:false,error:"Invalid modId/fileId"});
+      const uri=await nexusMirror(modId,fileId);
+      const r=await fetch(uri,{redirect:"follow"});
+      if(!r.ok)return res.status(502).json({ok:false,error:"Mirror download failed",status:r.status});
+      const announced=Number(r.headers.get("content-length")||0);
+      if(announced>3500000)return res.status(413).json({ok:false,error:"File too large for proxyDownload",sizeBytes:announced});
+      const buf=Buffer.from(await r.arrayBuffer());
+      if(buf.length>3500000)return res.status(413).json({ok:false,error:"File too large for proxyDownload",sizeBytes:buf.length});
+      res.setHeader("Content-Type",r.headers.get("content-type")||"application/octet-stream");
+      res.setHeader("Content-Length",String(buf.length));
+      res.setHeader("Content-Disposition",`attachment; filename=\"nexus-${modId}-${fileId}\"`);
+      return res.status(200).send(buf);
     }
     if(req.method==="GET") return res.status(400).json({ok:false,error:"Unsupported GET action"});
     if(body.action==="resolveQueue"){
@@ -71,5 +90,5 @@ module.exports = async function handler(req, res) {
       return res.json({ok:true,data:{available:Array.isArray(links)&&links.length>0,mirrorCount:Array.isArray(links)?links.length:0}});
     }
     return res.status(400).json({ok:false,error:"Unknown action"});
-  }catch(e){return res.status(e.status||500).json({ok:false,error:"Nexus request failed",status:e.status||500})}
+  }catch(e){return res.status(e.status||500).json({ok:false,error:e.message||"Nexus request failed",status:e.status||500})}
 }
