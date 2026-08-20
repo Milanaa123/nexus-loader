@@ -50,6 +50,15 @@ module.exports=async function handler(req,res){
     const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0'}});if(!r.ok)return res.status(502).json({ok:false,error:'source fetch failed',status:r.status});
     const buf=Buffer.from(await r.arrayBuffer()),list=entries(buf).filter(e=>!e.name.endsWith('/')),mode=String(req.query.mode||'');
     if(mode==='hashes'){const files=list.map(e=>{const b=extract(buf,e);return{name:e.name,size:b.length,sha256:sha(b)};});return res.json({ok:true,source,sizeBytes:buf.length,files});}
+    if(mode==='cyrfiles'){
+      const files=[];
+      for(const e of list){
+        if(!/\.(json|tmx|txt|md)$/i.test(e.name)) continue;
+        const b=extract(buf,e),s=b.toString('utf8'),m=s.match(/[А-Яа-яЁё]/g);
+        if(m&&m.length) files.push({name:e.name,size:b.length,cyrillicChars:m.length,sha256:sha(b)});
+      }
+      return res.json({ok:true,source,files});
+    }
     if(mode==='audit'){
       const def=list.find(e=>/\/i18n\/default\.json$/i.test(e.name)),ru=list.find(e=>/\/i18n\/ru\.json$/i.test(e.name));if(!def||!ru)return res.status(404).json({ok:false,error:'default/ru i18n pair not found'});
       const db=extract(buf,def),rb=extract(buf,ru),d=flat(parseJson(db)),u=flat(parseJson(rb)),dk=Object.keys(d),uk=Object.keys(u),us=new Set(uk),ds=new Set(dk),missing=dk.filter(k=>!us.has(k)),extra=uk.filter(k=>!ds.has(k)),same=dk.filter(k=>us.has(k)&&typeof d[k]==='string'&&d[k]===u[k]);
