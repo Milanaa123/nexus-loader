@@ -34,6 +34,8 @@ jobs:
           dl 44822 163923 "The Arcanian Exchange RU 1.0.0" rar
           dl 33522 153730 "Lani RU 1.1.7" rar
           dl 44532 163101 "Rekindle Kent and Jodi RU" rar
+          dl 31849 166311 "Sword and Sorcery RU RUSSAS 3.0" 7z
+          dl 18993 99252 "Sword and Sorcery RU 6squad 1.10.0" zip
           ls -lh out
       - name: Upload normalized Stage 46 translations
         uses: actions/upload-artifact@v4
