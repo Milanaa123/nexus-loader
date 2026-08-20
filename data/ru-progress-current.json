@@ -11,8 +11,9 @@
   "stage50VerifiedCount": 1,
   "stage51VerifiedCount": 1,
   "stage52VerifiedCount": 3,
-  "verifiedTotal": 220,
-  "remaining": 315,
+  "stage53VerifiedCount": 4,
+  "verifiedTotal": 224,
+  "remaining": 311,
   "tractorMod": "separate; not included in 535",
   "rules": "built-in complete RU first; otherwise exact ready RU; otherwise patch only version delta; self-translate only when no ready RU exists; preserve IDs/tokens/placeholders; validate keys and JSON",
   "stage46": [
@@ -31,15 +32,7 @@
   "stage51": ["JP More Warp Points v2 1.1.0"],
   "stage51Validation": {"baseRuVersion":"1.0.6","originalKeys":339,"finalRuKeys":339,"missing":0,"extra":0,"tokenMismatch":0,"remainingLatin":0,"sourceFileId":120778,"translationFileId":113601},
   "stage52": ["Cornucopia - Artisan Machines 1.0.16","Cornucopia - More Crops 1.6.3","Cornucopia - More Flowers 1.5.7"],
-  "stage52Validation": {
-    "mods":3,
-    "remainingVisibleLatin":0,
-    "placeholderMismatch":0,
-    "commandMismatch":0,
-    "items":[
-      {"name":"Cornucopia - Artisan Machines","keys":313,"filteredObsoleteKeys":12,"sourceFileId":162634,"translationFileId":165800},
-      {"name":"Cornucopia - More Crops","keys":539,"filteredObsoleteKeys":0,"sourceFileId":162633,"translationFileId":165701},
-      {"name":"Cornucopia - More Flowers","keys":202,"filteredObsoleteKeys":0,"sourceFileId":152128,"translationFileId":165703}
-    ]
-  }
+  "stage52Validation": {"mods":3,"remainingVisibleLatin":0,"placeholderMismatch":0,"commandMismatch":0,"items":[{"name":"Cornucopia - Artisan Machines","keys":313,"filteredObsoleteKeys":12,"sourceFileId":162634,"translationFileId":165800},{"name":"Cornucopia - More Crops","keys":539,"filteredObsoleteKeys":0,"sourceFileId":162633,"translationFileId":165701},{"name":"Cornucopia - More Flowers","keys":202,"filteredObsoleteKeys":0,"sourceFileId":152128,"translationFileId":165703}]},
+  "stage53": ["Pixie's Mid-Century Modern Catalogue 1.0.2","The Orangerie's Potion Shelf 1.0","Upgradable Bombs 1.0.1","Skip or Socialize 0.0.7"],
+  "stage53Validation": {"mods":4,"overlayFiles":5,"remainingVisibleLatin":0,"items":[{"name":"Pixie's Mid-Century Modern Catalogue","displayNamesTranslated":1,"idsChanged":0,"sourceFileId":158956},{"name":"The Orangerie's Potion Shelf","displayNamesTranslated":2,"idsChanged":0,"sourceFileId":110690},{"name":"Upgradable Bombs","keys":6,"missing":0,"extra":0,"tokensPreserved":2,"sourceFileId":107211},{"name":"Skip or Socialize","originalKeys":5,"baseRuVersion":"0.0.6","dropdownLabelsTranslated":21,"internalAllowValuesChanged":0,"sourceFileId":169172,"translationFileId":163921}]}
 }
