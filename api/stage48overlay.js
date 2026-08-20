@@ -1,0 +1,112 @@
+const AdmZip=require('adm-zip');
+
+const BOOKCASE={
+  "artist.large":"Большой книжный шкаф художника",
+  "artist.short":"Низкий книжный шкаф художника",
+  "artist.small":"Маленький книжный шкаф художника",
+  "artist.shelf":"Книжная полка художника",
+  "luxury.large":"Большой роскошный книжный шкаф",
+  "luxury.small":"Маленький роскошный книжный шкаф",
+  "luxury.shelf":"Роскошная книжная полка",
+  "modern.large":"Большой современный книжный шкаф",
+  "modern.short":"Низкий современный книжный шкаф",
+  "modern.small":"Маленький современный книжный шкаф",
+  "modern.shelf":"Современная книжная полка",
+  "dark.large":"Большой тёмный книжный шкаф",
+  "dark.short":"Низкий тёмный книжный шкаф",
+  "dark.small":"Маленький тёмный книжный шкаф",
+  "dark.shelf":"Тёмная книжная полка",
+  "retro.large":"Большой книжный шкаф в стиле ретро",
+  "retro.short":"Низкий книжный шкаф в стиле ретро",
+  "retro.small":"Маленький книжный шкаф в стиле ретро",
+  "retro.shelf":"Книжная полка в стиле ретро",
+  "joja.large":"Большой книжный шкаф Джоджа",
+  "joja.regular":"Книжный шкаф Джоджа",
+  "joja.small":"Маленький книжный шкаф Джоджа",
+  "joja.shelf":"Книжная полка Джоджа",
+  "joja2.large":"Большой серый книжный шкаф Джоджа",
+  "joja2.regular":"Серый книжный шкаф Джоджа",
+  "joja2.small":"Маленький серый книжный шкаф Джоджа",
+  "joja2.shelf":"Серая книжная полка Джоджа"
+};
+const TABLE={
+  "widetable_oak":"Широкий дубовый стол","widetable_walnut":"Широкий ореховый стол","widetable_birch":"Широкий берёзовый стол","widetable_mahogany":"Широкий стол из красного дерева","widetable_sun":"Широкий солнечный стол","widetable_moon":"Широкий лунный стол","widetable_modern":"Широкий современный стол","widetable_winter":"Широкий зимний стол","widetable_puzzle":"Широкий стол-пазл","widetable_candy":"Широкий конфетный стол","widetable_luau":"Широкий стол для луау","widetable_dark":"Широкий тёмный стол","widetable_desert":"Широкий пустынный стол","widetable_joja":"Широкий стол Джоджа","widetable_retro":"Широкий стол в стиле ретро",
+  "coffeetable_oak":"Дубовый журнальный столик","coffeetable_walnut":"Ореховый журнальный столик","coffeetable_birch":"Берёзовый журнальный столик","coffeetable_mahogany":"Журнальный столик из красного дерева","coffeetable_sun":"Солнечный журнальный столик","coffeetable_moon":"Лунный журнальный столик","coffeetable_modern":"Современный журнальный столик","coffeetable_winter":"Зимний журнальный столик","coffeetable_puzzle":"Журнальный столик-пазл","coffeetable_candy":"Конфетный журнальный столик","coffeetable_luau":"Журнальный столик для луау","coffeetable_dark":"Тёмный журнальный столик","coffeetable_desert":"Пустынный журнальный столик","coffeetable_retro":"Журнальный столик в стиле ретро","coffeetable_wine":"Винный журнальный столик","coffeetable_wizard":"Волшебный журнальный столик",
+  "normaltable_smalldining":"Маленький обеденный стол","normaltable_wizard":"Волшебный стол"
+};
+const PADDY={
+  "$schema":"https://smapi.io/schemas/i18n.json",
+  "Paddy.Name":"Рисовое поле",
+  "Paddy.Description":"Специальное рисовое поле с собственным источником воды.",
+  "config.PaddyColor.name":"Цвет рисового поля",
+  "config.PaddyColor.description":"Цвет почвы рисового поля; по умолчанию выбирается автоматически.",
+  "config.PaddyColor.values.auto":"Авто",
+  "config.PaddyColor.values.vanilla":"Оригинальный",
+  "config.PaddyColor.values.muted":"Приглушённый",
+  "config.PassableCenterTile.name":"Проходимая центральная клетка",
+  "config.PassableCenterTile.description":"Определяет, можно ли проходить через центральную клетку рисового поля (но не вспахивать её) или там будет источник воды."
+};
+const RUGS={
+  "MCM.4x3_TileBlue":"Ковёр 4×3 с синей плиткой","MCM.4x3_TileGreen":"Ковёр 4×3 с зелёной плиткой","MCM.4x3_TileRed":"Ковёр 4×3 с красной плиткой","MCM.4x3_TileYellow":"Ковёр 4×3 с жёлтой плиткой",
+  "MCM.4x3_TileBlueR":"Ковёр 4×3 с синей плиткой №2","MCM.4x3_TileGreenR":"Ковёр 4×3 с зелёной плиткой №2","MCM.4x3_TileRedR":"Ковёр 4×3 с красной плиткой №2","MCM.4x3_TileYellowR":"Ковёр 4×3 с жёлтой плиткой №2",
+  "MCM.4x3_CheckeredBlue":"Ковёр 4×3 в синюю клетку","MCM.4x3_CheckeredGreen":"Ковёр 4×3 в зелёную клетку","MCM.4x3_CheckeredRed":"Ковёр 4×3 в красную клетку","MCM.4x3_Curve":"Ковёр 4×3 с изогнутым узором",
+  "MCM.4x3_FlowerBlue":"Ковёр 4×3 с синими цветами","MCM.4x3_FlowerGreen":"Ковёр 4×3 с зелёными цветами","MCM.4x3_FlowerRed":"Ковёр 4×3 с красными цветами","MCM.4x3_Multi":"Многоцветный ковёр 4×3","MCM.4x3_PatternGreen":"Ковёр 4×3 с зелёным узором","MCM.4x3_PatternOrange":"Ковёр 4×3 с синим узором",
+  "MCM.RoundRug_8Ball":"Ковёр 2×2 «Шар №8»","MCM.RoundRug_CheckeredGreen":"Ковёр 2×2 в зелёную клетку","MCM.RoundRug_CheckeredOrange":"Ковёр 2×2 в оранжевую клетку",
+  "MCM.2x1_BluePlain":"Однотонный синий ковёр 2×1","MCM.2x1_BeigePlain":"Однотонный бежевый ковёр 2×1","MCM.2x1_GreenPlain":"Однотонный зелёный ковёр 2×1","MCM.2x1_OrangePlain":"Однотонный оранжевый ковёр 2×1",
+  "MCM.3x2_HexGreen":"Ковёр 3×2 с зелёными шестиугольниками","MCM.3x2_HexRed":"Ковёр 3×2 с красными шестиугольниками","MCM.3x2_LineGreen":"Ковёр 3×2 с зелёными линиями","MCM.3x2_LineRed":"Ковёр 3×2 с красными линиями","MCM.3x2_Oval":"Овальный ковёр 3×2","MCM.3x2_PlainGreen":"Однотонный зелёный ковёр 3×2","MCM.3x2_PlainOrange":"Однотонный оранжевый ковёр 3×2","MCM.3x2_PlainRed":"Однотонный красный ковёр 3×2","MCM.3x2_PlainYellow":"Однотонный жёлтый ковёр 3×2","MCM.3x2_PlainBeige":"Однотонный бежевый ковёр 3×2",
+  "MCM.5x4_Squares":"Ковёр 5×4 с оранжевыми квадратами","MCM.5x4_Tiles":"Ковёр 5×4 с оранжевой плиткой","MCM.5x4_Pattern":"Узорчатый ковёр 5×4","MCM.5x4_Wavy":"Волнистый ковёр 5×4"
+};
+const GIANT_CONTENT={
+  "Format":"2.0.0",
+  "ConfigSchema":{
+    "В теплице":{"AllowValues":"true, false","Default":true},
+    "На Имбирном острове":{"AllowValues":"true, false","Default":true}
+  },
+  "Changes":[
+    {"LogName":"Гигантские культуры в теплице","Action":"EditMap","Target":"Maps/Greenhouse","MapProperties":{"AllowGiantCrops":true},"When":{"В теплице":true},"Priority":"Late"},
+    {"LogName":"Гигантские культуры на ферме Имбирного острова","Action":"EditMap","Target":"Maps/Island_W","MapProperties":{"AllowGiantCrops":true},"When":{"На Имбирном острове":true},"Priority":"Late"}
+  ]
+};
+const GIANT_CONFIG={"В теплице":true,"На Имбирном острове":true};
+const SRC={
+  bookcase:{modId:30402,fileId:121082,path:"[CP] More Vanilla Bookcase/i18n/default.json",expect:27},
+  table:{modId:30312,fileId:120260,path:"[CP] More Vanilla Table/i18n/default.json",expect:33},
+  paddy:{modId:34254,fileId:133367,path:"[CP] Paddy Fields/i18n/default.json",expect:10},
+  rugs:{modId:36256,fileId:158954,path:"[CP] Pixie's MCM Rugs V2/content.json",expect:39},
+  giant:{modId:22815,fileId:93505,path:"[CP] More Giant Crop Locations/content.json",expect:2}
+};
+function text(o){return JSON.stringify(o,null,2)+'\n'}
+function add(zip,p,o){zip.addFile(p,Buffer.from(typeof o==='string'?o:text(o),'utf8'))}
+function stripJsonc(s){return s.replace(/\/\/.*$/gm,'').replace(/,\s*([}\]])/g,'$1')}
+async function source(x){const u=`https://nexus-loader.vercel.app/api/nexusarchive?modId=${x.modId}&fileId=${x.fileId}&path=${encodeURIComponent(x.path)}`;const r=await fetch(u,{headers:{'User-Agent':'nexus-loader-stage48/1.0'}});if(!r.ok)throw new Error(`source ${x.modId}/${x.fileId} HTTP ${r.status}`);const j=await r.json();if(!j.ok||typeof j.text!=='string')throw new Error(`source ${x.modId}/${x.fileId} missing text`);return j.text}
+function sameKeys(a,b){const ak=Object.keys(a).sort(),bk=Object.keys(b).sort();return ak.length===bk.length&&ak.every((k,i)=>k===bk[i])}
+function patchRugs(s){const o=JSON.parse(s),entries=o.Changes&&o.Changes[0]&&o.Changes[0].Entries;if(!entries)throw new Error('rug entries missing');let changed=0;for(const [id,ru] of Object.entries(RUGS)){if(typeof entries[id]!=='string')throw new Error(`rug id missing ${id}`);const p=entries[id].split('/');if(p.length<10)throw new Error(`rug schema unexpected ${id}`);p[7]=ru;entries[id]=p.join('/');changed++;}return {obj:o,changed}}
+function validateNoEnglishValues(obj,label){for(const [k,v] of Object.entries(obj)){if(k==='$schema')continue;if(typeof v==='string'&&!/[А-Яа-яЁё]/.test(v))throw new Error(`${label} non-RU value ${k}`)}}
+module.exports=async function handler(req,res){try{
+  const [bSrc,tSrc,pSrc,rSrc,gSrc]=await Promise.all([source(SRC.bookcase),source(SRC.table),source(SRC.paddy),source(SRC.rugs),source(SRC.giant)]);
+  const bDef=JSON.parse(stripJsonc(bSrc)),tDef=JSON.parse(stripJsonc(tSrc)),pDef=JSON.parse(stripJsonc(pSrc));
+  if(!sameKeys(bDef,BOOKCASE)||Object.keys(BOOKCASE).length!==27)throw new Error('bookcase key parity failed');
+  if(!sameKeys(tDef,TABLE)||Object.keys(TABLE).length!==33)throw new Error('table key parity failed');
+  if(!sameKeys(pDef,PADDY)||Object.keys(PADDY).length!==10)throw new Error('paddy key parity failed');
+  validateNoEnglishValues(BOOKCASE,'bookcase');validateNoEnglishValues(TABLE,'table');validateNoEnglishValues(PADDY,'paddy');
+  const rugs=patchRugs(rSrc);if(rugs.changed!==39)throw new Error('rug count failed');
+  const rugValues=Object.values(RUGS);if(rugValues.some(v=>!/[А-Яа-яЁё]/.test(v)))throw new Error('rug RU validation failed');
+  if(!gSrc.includes('"In Greenhouse"')||!gSrc.includes('"On Ginger Island"'))throw new Error('giant source schema changed');
+  const zip=new AdmZip();
+  add(zip,'Mods/[CP] More Vanilla Bookcase/i18n/ru.json',BOOKCASE);
+  add(zip,'Mods/[CP] More Vanilla Table/i18n/ru.json',TABLE);
+  add(zip,'Mods/[CP] Paddy Fields/i18n/ru.json',PADDY);
+  add(zip,"Mods/[CP] Pixie's MCM Rugs V2/content.json",rugs.obj);
+  add(zip,'Mods/[CP] More Giant Crop Locations/content.json',GIANT_CONTENT);
+  add(zip,'Mods/[CP] More Giant Crop Locations/config.json',GIANT_CONFIG);
+  const files=zip.getEntries().filter(e=>!e.isDirectory),buf=zip.toBuffer();
+  const report={ok:true,stage:48,mods:5,files:files.length,zipBytes:buf.length,verified:[
+    {name:'More Vanilla Bookcase',version:'1.1',fileId:121082,translated:27,parity:true},
+    {name:'More Vanilla Table',version:'1.1',fileId:120260,translated:33,parity:true},
+    {name:'Paddy Fields',version:'1.2.1',fileId:133367,translated:9,schemaPreserved:true,parity:true},
+    {name:"Pixie's MCM Rugs",version:'1.1.1',fileId:158954,translated:39,idsPreserved:true},
+    {name:'More Giant Crop Locations',version:'1.0.0',fileId:93505,translatedConfigOptions:2,logicPreserved:true}
+  ]};
+  if(String(req.query.status||'')==='1')return res.json(report);
+  res.setHeader('Content-Type','application/zip');res.setHeader('Content-Disposition','attachment; filename="RU_STAGE48_VERIFIED_5.zip"');res.setHeader('Cache-Control','no-store');return res.status(200).send(buf);
+}catch(e){return res.status(500).json({ok:false,error:String(e&&e.message||e)})}}
