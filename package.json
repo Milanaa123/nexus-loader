@@ -1,10 +1,11 @@
 {
   "name": "nexus-loader",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "private": true,
   "engines": {"node": ">=20"},
   "dependencies": {
     "7zip-bin": "5.2.0",
-    "adm-zip": "0.5.16"
+    "adm-zip": "0.5.16",
+    "node-unrar-js": "2.0.2"
   }
 }
