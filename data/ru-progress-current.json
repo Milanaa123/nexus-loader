@@ -10,74 +10,36 @@
   "stage49VerifiedCount": 1,
   "stage50VerifiedCount": 1,
   "stage51VerifiedCount": 1,
-  "verifiedTotal": 217,
-  "remaining": 318,
+  "stage52VerifiedCount": 3,
+  "verifiedTotal": 220,
+  "remaining": 315,
   "tractorMod": "separate; not included in 535",
   "rules": "built-in complete RU first; otherwise exact ready RU; otherwise patch only version delta; self-translate only when no ready RU exists; preserve IDs/tokens/placeholders; validate keys and JSON",
   "stage46": [
-    "Always Raining in the Valley",
-    "Canon Friendly Dialogue Expansion",
-    "Date Night Redux",
-    "Eli and Dylan",
-    "Haley Ever After - Sweet Edition",
-    "Haywrite's Dialogue",
-    "Jorts and Jean",
-    "Lani - Custom NPC for Sunberry Village",
-    "Nora the Herpetologist",
-    "Part of a Saloon Breakfast",
-    "Rekindle - Kent and Jodi Event Expansion",
-    "Sword and Sorcery for East Scarp Remastered",
-    "The Arcanian Exchange",
-    "The Last Smoluanu",
-    "Unique Winter Star",
-    "Wren the Plumber"
+    "Always Raining in the Valley","Canon Friendly Dialogue Expansion","Date Night Redux","Eli and Dylan","Haley Ever After - Sweet Edition","Haywrite's Dialogue","Jorts and Jean","Lani - Custom NPC for Sunberry Village","Nora the Herpetologist","Part of a Saloon Breakfast","Rekindle - Kent and Jodi Event Expansion","Sword and Sorcery for East Scarp Remastered","The Arcanian Exchange","The Last Smoluanu","Unique Winter Star","Wren the Plumber"
   ],
   "stage47": [
-    "What Does Trash Bear Want 1.0.1",
-    "Searchable Collections Page 1.0.2",
-    "Seasonal Town Lamp Posts 2.0.0",
-    "Better Signs 4.0.0",
-    "Em's Pet Adoptions 1.0",
-    "Extra Animal Config 1.9.10",
-    "Kitty Furniture CP 1.0",
-    "Save Mod Info 0.2.0",
-    "Safe Lightning Updated 1.1.1",
-    "Waterproof Items 1.0.3",
-    "Armory Cabinet 2.0.0",
-    "Mini Wind Turbines 1.0.0",
-    "Orangeblossom's Furniture Catalogue 1.0.2",
-    "Secret Note Framework 1.2.1"
+    "What Does Trash Bear Want 1.0.1","Searchable Collections Page 1.0.2","Seasonal Town Lamp Posts 2.0.0","Better Signs 4.0.0","Em's Pet Adoptions 1.0","Extra Animal Config 1.9.10","Kitty Furniture CP 1.0","Save Mod Info 0.2.0","Safe Lightning Updated 1.1.1","Waterproof Items 1.0.3","Armory Cabinet 2.0.0","Mini Wind Turbines 1.0.0","Orangeblossom's Furniture Catalogue 1.0.2","Secret Note Framework 1.2.1"
   ],
-  "stage47Validation": {
-    "mods": 14,
-    "jsonFiles": 14,
-    "keys": 35,
-    "readyExactSources": {
-      "Orangeblossom's Furniture Catalogue": {"nexusModId": 26723, "fileId": 108562, "keys": 1},
-      "Secret Note Framework": {"nexusModId": 48797, "fileId": 174029, "keys": 3}
-    }
-  },
-  "stage48": [
-    "More Vanilla Bookcase 1.1",
-    "More Vanilla Table 1.1",
-    "Paddy Fields 1.2.1",
-    "Pixie's MCM Rugs 1.1.1",
-    "More Giant Crop Locations 1.0.0"
-  ],
-  "stage48Validation": {
-    "mods": 5,
-    "overlayFiles": 6,
-    "bookcaseKeys": 27,
-    "tableKeys": 33,
-    "paddyKeys": 10,
-    "rugDisplayNames": 39,
-    "giantCropConfigOptions": 2,
-    "sourceFileIds": [121082,120260,133367,158954,93505]
-  },
+  "stage47Validation": {"mods":14,"jsonFiles":14,"keys":35,"readyExactSources":{"Orangeblossom's Furniture Catalogue":{"nexusModId":26723,"fileId":108562,"keys":1},"Secret Note Framework":{"nexusModId":48797,"fileId":174029,"keys":3}}},
+  "stage48": ["More Vanilla Bookcase 1.1","More Vanilla Table 1.1","Paddy Fields 1.2.1","Pixie's MCM Rugs 1.1.1","More Giant Crop Locations 1.0.0"],
+  "stage48Validation": {"mods":5,"overlayFiles":6,"bookcaseKeys":27,"tableKeys":33,"paddyKeys":10,"rugDisplayNames":39,"giantCropConfigOptions":2,"sourceFileIds":[121082,120260,133367,158954,93505]},
   "stage49": ["Cozy Chocolate Furniture 1.0.2"],
   "stage49Validation": {"sourceKeys":197,"translatedKeys":197,"missing":0,"englishUserFacingValues":0,"idsChanged":0,"sourceFileId":118893},
   "stage50": ["More Bar Transmutations 1.2.0"],
   "stage50Validation": {"recipesTranslated":6,"configUiStrings":8,"internalRecipeKeysChanged":0,"tokensPreserved":2,"sourceFileId":36703},
   "stage51": ["JP More Warp Points v2 1.1.0"],
-  "stage51Validation": {"baseRuVersion":"1.0.6","originalKeys":339,"finalRuKeys":339,"missing":0,"extra":0,"tokenMismatch":0,"remainingLatin":0,"sourceFileId":120778,"translationFileId":113601}
+  "stage51Validation": {"baseRuVersion":"1.0.6","originalKeys":339,"finalRuKeys":339,"missing":0,"extra":0,"tokenMismatch":0,"remainingLatin":0,"sourceFileId":120778,"translationFileId":113601},
+  "stage52": ["Cornucopia - Artisan Machines 1.0.16","Cornucopia - More Crops 1.6.3","Cornucopia - More Flowers 1.5.7"],
+  "stage52Validation": {
+    "mods":3,
+    "remainingVisibleLatin":0,
+    "placeholderMismatch":0,
+    "commandMismatch":0,
+    "items":[
+      {"name":"Cornucopia - Artisan Machines","keys":313,"filteredObsoleteKeys":12,"sourceFileId":162634,"translationFileId":165800},
+      {"name":"Cornucopia - More Crops","keys":539,"filteredObsoleteKeys":0,"sourceFileId":162633,"translationFileId":165701},
+      {"name":"Cornucopia - More Flowers","keys":202,"filteredObsoleteKeys":0,"sourceFileId":152128,"translationFileId":165703}
+    ]
+  }
 }
