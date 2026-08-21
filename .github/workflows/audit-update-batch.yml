@@ -1,0 +1,152 @@
+name: Audit verified update batch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/audit-update-batch.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download verified update archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit/zips audit/out
+          dl() {
+            local id="$1" fid="$2" name="$3"
+            curl -fL --retry 5 --retry-all-errors --connect-timeout 30 \
+              -o "audit/zips/${name}.zip" \
+              "https://nexus-loader.vercel.app/api/nexus?action=proxyDownload&game=stardewvalley&modId=${id}&fileId=${fid}"
+          }
+          dl 16491 74411 simple-weapons
+          dl 18914 176020 crop-growth-adjustments
+          dl 32081 178840 blinkfix
+          dl 39979 179311 billboard-beautifier
+          dl 44845 178219 evelyn-expansion-1.5
+          dl 46356 168430 evelyn-expansion-ru-1.1
+          dl 29400 177667 a-warm-welcome-1.3.1
+          dl 23697 176450 mastery-extended-2.2.2
+          ls -lh audit/zips
+
+      - name: Inspect archives and compare translations
+        shell: python
+        run: |
+          import json, re, zipfile, pathlib
+          ROOT=pathlib.Path('audit')
+          OUT=ROOT/'out'; OUT.mkdir(exist_ok=True)
+
+          def read_json_loose(text):
+              text=text.lstrip('\ufeff')
+              text=re.sub(r'(?m)^\s*//.*$', '', text)
+              text=re.sub(r',\s*([}\]])', r'\1', text)
+              return json.loads(text)
+
+          def zip_entries(name):
+              p=ROOT/'zips'/name
+              z=zipfile.ZipFile(p)
+              rows=[]
+              for i in z.infolist():
+                  if i.is_dir(): continue
+                  rows.append({'path':i.filename,'bytes':i.file_size})
+              return z,rows
+
+          def text_files_report(zipname, outname):
+              z,rows=zip_entries(zipname)
+              ex=re.compile(r'\.(json|jsonc|txt|md|xml|tmx|yaml|yml|csv|ini|cfg|config|toml|properties)$', re.I)
+              out={'archive':zipname,'entries':rows,'textFiles':[]}
+              for r in rows:
+                  if not ex.search(r['path']) or r['bytes']>200000: continue
+                  try: t=z.read(r['path']).decode('utf-8-sig')
+                  except: continue
+                  out['textFiles'].append({'path':r['path'],'bytes':r['bytes'],'text':t[:200000]})
+              (OUT/outname).write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+              return out
+
+          for zname,oname in [
+              ('simple-weapons.zip','inspect-simple-weapons.json'),
+              ('crop-growth-adjustments.zip','inspect-crop-growth-adjustments.json'),
+              ('blinkfix.zip','inspect-blinkfix.json'),
+              ('billboard-beautifier.zip','inspect-billboard-beautifier.json')]:
+              text_files_report(zname,oname)
+
+          def find_i18n(zipname, lang):
+              z,_=zip_entries(zipname)
+              cand=[]
+              pat=re.compile(rf'(^|/)i18n/{re.escape(lang)}\.json$',re.I)
+              for n in z.namelist():
+                  if pat.search(n):
+                      cand.append((n,z.read(n).decode('utf-8-sig')))
+              return cand
+
+          def placeholders(s):
+              # SMAPI/content tokens and common format placeholders.
+              pats=[r'\{\{[^{}]+\}\}',r'\{\d+[^{}]*\}',r'%item\b[^%]*%',r'\$[a-zA-Z0-9#]+',r'\[[^\]]+\]',r'@',r'\^+']
+              out=[]
+              for p in pats: out.extend(re.findall(p,s))
+              return sorted(out)
+
+          # Evelyn Expansion: ready RU baseline vs current 1.5.
+          src=find_i18n('evelyn-expansion-1.5.zip','default')
+          ru=find_i18n('evelyn-expansion-ru-1.1.zip','ru')
+          ev={'sourceCandidates':[x[0] for x in src],'ruCandidates':[x[0] for x in ru]}
+          if src and ru:
+              s=read_json_loose(src[0][1]); r=read_json_loose(ru[0][1])
+              missing=[k for k in s if k not in r]
+              extra=[k for k in r if k not in s]
+              mismatch=[]
+              for k in s:
+                  if k in r and placeholders(str(s[k]))!=placeholders(str(r[k])):
+                      mismatch.append({'key':k,'sourceTokens':placeholders(str(s[k])),'ruTokens':placeholders(str(r[k]))})
+              ev.update({'sourceKeys':len(s),'ruKeys':len(r),'missingCount':len(missing),'extraCount':len(extra),'tokenMismatchCount':len(mismatch),'missing':[{ 'key':k,'source':s[k]} for k in missing],'extra':extra,'tokenMismatches':mismatch})
+          (OUT/'evelyn-ru-delta.json').write_text(json.dumps(ev,ensure_ascii=False,indent=2),encoding='utf-8')
+
+          # A Warm Welcome: merge our three parts and compare against current source.
+          awsrc=find_i18n('a-warm-welcome-1.3.1.zip','default')
+          aw={'sourceCandidates':[x[0] for x in awsrc]}
+          merged={}
+          for p in [
+              pathlib.Path('data/review/a-warm-welcome-1.3.1-ru-part01.json'),
+              pathlib.Path('data/review/a-warm-welcome-1.3.1-ru-part02-ridgeside.json'),
+              pathlib.Path('data/review/a-warm-welcome-1.3.1-ru-part03-east-scarp.json')]:
+              merged.update(json.loads(p.read_text(encoding='utf-8')))
+          if awsrc:
+              s=read_json_loose(awsrc[0][1]); missing=[k for k in s if k not in merged]; extra=[k for k in merged if k not in s]
+              mismatch=[]
+              for k in s:
+                  if k in merged and placeholders(str(s[k]))!=placeholders(str(merged[k])):
+                      mismatch.append({'key':k,'sourceTokens':placeholders(str(s[k])),'ruTokens':placeholders(str(merged[k]))})
+              aw.update({'sourceKeys':len(s),'ruKeys':len(merged),'missingCount':len(missing),'extraCount':len(extra),'tokenMismatchCount':len(mismatch),'missing':[{ 'key':k,'source':s[k]} for k in missing],'extra':extra,'tokenMismatches':mismatch})
+          (OUT/'a-warm-welcome-parity.json').write_text(json.dumps(aw,ensure_ascii=False,indent=2),encoding='utf-8')
+
+          # Mastery Extended: compare our RU file to current source.
+          msrc=find_i18n('mastery-extended-2.2.2.zip','default')
+          mr={'sourceCandidates':[x[0] for x in msrc]}
+          ruobj=json.loads(pathlib.Path('data/review/mastery-extended-2.2.2-ru.json').read_text(encoding='utf-8'))
+          if msrc:
+              s=read_json_loose(msrc[0][1]); missing=[k for k in s if k not in ruobj]; extra=[k for k in ruobj if k not in s]
+              mismatch=[]
+              for k in s:
+                  if k in ruobj and placeholders(str(s[k]))!=placeholders(str(ruobj[k])):
+                      mismatch.append({'key':k,'sourceTokens':placeholders(str(s[k])),'ruTokens':placeholders(str(ruobj[k]))})
+              mr.update({'sourceKeys':len(s),'ruKeys':len(ruobj),'missingCount':len(missing),'extraCount':len(extra),'tokenMismatchCount':len(mismatch),'missing':[{ 'key':k,'source':s[k]} for k in missing],'extra':extra,'tokenMismatches':mismatch})
+          (OUT/'mastery-extended-parity.json').write_text(json.dumps(mr,ensure_ascii=False,indent=2),encoding='utf-8')
+
+          print((OUT/'evelyn-ru-delta.json').read_text(encoding='utf-8'))
+          print((OUT/'a-warm-welcome-parity.json').read_text(encoding='utf-8'))
+          print((OUT/'mastery-extended-parity.json').read_text(encoding='utf-8'))
+
+      - name: Upload audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-update-batch-audit
+          path: audit/out/*
+          if-no-files-found: error
+          retention-days: 7
