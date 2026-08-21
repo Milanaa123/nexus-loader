@@ -2,9 +2,9 @@
   "stage": 78,
   "assemblyTotal": 535,
   "verifiedBefore": 313,
-  "verifiedStage": 3,
-  "verifiedTotal": 316,
-  "remaining": 219,
+  "verifiedStage": 4,
+  "verifiedTotal": 317,
+  "remaining": 218,
   "complete": false,
   "mods": [
     {
@@ -34,7 +34,16 @@
       "name": "Beach Additional Storage Space Area",
       "version": "2.3",
       "modId": 14244,
-      "status": "in-progress"
+      "fileId": 170957,
+      "status": "verified-ready-ru-exact-version",
+      "translation": {
+        "modId": 47380,
+        "fileId": 170988,
+        "version": "2.3",
+        "fileName": "Перевод Beach Additional Storage Space Area-47380-2-3-1781305497.zip",
+        "targetPath": "[CP] Beach Additional Storage Space Area/i18n/ru.json"
+      },
+      "notes": "Nexus lists Russian translation by Erayd for the current original version 2.3. Translation MAIN file is explicitly version 2.3 and its archive contains the expected i18n/ru.json payload. Counted only after exact-version metadata and archive path were rechecked."
     },
     {
       "name": "Beach Extension For Crab Pod",
@@ -42,12 +51,15 @@
       "modId": 11594,
       "fileId": 170131,
       "status": "in-progress",
-      "notes": "Russian translation mod 47335 MAIN file 170518 was published after original 3.8. Exact i18n key compatibility between current 3.8 and translation is still being checked before counting."
+      "notes": "Nexus lists Russian translation by Erayd. Translation mod 47335 MAIN file 170518 was uploaded 2026-06-08, after original 3.8 on 2026-06-05, and the archive contains only [CP] Beach Extension For Crab Pod/i18n/ru.json. Exact current 3.8 source-key parity is still required before counting."
     },
     {
       "name": "Berry Season Reminder",
-      "status": "in-progress",
-      "notes": "Official source contains visible English hover text 'Blackberry Season' and 'Salmonberry Season'; requires a real localization/code patch. Previously remembered Nexus ID 24235 was incorrect and has been discarded."
+      "version": "1.1.2",
+      "modId": 9315,
+      "fileId": 115757,
+      "status": "in-progress-code-localization-required",
+      "notes": "Exact Nexus mod resolved as 9315, current MAIN 1.1.2 file 115757. Current archive has only manifest.json and BerrySeasonReminder.dll. Public source has two hard-coded player-facing hover strings: 'Blackberry Season' and 'Salmonberry Season'; there is no i18n layer, so a real code/localization patch is required before counting."
     }
   ]
 }
