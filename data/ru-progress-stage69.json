@@ -1,0 +1,19 @@
+{
+  "schema":1,
+  "updated":"2026-08-21",
+  "stage":69,
+  "verifiedBefore":276,
+  "verifiedStage":3,
+  "verifiedTotal":279,
+  "remaining":256,
+  "assemblyTotal":535,
+  "tractorMod":"separate; not included in 535",
+  "complete":true,
+  "validatorCommit":"6023c2ef7617b43352c2bd0f99d1a96697699a56",
+  "productionDeploymentId":"dpl_4gKsF2q42GqekZveMuQwDqGyCR64",
+  "mods":[
+    {"name":"Hitme's Spouse Portraits Reworked 4.0.1","originalFileId":107419,"readyRuModId":32102,"translationFileId":126617,"baseRuKeys":114,"finalRuKeys":120,"deltaAdded":6,"missing":0,"extra":0,"remainingVisibleLatin":0,"internalConfigKeysChanged":0,"internalAllowValuesChanged":0},
+    {"name":"Staffy dog 1.0.0","defaultKeys":5,"ruKeys":5,"localizedPetDisplayName":1,"remainingVisibleLatin":0,"internalConfigKeysChanged":0,"internalAllowValuesChanged":0,"technicalPetFieldsChanged":0},
+    {"name":"Help Wanted Pad and Pin Retexture 2.1","activeUserFacingText":0,"localizationNeeded":false}
+  ]
+}
