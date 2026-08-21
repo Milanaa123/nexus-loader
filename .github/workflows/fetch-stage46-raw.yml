@@ -1,8 +1,6 @@
 name: Fetch Stage 46 RU raw
 
 on:
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
