@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "updated": "2026-08-21",
+  "stage": 75,
+  "verifiedBefore": 302,
+  "verifiedStage": 4,
+  "verifiedTotal": 306,
+  "remaining": 229,
+  "assemblyTotal": 535,
+  "tractorMod": "separate; not included in 535",
+  "complete": true,
+  "validatorCommit": "0cd29b3d65786c74ff8fd391567448d04241a527",
+  "productionDeploymentId": "dpl_BQWUCtfaFUUQxY8Z4RfqEwW5rMsG",
+  "overlayFiles": 8,
+  "totalLocalizedKeys": 463,
+  "mods": [
+    {"name":"Animated East Scarp Fish 1.3.2","modId":10913,"originalFileId":154411,"configOptions":11,"sourceKeys":33,"finalRuKeys":33,"missing":0,"extra":0,"remainingVisibleLatin":0},
+    {"name":"Animated Fish 1.4.0","modId":5735,"originalFileId":120871,"configOptions":91,"sourceKeys":273,"finalRuKeys":273,"missing":0,"extra":0,"remainingVisibleLatin":0},
+    {"name":"Animated Fish SVE 1.9.0","modId":6089,"originalFileId":120873,"configOptions":30,"sourceKeys":90,"finalRuKeys":90,"missing":0,"extra":0,"remainingVisibleLatin":0},
+    {"name":"Animated Ridgeside Village Fish 1.4.1","modId":7353,"originalFileId":120976,"configOptions":19,"sourceKeys":67,"finalRuKeys":67,"missing":0,"extra":0,"remainingVisibleLatin":0}
+  ],
+  "validation": {"missing":0,"extra":0,"remainingVisibleLatin":0}
+}
