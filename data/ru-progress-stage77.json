@@ -1,0 +1,61 @@
+{
+  "stage": 77,
+  "assemblyTotal": 535,
+  "verifiedBefore": 310,
+  "verifiedStage": 3,
+  "verifiedTotal": 313,
+  "remaining": 222,
+  "complete": false,
+  "mods": [
+    {
+      "name": "Auto-Stack Bait and Ammo",
+      "version": "2.2.0",
+      "modId": 23423,
+      "status": "verified-no-runtime-localization",
+      "notes": "Official source contains project/source/manifest only; no i18n or user-facing configuration text resources."
+    },
+    {
+      "name": "AutoGate",
+      "version": "1.3.6",
+      "modId": 820,
+      "fileId": 160669,
+      "status": "verified-no-runtime-localization",
+      "notes": "Current official source linked by Nexus contains gate automation logic only and no user-facing messages, configuration menu, or i18n resources."
+    },
+    {
+      "name": "Banners Expanded",
+      "version": "1.6.0",
+      "modId": 40482,
+      "fileId": 165289,
+      "status": "verified",
+      "notes": "Official v1.6.0 source includes matching default.json and ru.json key sets, including MomBanner and SummerBanner additions. Remaining Latin in Russian mail strings is technical item-ID syntax and must not be translated."
+    },
+    {
+      "name": "Armory Cabinet",
+      "version": "2.0.0",
+      "modId": 40264,
+      "fileId": 151262,
+      "status": "in-progress"
+    },
+    {
+      "name": "Artisan Goods Keep Quality",
+      "version": "1.4.7",
+      "modId": 21278,
+      "status": "in-progress"
+    },
+    {
+      "name": "AutoAnimalDoors",
+      "version": "4.2.0",
+      "modId": 1019,
+      "status": "in-progress",
+      "notes": "Published source for 4.1.0 hardcodes GMCM labels/tooltips in English; exact 4.2.0 archive still needs final source/binary comparison before producing a replacement/overlay."
+    }
+  ],
+  "infrastructure": {
+    "nexusArchiveAuditorAllowlistUpdated": true,
+    "vercelAutoDeployBlocked": "build-rate-limit",
+    "vercelApiDeployBlocked": "api-deployments-free-per-day",
+    "vercelDailyApiDeployLimit": 100,
+    "productionChangedByPreviewAttempt": false
+  }
+}
