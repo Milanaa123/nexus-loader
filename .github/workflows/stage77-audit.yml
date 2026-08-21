@@ -1,0 +1,69 @@
+name: Stage 77 audit originals
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download exact latest main files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p downloads
+          download_latest() {
+            local modid="$1" label="$2"
+            local info fid ver orig ext
+            info="$(curl -fsSL --retry 3 --connect-timeout 20 --max-time 90 "https://nexus-loader.vercel.app/api/nexus?action=files&game=stardewvalley&modId=${modid}")"
+            fid="$(printf '%s' "$info" | jq -r '.data.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].file_id')"
+            ver="$(printf '%s' "$info" | jq -r '.data.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].version // .[0].mod_version // "unknown"')"
+            orig="$(printf '%s' "$info" | jq -r '.data.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].file_name')"
+            test "$fid" != "null"
+            ext="${orig##*.}"; case "$ext" in zip|rar|7z) ;; *) ext=zip ;; esac
+            printf '%s\t%s\t%s\t%s\t%s\n' "$label" "$modid" "$fid" "$ver" "$orig" >> downloads/STAGE77_MANIFEST.tsv
+            curl -fL --retry 3 --connect-timeout 20 --max-time 240 -o "downloads/${label}.${ext}" "https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=${modid}&fileId=${fid}"
+          }
+          download_latest 40264 "Armory Cabinet"
+          download_latest 21278 "Artisan Goods Keep Quality"
+          download_latest 23423 "Auto-Stack Bait and Ammo"
+          download_latest 1019 "AutoAnimalDoors"
+          download_latest 820 "AutoGate"
+          download_latest 40482 "Banners Expanded"
+          cat downloads/STAGE77_MANIFEST.tsv
+          ls -lh downloads
+
+      - name: Generate archive inventory
+        shell: python
+        run: |
+          import json, zipfile, pathlib
+          root=pathlib.Path('downloads')
+          out=[]
+          for p in sorted(root.iterdir()):
+              if p.name.endswith('.tsv'): continue
+              rec={'archive':p.name,'bytes':p.stat().st_size,'entries':[]}
+              if p.suffix.lower()=='.zip':
+                  with zipfile.ZipFile(p) as z:
+                      for i in z.infolist():
+                          if i.is_dir(): continue
+                          e={'name':i.filename,'bytes':i.file_size}
+                          low=i.filename.lower()
+                          if low.endswith(('.json','.jsonc','.txt','.md','.yaml','.yml')) and i.file_size <= 500000:
+                              try:
+                                  s=z.read(i).decode('utf-8-sig')
+                                  e['text']=s
+                              except Exception as ex:
+                                  e['text_error']=str(ex)
+                          rec['entries'].append(e)
+              out.append(rec)
+          (root/'STAGE77_AUDIT.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+
+      - name: Upload Stage 77 audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage77-originals-audit
+          path: downloads/*
+          if-no-files-found: error
+          retention-days: 7
