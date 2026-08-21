@@ -1,12 +1,6 @@
 name: Fetch ready RU translations
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/fetch-ready-ru.yml'
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
