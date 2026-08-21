@@ -1,4 +1,23 @@
-const AdmZip=require('adm-zip');
-async function nx(u,k){const r=await fetch(u,{headers:{apikey:k,'User-Agent':'alecto-token-check/1.1'}});const j=await r.json().catch(()=>null);if(!r.ok)throw Error(`Nexus ${r.status}`);return j}
-function strip(s){let o='',q=false,e=false;for(let i=0;i<s.length;i++){const c=s[i],n=s[i+1];if(q){o+=c;if(e)e=false;else if(c==='\\')e=true;else if(c==='"')q=false;continue}if(c==='"'){q=true;o+=c;continue}if(c==='/'&&n==='/'){while(i<s.length&&s[i]!=='\n')i++;o+='\n';continue}if(c==='/'&&n==='*'){i+=2;while(i<s.length-1&&!(s[i]==='*'&&s[i+1]==='/'))i++;i++;continue}o+=c}return o.replace(/,\s*([}\]])/g,'$1')}function parse(b){return JSON.parse(strip(b.toString('utf8').replace(/^\uFEFF/,'')))}
-module.exports=async(req,res)=>{try{const k=process.env.NEXUS_API_KEY;if(!k)throw Error('NEXUS_API_KEY missing');const links=await nx('https://api.nexusmods.com/v1/games/stardewvalley/mods/10671/files/134150/download_link.json',k),u=(links||[]).find(x=>x&&(x.URI||x.uri));if(!u)throw Error('no mirror');const rr=await fetch(u.URI||u.uri,{redirect:'follow'});if(!rr.ok)throw Error(`mirror ${rr.status}`);const z=new AdmZip(Buffer.from(await rr.arrayBuffer())),entries=z.getEntries();const d=entries.find(e=>/(^|\/)i18n\/default\.json$/i.test(e.entryName)),r=entries.find(e=>/(^|\/)i18n\/ru\.json$/i.test(e.entryName));if(!d||!r)throw Error('i18n missing');const D=parse(d.getData()),R=parse(r.getData()),keys=['Alecto.dialogue.introduction','Alecto.event4.5'];return res.json({ok:true,rows:keys.map(key=>({key,source:D[key],ru:R[key]}))})}catch(e){return res.status(500).json({ok:false,error:String(e.message||e)})}};
+const fs = require('fs');
+const path = require('path');
+const Module = require('module');
+
+module.exports = async function handler(req, res) {
+  try {
+    const sourcePath = path.join(__dirname, 'stage53audit.js');
+    let source = fs.readFileSync(sourcePath, 'utf8');
+    const injection = `const AP={
+'Alecto.dialogue.introduction':'Только люди с сильной магической восприимчивостью способны видеть сквозь заклинания невидимости вроде того, которым я сейчас пользуюсь.#$b#К сожалению, к ним относятся и маленькие дети. Уф.$5',
+'Alecto.event4.5':'Ну? Ты идёшь или нет?#$b#Мне... мне, пожалуй, не помешала бы моральная поддержка. Уф. Не могу поверить, что я только что это сказала...$2',`;
+    if (!source.includes('const AP={')) throw new Error('Stage 73 source marker not found');
+    source = source.replace('const AP={', injection);
+    const filename = path.join(__dirname, '__stage73_runtime_fixed.js');
+    const mod = new Module(filename, module);
+    mod.filename = filename;
+    mod.paths = module.paths;
+    mod._compile(source, filename);
+    return await mod.exports(req, res);
+  } catch (e) {
+    return res.status(500).json({ ok: false, stage: 73, error: String(e && e.message || e) });
+  }
+};
