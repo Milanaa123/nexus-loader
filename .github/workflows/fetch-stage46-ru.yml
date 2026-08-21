@@ -1,12 +1,6 @@
 name: Fetch Stage 46 RU translations
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/fetch-stage46-ru.yml'
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
