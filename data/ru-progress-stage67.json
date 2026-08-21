@@ -1,0 +1,18 @@
+{
+  "schema":1,
+  "updated":"2026-08-21",
+  "stage":67,
+  "verifiedBefore":272,
+  "verifiedStage":2,
+  "verifiedTotal":274,
+  "remaining":261,
+  "assemblyTotal":535,
+  "tractorMod":"separate; not included in 535",
+  "complete":true,
+  "validatorCommit":"ac095bec94d3fa67887545e7d192fc8afed21c4c",
+  "productionDeploymentId":"dpl_42rULSePRvPDxXu9kPV4e8Km8AY8",
+  "mods":[
+    {"name":"Blue Eggs and Golden Mayo 1.1.2","sourceKeys":14,"finalRuKeys":14,"missing":0,"extra":0,"remainingVisibleLatin":0,"baseRuVersion":"1.1.0","translationFileId":104030,"configKeysAdded":6},
+    {"name":"HxW Farmers Market Wildflour Set 1.0.2","sourceKeys":74,"finalRuKeys":74,"missing":0,"extra":0,"remainingVisibleLatin":0,"baseRuVersion":"1.1","translationFileId":126687,"configKeysAdded":5}
+  ]
+}
