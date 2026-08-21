@@ -3,7 +3,8 @@ const crypto = require('crypto');
 
 const SOURCES = {
   arv: 'https://stardewmods.ru/uploads/public_files/2025-05/arvsunberry.zip',
-  jorts: 'https://stardewmods.ru/uploads/public_files/2025-03/jorts-and-jean.zip'
+  jorts: 'https://stardewmods.ru/uploads/public_files/2025-03/jorts-and-jean.zip',
+  age223: 'https://stardewmods.ru/index.php?do=download&id=301'
 };
 
 function entries(buf) {
@@ -46,10 +47,10 @@ function parseJson(b){let s=b.toString('utf8').replace(/^\uFEFF/,'');try{return 
 module.exports=async function handler(req,res){
   res.setHeader('Cache-Control','no-store');
   try{
-    const source=String(req.query.source||''),url=SOURCES[source];if(!url)return res.status(400).json({ok:false,error:'source must be arv or jorts'});
-    const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0'}});if(!r.ok)return res.status(502).json({ok:false,error:'source fetch failed',status:r.status});
+    const source=String(req.query.source||''),url=SOURCES[source];if(!url)return res.status(400).json({ok:false,error:'source must be arv, jorts, or age223'});
+    const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0'}});if(!r.ok)return res.status(502).json({ok:false,error:'source fetch failed',status:r.status,finalUrl:r.url});
     const buf=Buffer.from(await r.arrayBuffer()),list=entries(buf).filter(e=>!e.name.endsWith('/')),mode=String(req.query.mode||'');
-    if(mode==='hashes'){const files=list.map(e=>{const b=extract(buf,e);return{name:e.name,size:b.length,sha256:sha(b)};});return res.json({ok:true,source,sizeBytes:buf.length,files});}
+    if(mode==='hashes'){const files=list.map(e=>{const b=extract(buf,e);return{name:e.name,size:b.length,sha256:sha(b)};});return res.json({ok:true,source,sizeBytes:buf.length,finalUrl:r.url,files});}
     if(mode==='cyrfiles'){
       const files=[];
       for(const e of list){
@@ -57,14 +58,14 @@ module.exports=async function handler(req,res){
         const b=extract(buf,e),s=b.toString('utf8'),m=s.match(/[А-Яа-яЁё]/g);
         if(m&&m.length) files.push({name:e.name,size:b.length,cyrillicChars:m.length,sha256:sha(b)});
       }
-      return res.json({ok:true,source,files});
+      return res.json({ok:true,source,finalUrl:r.url,files});
     }
     if(mode==='audit'){
-      const def=list.find(e=>/\/i18n\/default\.json$/i.test(e.name)),ru=list.find(e=>/\/i18n\/ru\.json$/i.test(e.name));if(!def||!ru)return res.status(404).json({ok:false,error:'default/ru i18n pair not found'});
+      const def=list.find(e=>/(^|\/)i18n\/default\.json$/i.test(e.name)),ru=list.find(e=>/(^|\/)i18n\/ru\.json$/i.test(e.name));if(!def||!ru)return res.status(404).json({ok:false,error:'default/ru i18n pair not found',files:list.map(e=>e.name)});
       const db=extract(buf,def),rb=extract(buf,ru),d=flat(parseJson(db)),u=flat(parseJson(rb)),dk=Object.keys(d),uk=Object.keys(u),us=new Set(uk),ds=new Set(dk),missing=dk.filter(k=>!us.has(k)),extra=uk.filter(k=>!ds.has(k)),same=dk.filter(k=>us.has(k)&&typeof d[k]==='string'&&d[k]===u[k]);
-      return res.json({ok:true,source,defaultPath:def.name,ruPath:ru.name,defaultSha256:sha(db),ruSha256:sha(rb),defaultKeys:dk.length,ruKeys:uk.length,missingCount:missing.length,extraCount:extra.length,sameCount:same.length,missing:missing.slice(0,200),extra:extra.slice(0,200),same:same.slice(0,200)});
+      return res.json({ok:true,source,finalUrl:r.url,defaultPath:def.name,ruPath:ru.name,defaultSha256:sha(db),ruSha256:sha(rb),defaultKeys:dk.length,ruKeys:uk.length,missingCount:missing.length,extraCount:extra.length,sameCount:same.length,missing:missing.slice(0,200),extra:extra.slice(0,200),same:same.slice(0,200)});
     }
-    const wanted=req.query.path?String(req.query.path):null;if(!wanted)return res.json({ok:true,source,sizeBytes:buf.length,files:list.map(e=>({name:e.name,size:e.uncompressedSize}))});
+    const wanted=req.query.path?String(req.query.path):null;if(!wanted)return res.json({ok:true,source,sizeBytes:buf.length,finalUrl:r.url,files:list.map(e=>({name:e.name,size:e.uncompressedSize}))});
     const e=list.find(x=>x.name===wanted);if(!e)return res.status(404).json({ok:false,error:'entry not found'});if(e.uncompressedSize>4500000)return res.status(413).json({ok:false,error:'entry too large',size:e.uncompressedSize});
     const data=extract(buf,e);return res.json({ok:true,source,path:e.name,size:data.length,sha256:sha(data),text:data.toString('utf8')});
   }catch(err){return res.status(500).json({ok:false,error:String(err&&err.message||err)});}
