@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
   if (!key) return res.status(500).json({ok:false,error:"NEXUS_API_KEY is not configured"});
   const body=req.method==="GET"?(req.query||{}):(req.body||{});
   const game=String(body.game||"stardewvalley").replace(/[^a-z0-9_-]/gi,"");
-  const headers={apikey:key,"User-Agent":"nexus-loader/1.9"};
+  const headers={apikey:key,"User-Agent":"nexus-loader/2.0"};
   const json=async url=>{const r=await fetch(url,{headers});let data=null;try{data=await r.json()}catch{}if(!r.ok){const e=new Error("Nexus request failed");e.status=r.status;e.data=data;throw e}return data};
   const positiveInt=v=>{const n=Number(v);return Number.isInteger(n)&&n>0?n:null};
   const chooseMain=(files,platform="desktop")=>{
@@ -24,6 +24,21 @@ module.exports = async function handler(req, res) {
     if(!uri){const e=new Error("Nexus returned no downloadable mirror");e.status=502;throw e}
     return uri;
   };
+  const resolveIds=async(ids,platform="desktop")=>{
+    const out=[];
+    for(const modId of ids){
+      try{
+        const [meta,pack]=await Promise.all([
+          json(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}.json`),
+          json(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files.json`)
+        ]);
+        const file=chooseMain(pack.files,platform);
+        if(!file){out.push({modId,ok:false,error:"No MAIN file"});continue;}
+        out.push({modId,ok:true,name:meta.name,modVersion:meta.version,fileId:file.file_id,fileName:file.file_name,fileVersion:file.version||file.mod_version||null,sizeBytes:file.size_in_bytes||null,uploaded:file.uploaded_timestamp||null,downloadPath:`/api/nexus?action=download&modId=${modId}&fileId=${file.file_id}&game=${game}`});
+      }catch(e){out.push({modId,ok:false,status:e.status||500});}
+    }
+    return out;
+  };
   try {
     if(body.action==="validate"){
       const data=await json("https://api.nexusmods.com/v1/users/validate.json");
@@ -32,6 +47,12 @@ module.exports = async function handler(req, res) {
     if(body.action==="files"){
       const modId=positiveInt(body.modId);if(!modId)return res.status(400).json({ok:false,error:"Invalid modId"});
       return res.json({ok:true,data:await json(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files.json`)});
+    }
+    if(req.method==="GET"&&body.action==="resolveQueueCsv"){
+      const ids=[...new Set(String(body.ids||"").split(",").map(Number).filter(x=>Number.isInteger(x)&&x>0))];
+      if(!ids.length||ids.length>20)return res.status(400).json({ok:false,error:"Provide 1-20 comma-separated ids"});
+      const platform=body.platform==="android"?"android":"desktop";
+      return res.json({ok:true,data:{platform,items:await resolveIds(ids,platform)}});
     }
     if(req.method==="GET"&&body.action==="download"){
       const modId=positiveInt(body.modId),fileId=positiveInt(body.fileId);
@@ -61,19 +82,7 @@ module.exports = async function handler(req, res) {
       const platform=body.platform==="android"?"android":"desktop";
       const user=await json("https://api.nexusmods.com/v1/users/validate.json");
       if(!user||!user.is_premium)return res.status(403).json({ok:false,error:"Nexus Premium required"});
-      const out=[];
-      for(const modId of ids){
-        try{
-          const [meta,pack]=await Promise.all([
-            json(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}.json`),
-            json(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files.json`)
-          ]);
-          const file=chooseMain(pack.files,platform);
-          if(!file){out.push({modId,ok:false,error:"No MAIN file"});continue;}
-          out.push({modId,ok:true,name:meta.name,modVersion:meta.version,fileId:file.file_id,fileName:file.file_name,fileVersion:file.version||file.mod_version||null,sizeBytes:file.size_in_bytes||null,downloadPath:`/api/nexus?action=download&modId=${modId}&fileId=${file.file_id}&game=${game}`});
-        }catch(e){out.push({modId,ok:false,status:e.status||500});}
-      }
-      return res.json({ok:true,data:{platform,items:out}});
+      return res.json({ok:true,data:{platform,items:await resolveIds(ids,platform)}});
     }
     if(body.action==="mod"||body.action==="batchMods"||body.action==="downloadLinks"){
       if(body.action==="mod"){
@@ -91,4 +100,4 @@ module.exports = async function handler(req, res) {
     }
     return res.status(400).json({ok:false,error:"Unknown action"});
   }catch(e){return res.status(e.status||500).json({ok:false,error:e.message||"Nexus request failed",status:e.status||500})}
-}
+};
