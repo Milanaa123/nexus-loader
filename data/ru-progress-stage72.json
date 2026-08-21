@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "updated": "2026-08-21",
+  "stage": 72,
+  "verifiedBefore": 287,
+  "verifiedStage": 7,
+  "verifiedTotal": 294,
+  "remaining": 241,
+  "assemblyTotal": 535,
+  "tractorMod": "separate; not included in 535",
+  "complete": true,
+  "validatorCommit": "7ff4cc3ce806f194b82a141c342d6eb856dc5b76",
+  "productionDeploymentId": "dpl_DqP11cZ5E143YiJ2ARoH7hUZqka7",
+  "overlayFiles": 16,
+  "totalLocalizedKeys": 601,
+  "mods": [
+    {"name":"Molamole's Catalogue Retexture 1.0.3","modId":39187,"originalFileId":166161,"keys":97},
+    {"name":"Molamole's Mailbox 2.0.2","modId":20517,"originalFileId":165771,"keys":98},
+    {"name":"Molamole's Mini-ShippingBin 1.0.1","modId":31970,"originalFileId":171751,"keys":29},
+    {"name":"Molamole's ShippingBin 2.0.2","modId":23117,"originalFileId":170883,"keys":63},
+    {"name":"Molamole's Tree Of The Winter Star 1.0.2","modId":28667,"originalFileId":137048,"keys":205},
+    {"name":"Molamole's Wallpaper and Flooring 2.0.5","modId":27122,"originalFileId":165761,"keys":6,"subpacks":2},
+    {"name":"Molamole's Pet Toys And House 1.0.2","modId":28460,"originalFileId":147891,"keys":103}
+  ],
+  "validation": {"missing":0,"extra":0,"remainingVisibleLatin":0}
+}
