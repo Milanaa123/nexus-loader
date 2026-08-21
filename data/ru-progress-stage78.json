@@ -1,0 +1,53 @@
+{
+  "stage": 78,
+  "assemblyTotal": 535,
+  "verifiedBefore": 313,
+  "verifiedStage": 3,
+  "verifiedTotal": 316,
+  "remaining": 219,
+  "complete": false,
+  "mods": [
+    {
+      "name": "Battery Pack From Joja",
+      "version": "0.0.1",
+      "modId": 27674,
+      "status": "verified-no-runtime-localization",
+      "notes": "Current archive contains only content.json and manifest.json and reuses the vanilla Battery Pack item; no custom player-facing text resources are added."
+    },
+    {
+      "name": "Beach Farm Redone",
+      "version": "1.2",
+      "modId": 24235,
+      "fileId": 158783,
+      "status": "verified-no-runtime-localization",
+      "notes": "Current MAIN archive contains Farm_Island.tmx, content.json and manifest.json only; no i18n/config-menu/player-facing text resources. Nexus ID 24235 was revalidated as Beach Farm Redone."
+    },
+    {
+      "name": "Beach Wave Sounds",
+      "version": "1.0.0",
+      "modId": 32469,
+      "fileId": 131413,
+      "status": "verified-no-runtime-localization",
+      "notes": "Current archive contains three WAV audio files, content.json and manifest.json only; no localization resources or custom player-facing text."
+    },
+    {
+      "name": "Beach Additional Storage Space Area",
+      "version": "2.3",
+      "modId": 14244,
+      "status": "in-progress"
+    },
+    {
+      "name": "Beach Extension For Crab Pod",
+      "version": "3.8",
+      "modId": 11594,
+      "fileId": 170131,
+      "status": "in-progress",
+      "notes": "Russian translation mod 47335 MAIN file 170518 was published after original 3.8. Exact i18n key compatibility between current 3.8 and translation is still being checked before counting."
+    },
+    {
+      "name": "Berry Season Reminder",
+      "status": "in-progress",
+      "notes": "Official source contains visible English hover text 'Blackberry Season' and 'Salmonberry Season'; requires a real localization/code patch. Previously remembered Nexus ID 24235 was incorrect and has been discarded."
+    }
+  ]
+}
