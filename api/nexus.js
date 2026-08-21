@@ -1,41 +1,42 @@
-const AdmZip=require('adm-zip');
-const UPDATES=[
-{id:7482,fid:175111,installed:'4.0.0',latest:'4.1.0',name:'Better Signs'},
-{id:14916,fid:178009,installed:'1.0.8',latest:'1.1.3',name:'Dwarf Portrait Replacement'},
-{id:16491,fid:74411,installed:'1.0.2',latest:'1.0.3',name:'Simple Weapons'},
-{id:18914,fid:176020,installed:'1.4.0',latest:'2.0.0',name:'Crop Growth Adjustments'},
-{id:21588,fid:176516,installed:'1.1.0',latest:'1.2.0',name:'Custom Backpack Framework'},
-{id:22016,fid:93132,installed:'1.0.2',latest:'1.0.3',name:'Winter Gifts'},
-{id:23697,fid:176450,installed:'2.2.1',latest:'2.2.2',name:'Mastery Extended'},
-{id:25328,fid:177076,installed:'1.9.10',latest:'1.9.14',name:'Extra Animal Configs'},
-{id:26236,fid:110396,installed:'1.0.7',latest:'1.0.8',name:'Sweet Gem Berry Extended - English Translation'},
-{id:28103,fid:171098,installed:'1.5.0',latest:'1.7.0',name:'Luck Skill'},
-{id:29400,fid:177667,installed:'1.3.0',latest:'1.3.1',name:'A Warm Welcome'},
-{id:32081,fid:178840,installed:'1.0.1',latest:'1.1.0',name:'BlinkFix'},
-{id:39979,fid:179311,installed:'1.0.4',latest:'1.0.5',name:'Billboard Beautifier'},
-{id:44845,fid:178219,installed:'1.4.4',latest:'1.5',name:'Evelyn Expansion'}
-];
-module.exports=async function handler(req,res){
+module.exports=async function(req,res){
  res.setHeader('Cache-Control','no-store');
- if(!['GET','POST'].includes(req.method))return res.status(405).json({ok:false,error:'GET/POST required'});
- const key=process.env.NEXUS_API_KEY;if(!key)return res.status(500).json({ok:false,error:'NEXUS_API_KEY is not configured'});
- const b=req.method==='GET'?(req.query||{}):(req.body||{}),game=String(b.game||'stardewvalley').replace(/[^a-z0-9_-]/gi,''),headers={apikey:key,'User-Agent':'nexus-loader/2.3'};
- const json=async u=>{const r=await fetch(u,{headers});let d=null;try{d=await r.json()}catch{}if(!r.ok){const e=Error('Nexus request failed');e.status=r.status;throw e}return d};
- const pint=v=>{const n=Number(v);return Number.isInteger(n)&&n>0?n:null};
- const main=files=>{const a=(Array.isArray(files)?files:[]).filter(f=>(f.category_name==='MAIN'||f.category_id===1)&&!/android/i.test(`${f.name||''} ${f.file_name||''} ${f.description||''}`));return a.find(f=>f.is_primary)||a.sort((x,y)=>(y.uploaded_timestamp||0)-(x.uploaded_timestamp||0))[0]||null};
- const one=async id=>{try{const[m,p]=await Promise.all([json(`https://api.nexusmods.com/v1/games/${game}/mods/${id}.json`),json(`https://api.nexusmods.com/v1/games/${game}/mods/${id}/files.json`)]),f=main(p.files);if(!f)return{id,ok:false,error:'No MAIN file'};return{id,ok:true,name:m.name,modVersion:m.version,fileId:f.file_id,fileName:f.file_name,fileVersion:f.version||f.mod_version||null,sizeBytes:f.size_in_bytes||null,uploaded:f.uploaded_timestamp||null}}catch(e){return{id,ok:false,status:e.status||500}}};
- const premium=async()=>{const u=await json('https://api.nexusmods.com/v1/users/validate.json');if(!u||!u.is_premium){const e=Error('Nexus Premium required');e.status=403;throw e}};
- const mirror=async(id,fid)=>{const ls=await json(`https://api.nexusmods.com/v1/games/${game}/mods/${id}/files/${fid}/download_link.json`),x=(ls||[]).find(v=>v&&(v.URI||v.uri));if(!x){const e=Error('No mirror');e.status=502;throw e}return x.URI||x.uri};
- const fetchBuf=async u=>{const r=await fetch(u,{redirect:'follow'});if(!r.ok){const e=Error('Mirror download failed');e.status=502;throw e}return Buffer.from(await r.arrayBuffer())};
- const zipText=buf=>{const z=new AdmZip(buf),out=[];for(const e of z.getEntries()){if(e.isDirectory)continue;const n=e.entryName,low=n.toLowerCase();if(/manifest\.json$/.test(low)||/i18n\/(default|ru)\.json$/.test(low)||/assets\/translations\/ru\.json$/.test(low)){let text='';try{text=e.getData().toString('utf8')}catch{}out.push({path:n,bytes:e.header.size,text})}}return out};
- const inspectText=buf=>{const z=new AdmZip(buf),out=[];let total=0;const ex=/\.(json|jsonc|txt|md|xml|tmx|yaml|yml|csv|ini|cfg|config|toml|properties)$/i;for(const e of z.getEntries()){if(e.isDirectory)continue;const n=e.entryName;if(!ex.test(n))continue;const sz=e.header.size||0;if(sz>160000)continue;let text='';try{text=e.getData().toString('utf8').replace(/^\uFEFF/,'')}catch{continue}if(total+text.length>750000){const left=750000-total;if(left<=0)break;text=text.slice(0,left)}total+=text.length;out.push({path:n,bytes:sz,text});if(total>=750000)break}return{files:out,totalChars:total,archiveEntries:z.getEntries().length}};
  try{
-  if(b.action==='validate'){const d=await json('https://api.nexusmods.com/v1/users/validate.json');return res.json({ok:true,data:{valid:true,isPremium:!!d?.is_premium}})}
-  if(b.action==='files'){const id=pint(b.modId);if(!id)return res.status(400).json({ok:false,error:'Invalid modId'});return res.json({ok:true,data:await json(`https://api.nexusmods.com/v1/games/${game}/mods/${id}/files.json`)})}
-  if(b.action==='resolveQueue'){const ids=Array.isArray(b.modIds)?b.modIds.map(pint).filter(Boolean):String(b.modIds||'').split(/[\s,;]+/).map(pint).filter(Boolean);if(!ids.length||ids.length>100)return res.status(400).json({ok:false,error:'Provide 1-100 modIds'});const items=await Promise.all(ids.map(one));return res.json({ok:true,data:{items:items.map(x=>x.ok?{...x,downloadPath:`/api/nexus?action=download&modId=${x.id}&fileId=${x.fileId}&game=${game}`}:x)}})}
-  if(req.method==='GET'&&b.action==='auditCsv'){return res.json({ok:true,data:{checked:0,outdated:0,items:[]}})}
-  if(req.method==='GET'&&b.action==='resolveQueueCsv'){const ids=[...new Set(String(b.ids||'').split(',').map(pint).filter(Boolean))];if(!ids.length||ids.length>100)return res.status(400).json({ok:false,error:'Provide 1-100 ids'});return res.json({ok:true,data:{items:await Promise.all(ids.map(one))}})}
-  if(req.method==='GET'&&b.action==='download'){const id=pint(b.modId),fid=pint(b.fileId);if(!id||!fid)return res.status(400).json({ok:false,error:'Invalid modId/fileId'});await premium();res.setHeader('Location',await mirror(id,fid));return res.status(302).end()}
-  return res.status(400).json({ok:false,error:'Unknown action'})
- }catch(e){return res.status(e.status||500).json({ok:false,error:e.message||'Nexus request failed',status:e.status||500})}
+  const key=process.env.NEXUS_API_KEY;
+  if(!key) return res.status(500).json({ok:false,error:'NEXUS_API_KEY is not configured'});
+  const body=req.body||{};
+  const q=req.query||{};
+  const action=body.action||q.action;
+  const game=String(body.game||q.game||'stardewvalley');
+  const headers={apikey:key,'User-Agent':'nexus-loader/3.0'};
+  const api=async u=>{const r=await fetch(u,{headers});const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.message||'Nexus error'),{status:r.status});return d};
+  if(action==='validate'){
+   const d=await api('https://api.nexusmods.com/v1/users/validate.json');
+   return res.json({ok:true,data:{valid:true,isPremium:!!d.is_premium}});
+  }
+  if(action==='files'){
+   const id=Number(body.modId||q.modId);
+   return res.json({ok:true,data:await api(`https://api.nexusmods.com/v1/games/${game}/mods/${id}/files.json`)});
+  }
+  if(action==='resolveQueue'){
+   const ids=(body.modIds||[]).map(Number).filter(Boolean);
+   const items=[];
+   for(const id of ids){
+    try{
+     const m=await api(`https://api.nexusmods.com/v1/games/${game}/mods/${id}.json`);
+     const f=await api(`https://api.nexusmods.com/v1/games/${game}/mods/${id}/files.json`);
+     const file=(f.files||[]).find(x=>x.category_name==='MAIN')||(f.files||[])[0];
+     items.push({ok:true,id,name:m.name,fileId:file.file_id,fileName:file.file_name,fileVersion:file.version,downloadPath:`/api/nexus?action=download&modId=${id}&fileId=${file.file_id}&game=${game}`});
+    }catch(e){items.push({ok:false,modId:id,error:e.message});}
+   }
+   return res.json({ok:true,data:{items}});
+  }
+  if(action==='download'){
+   const id=Number(body.modId||q.modId),fid=Number(body.fileId||q.fileId);
+   const d=await api(`https://api.nexusmods.com/v1/games/${game}/mods/${id}/files/${fid}/download_link.json`);
+   const link=d[0]?.URI||d[0]?.uri;
+   if(!link)return res.status(502).json({ok:false,error:'No download link'});
+   res.statusCode=302;res.setHeader('Location',link);return res.end();
+  }
+  return res.status(400).json({ok:false,error:'Unknown action',received:action||null,body});
+ }catch(e){return res.status(e.status||500).json({ok:false,error:e.message});}
 };
