@@ -5,31 +5,23 @@ const { downloadMod, ensure } = require('./nexus-downloader');
 const ROOT = path.join(__dirname, '..');
 const WORK = path.join(ROOT, 'RU_PACK_WORK');
 const PROGRESS = path.join(WORK, 'progress.json');
-
-const DEFAULT = {
-  total: 535,
-  ready: 1,
-  remaining: 534,
-  updated: 0,
-  fixed: 0,
-  createdTranslations: 0,
-  withoutTranslation: 534,
-  processed: 1,
-  running: false,
-  queueSize: 0,
-  current: null,
-  downloaded: 0,
-  failed: 0
-};
+const QUEUE = path.join(WORK, 'queue.json');
 
 function loadProgress() {
-  if (!fs.existsSync(PROGRESS)) return { ...DEFAULT };
-  return { ...DEFAULT, ...JSON.parse(fs.readFileSync(PROGRESS, 'utf8')) };
+  try { return JSON.parse(fs.readFileSync(PROGRESS, 'utf8')); }
+  catch { return { total: 535, downloaded: 0, failed: 0 }; }
 }
 
 function saveProgress(data) {
   fs.mkdirSync(WORK, { recursive: true });
-  fs.writeFileSync(PROGRESS, JSON.stringify(data, null, 2));
+  fs.writeFileSync(PROGRESS, JSON.stringify(data, null, 2), 'utf8');
+}
+
+function loadQueue() {
+  try {
+    const q = JSON.parse(fs.readFileSync(QUEUE, 'utf8'));
+    return Array.isArray(q) ? q : (q.mods || []);
+  } catch { return []; }
 }
 
 async function processQueue(items = []) {
@@ -41,15 +33,13 @@ async function processQueue(items = []) {
 
   for (const item of items) {
     try {
-      progress.current = item.modId;
+      progress.current = item.modId || item.name;
       const link = await downloadMod(item);
-      progress.lastDownload = link ? 'ready' : 'missing';
-      if (link) progress.downloaded++;
+      if (link) progress.downloaded = (progress.downloaded || 0) + 1;
     } catch (e) {
-      progress.failed++;
+      progress.failed = (progress.failed || 0) + 1;
       progress.lastError = e.message;
     }
-    progress.lastRun = new Date().toISOString();
     saveProgress(progress);
   }
 
@@ -60,7 +50,8 @@ async function processQueue(items = []) {
 }
 
 async function start(options = {}) {
-  return processQueue(Array.isArray(options.queue) ? options.queue : []);
+  const queue = Array.isArray(options.queue) && options.queue.length ? options.queue : loadQueue();
+  return processQueue(queue);
 }
 
 module.exports = { start, processQueue, loadProgress, saveProgress };
