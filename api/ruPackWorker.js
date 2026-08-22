@@ -3,41 +3,42 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const PROGRESS = path.join(ROOT, 'RU_PACK_WORK', 'progress.json');
+const QUEUE = path.join(ROOT, 'RU_PACK_WORK', 'queue.json');
 
-function loadProgress() {
-  try {
-    return JSON.parse(fs.readFileSync(PROGRESS, 'utf8'));
-  } catch {
-    return {
-      total: 535,
-      ready: 1,
-      remaining: 534,
-      updated: 0,
-      fixed: 0,
-      createdTranslations: 0,
-      withoutTranslation: 0
-    };
-  }
+function load(file, fallback) {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
+  catch { return fallback; }
 }
 
-function saveProgress(data) {
-  fs.mkdirSync(path.dirname(PROGRESS), { recursive: true });
-  fs.writeFileSync(PROGRESS, JSON.stringify(data, null, 2), 'utf8');
+function save(file, data) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 }
 
 module.exports = async function (req, res) {
   const action = (req.body && req.body.action) || (req.query && req.query.action);
+  const progress = load(PROGRESS, {
+    total: 535,
+    ready: 0,
+    remaining: 535,
+    updated: 0,
+    fixed: 0,
+    createdTranslations: 0,
+    status: 'queue_ready'
+  });
 
   if (action === 'status') {
-    return res.json({ ok: true, data: loadProgress() });
+    return res.json({ ok: true, data: progress });
   }
 
   if (action === 'start') {
-    const p = loadProgress();
-    p.worker = 'started';
-    p.lastRun = new Date().toISOString();
-    saveProgress(p);
-    return res.json({ ok: true, data: p });
+    const queue = load(QUEUE, { mods: [] });
+    progress.worker = 'started';
+    progress.queueSize = queue.mods.length;
+    progress.lastRun = new Date().toISOString();
+    progress.status = 'processing';
+    save(PROGRESS, progress);
+    return res.json({ ok: true, data: progress });
   }
 
   return res.status(400).json({ ok: false, error: 'Unknown action' });
