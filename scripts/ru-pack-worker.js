@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { downloadMod, ensure } = require('./nexus-downloader');
 
 const ROOT = path.join(__dirname, '..');
 const WORK = path.join(ROOT, 'RU_PACK_WORK');
@@ -16,7 +17,9 @@ const DEFAULT = {
   processed: 1,
   running: false,
   queueSize: 0,
-  current: null
+  current: null,
+  downloaded: 0,
+  failed: 0
 };
 
 function loadProgress() {
@@ -29,13 +32,23 @@ function saveProgress(data) {
   fs.writeFileSync(PROGRESS, JSON.stringify(data, null, 2));
 }
 
-async function processQueue(modIds = []) {
+async function processQueue(items = []) {
+  ensure();
   const progress = loadProgress();
   progress.running = true;
-  progress.queueSize = modIds.length;
+  progress.queueSize = items.length;
+  saveProgress(progress);
 
-  for (const modId of modIds) {
-    progress.current = modId;
+  for (const item of items) {
+    try {
+      progress.current = item.modId;
+      const link = await downloadMod(item);
+      progress.lastDownload = link ? 'ready' : 'missing';
+      if (link) progress.downloaded++;
+    } catch (e) {
+      progress.failed++;
+      progress.lastError = e.message;
+    }
     progress.lastRun = new Date().toISOString();
     saveProgress(progress);
   }
@@ -47,12 +60,7 @@ async function processQueue(modIds = []) {
 }
 
 async function start(options = {}) {
-  const ids = Array.isArray(options.modIds) ? options.modIds : [];
-  return processQueue(ids);
+  return processQueue(Array.isArray(options.queue) ? options.queue : []);
 }
 
-async function runBatch(ids = []) {
-  return processQueue(ids);
-}
-
-module.exports = { start, runBatch, loadProgress, saveProgress, processQueue };
+module.exports = { start, processQueue, loadProgress, saveProgress };
