@@ -15,7 +15,8 @@ const DEFAULT = {
   withoutTranslation: 534,
   processed: 1,
   running: false,
-  queueSize: 0
+  queueSize: 0,
+  current: null
 };
 
 function loadProgress() {
@@ -28,21 +29,30 @@ function saveProgress(data) {
   fs.writeFileSync(PROGRESS, JSON.stringify(data, null, 2));
 }
 
-async function start(options = {}) {
+async function processQueue(modIds = []) {
   const progress = loadProgress();
   progress.running = true;
-  progress.startedAt = new Date().toISOString();
-  progress.queueSize = Array.isArray(options.modIds) ? options.modIds.length : 0;
+  progress.queueSize = modIds.length;
+
+  for (const modId of modIds) {
+    progress.current = modId;
+    progress.lastRun = new Date().toISOString();
+    saveProgress(progress);
+  }
+
+  progress.running = false;
+  progress.current = null;
   saveProgress(progress);
   return progress;
+}
+
+async function start(options = {}) {
+  const ids = Array.isArray(options.modIds) ? options.modIds : [];
+  return processQueue(ids);
 }
 
 async function runBatch(ids = []) {
-  const progress = loadProgress();
-  progress.lastRun = new Date().toISOString();
-  progress.queueSize = ids.length;
-  saveProgress(progress);
-  return progress;
+  return processQueue(ids);
 }
 
-module.exports = { start, runBatch, loadProgress, saveProgress };
+module.exports = { start, runBatch, loadProgress, saveProgress, processQueue };
