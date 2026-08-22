@@ -1,0 +1,8 @@
+{
+  "source": "Google Drive/МОДЫ",
+  "output": "Google Drive/ГОТОВЫЕ РУССКИЕ МОДЫ",
+  "mode": "merge_original_with_translation",
+  "checkOldTranslations": true,
+  "createMissingTranslations": true,
+  "doNotModifyOriginals": true
+}
