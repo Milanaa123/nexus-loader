@@ -20,11 +20,11 @@ async function nexusSearch(name){
 }
 
 async function run(){
- const input = path.join(__dirname,'..','mods_full_list.txt');
+ const input = path.join(__dirname,'..','input','mods_536_for_nexus_loader.txt');
  const out = path.join(__dirname,'..','RU_PACK_WORK','mods_with_ids.json');
  const lines = fs.readFileSync(input,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
  const result=[]; let found=0;
- saveState({running:true,total:lines.length,processed:0,found:0});
+ saveState({running:true,total:lines.length,processed:0,found});
  for(const name of lines){
   const modId=await nexusSearch(name);
   if(modId) found++;
@@ -37,9 +37,9 @@ async function run(){
 }
 
 module.exports=async function(req,res){
- const input=path.join(__dirname,'..','mods_full_list.txt');
- if(!fs.existsSync(input)) return res.status(404).json({ok:false,error:'mods_full_list.txt not found'});
+ const input=path.join(__dirname,'..','input','mods_536_for_nexus_loader.txt');
+ if(!fs.existsSync(input)) return res.status(404).json({ok:false,error:'input/mods_536_for_nexus_loader.txt not found'});
  const status=fs.existsSync(stateFile)?JSON.parse(fs.readFileSync(stateFile,'utf8')):null;
  if(!status||!status.running){ run(); }
- return res.json({ok:true,status:'started',details:'generation running in background'});
+ return res.json({ok:true,status:'started',source:'input/mods_536_for_nexus_loader.txt'});
 };
