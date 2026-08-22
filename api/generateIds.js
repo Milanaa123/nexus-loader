@@ -1,35 +1,45 @@
 const fs = require('fs');
 const path = require('path');
 
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+const stateFile = path.join(__dirname,'..','RU_PACK_WORK','generator_status.json');
 
-async function nexusSearch(name){
-  const key = process.env.NEXUS_API_KEY;
-  if(!key) return null;
-  const url = `https://api.nexusmods.com/v1/games/stardewvalley/mods.json?query=${encodeURIComponent(name)}`;
-  try{
-    const r = await fetch(url,{headers:{apikey:key}});
-    if(!r.ok) return null;
-    const data = await r.json();
-    const first = Array.isArray(data) ? data[0] : null;
-    return first ? first.mod_id : null;
-  }catch(e){ return null; }
+function saveState(data){
+ fs.mkdirSync(path.dirname(stateFile),{recursive:true});
+ fs.writeFileSync(stateFile,JSON.stringify(data,null,2),'utf8');
 }
 
-module.exports = async function(req,res){
+async function nexusSearch(name){
+ const key = process.env.NEXUS_API_KEY;
+ if(!key) return null;
+ try{
+  const r = await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/mods.json?query=${encodeURIComponent(name)}`,{headers:{apikey:key}});
+  if(!r.ok) return null;
+  const data = await r.json();
+  return Array.isArray(data)&&data[0] ? data[0].mod_id : null;
+ }catch(e){ return null; }
+}
+
+async function run(){
  const input = path.join(__dirname,'..','mods_full_list.txt');
  const out = path.join(__dirname,'..','RU_PACK_WORK','mods_with_ids.json');
- if(!fs.existsSync(input)) return res.status(404).json({ok:false,error:'mods_full_list.txt not found'});
  const lines = fs.readFileSync(input,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- const result=[];
- let found=0;
+ const result=[]; let found=0;
+ saveState({running:true,total:lines.length,processed:0,found:0});
  for(const name of lines){
-   const modId = await nexusSearch(name);
-   if(modId) found++;
-   result.push({name,modId,status:modId?'found':'not_found'});
-   await sleep(250);
+  const modId=await nexusSearch(name);
+  if(modId) found++;
+  result.push({name,modId,status:modId?'found':'not_found'});
+  saveState({running:true,total:lines.length,processed:result.length,found});
+  await new Promise(r=>setTimeout(r,250));
  }
- fs.mkdirSync(path.dirname(out),{recursive:true});
  fs.writeFileSync(out,JSON.stringify(result,null,2),'utf8');
- return res.json({ok:true,total:result.length,found,file:'RU_PACK_WORK/mods_with_ids.json',status:'completed'});
+ saveState({running:false,total:lines.length,processed:result.length,found,file:out});
+}
+
+module.exports=async function(req,res){
+ const input=path.join(__dirname,'..','mods_full_list.txt');
+ if(!fs.existsSync(input)) return res.status(404).json({ok:false,error:'mods_full_list.txt not found'});
+ const status=fs.existsSync(stateFile)?JSON.parse(fs.readFileSync(stateFile,'utf8')):null;
+ if(!status||!status.running){ run(); }
+ return res.json({ok:true,status:'started',details:'generation running in background'});
 };
