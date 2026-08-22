@@ -1,0 +1,28 @@
+{
+  "project": "Stardew Valley RU Pack",
+  "totalMods": 535,
+  "batchSize": 25,
+  "parallelDownloads": 3,
+  "checks": [
+    "nexus_version",
+    "translation_exists",
+    "translation_version_match",
+    "english_strings_scan",
+    "i18n_check",
+    "content_patcher_check",
+    "gmcm_check"
+  ],
+  "folders": {
+    "ready": "READY_RU",
+    "updated": "UPDATED_MODS",
+    "fixed": "FIXED_TRANSLATIONS",
+    "needsTranslation": "NEED_TRANSLATION",
+    "reports": "REPORTS"
+  },
+  "rules": {
+    "neverOverwriteOriginals": true,
+    "oldTranslationRequiresUpdate": true,
+    "missingTranslationRequiresCreation": true,
+    "acceptOnlyRussianResult": true
+  }
+}
