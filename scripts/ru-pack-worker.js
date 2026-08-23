@@ -40,6 +40,14 @@ function saveProgress(progress) {
 }
 
 async function processQueue(items) {
+  if (!items.length) {
+    const empty = loadProgress();
+    empty.running = false;
+    empty.status = 'empty_queue';
+    saveProgress(empty);
+    return empty;
+  }
+
   if (fs.existsSync(LOCK)) return loadProgress();
   fs.mkdirSync(WORK, { recursive: true });
   fs.writeFileSync(LOCK, String(Date.now()));
@@ -47,7 +55,16 @@ async function processQueue(items) {
   try {
     ensure();
     const progress = loadProgress();
+
+    if (progress.total !== items.length) {
+      progress.processed = 0;
+      progress.downloaded = 0;
+      progress.failed = 0;
+      progress.noTranslations = 0;
+    }
+
     progress.total = items.length;
+    progress.remaining = Math.max(0, progress.total - progress.processed);
     progress.running = true;
     progress.status = 'processing';
     saveProgress(progress);
