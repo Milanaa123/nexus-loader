@@ -2,9 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const PROGRESS = path.join(ROOT, 'RU_PACK_WORK', 'progress.json');
-const QUEUE = path.join(ROOT, 'RU_PACK_WORK', 'queue.json');
-const RESULT = path.join(ROOT, 'RU_PACK_WORK', 'ready.json');
+const DIR = path.join(ROOT, 'RU_PACK_WORK');
+const PROGRESS = path.join(DIR, 'progress.json');
+const QUEUE = path.join(DIR, 'queue.json');
+const RESULT = path.join(DIR, 'ready.json');
 
 function load(file, fallback) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
@@ -12,31 +13,45 @@ function load(file, fallback) {
 }
 
 function save(file, data) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.mkdirSync(DIR, { recursive: true });
   fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 }
 
 async function runWorker() {
   const queue = load(QUEUE, { mods: [] });
   const items = queue.mods || [];
-  const progress = load(PROGRESS, { total: items.length });
+  const progress = load(PROGRESS, {});
+  const result = load(RESULT, { found: [], missing: [], failed: [] });
+
   progress.total = items.length || progress.total || 535;
   progress.running = true;
   progress.status = 'processing';
+  progress.remaining = progress.total - (progress.processed || 0);
+  save(PROGRESS, progress);
 
   for (let i = progress.processed || 0; i < items.length; i++) {
     progress.current = items[i];
+    save(PROGRESS, progress);
+
+    try {
+      result.missing.push(items[i]);
+      progress.noTranslations = (progress.noTranslations || 0) + 1;
+    } catch (e) {
+      result.failed.push(items[i]);
+      progress.failed = (progress.failed || 0) + 1;
+    }
+
     progress.processed = i + 1;
     progress.remaining = items.length - progress.processed;
+    save(RESULT, result);
     save(PROGRESS, progress);
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 100));
   }
 
-  progress.running = false;
   progress.current = null;
+  progress.running = false;
   progress.status = 'finished';
   save(PROGRESS, progress);
-  save(RESULT, { finished: new Date().toISOString(), progress });
 }
 
 module.exports = async function (req, res) {
