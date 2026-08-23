@@ -1,67 +1,14 @@
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
+const fs=require('fs');
+const path=require('path');
+const https=require('https');
 
-function getJson(url, headers = {}) {
-  return new Promise(resolve => {
-    https.get(url, { headers }, r => {
-      let data = '';
-      r.on('data', c => data += c);
-      r.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
-    }).on('error', () => resolve({}));
-  });
-}
+const root=path.join(__dirname,'..');
+const state=path.join(root,'ru-status.json');
+const out=path.join(root,'RU_PACK_WORK','translations.json');
 
-function parseList(file) {
-  if (!fs.existsSync(file)) return [];
-  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
-  const out = [];
-  for (let i = 0; i < lines.length; i++) {
-    const name = lines[i].trim();
-    const author = (lines[i + 1] || '').trim();
-    if (name && author && !name.startsWith('(') && !author.startsWith('(')) {
-      out.push({ name, author });
-      i++;
-    }
-  }
-  return out;
-}
-
-function norm(s) {
-  return String(s || '').toLowerCase();
-}
-
-async function findRU(mod) {
-  const key = process.env.NEXUS_API_KEY;
-  if (!key) return { status: 'missing_api_key' };
-
-  const q = encodeURIComponent(`${mod.name} ${mod.author}`);
-  const data = await getJson(`https://api.nexusmods.com/v1/games/stardewvalley/search.json?terms=${q}`, { apikey: key });
-  const list = Array.isArray(data) ? data : (data.results || []);
-
-  const ru = list.find(x => {
-    const text = norm((x.name || '') + ' ' + (x.summary || ''));
-    return text.includes('russian') || text.includes('translation') || text.includes('ru') || text.includes('рус');
-  });
-
-  return ru
-    ? { status: 'translation_found', modId: ru.mod_id, name: ru.name }
-    : { status: 'no_translation_found' };
-}
-
-module.exports = async function(req, res) {
-  const root = path.join(__dirname, '..');
-  const mods = parseList(path.join(root, 'моды(3).txt'));
-  const result = [];
-
-  for (const mod of mods) {
-    try {
-      result.push({ ...mod, ...(await findRU(mod)) });
-    } catch (e) {
-      result.push({ ...mod, status: 'error_continue' });
-    }
-  }
-
-  fs.writeFileSync(path.join(root, 'ru-status.json'), JSON.stringify(result, null, 2));
-  res.json({ ok: true, total: mods.length, processed: result.length });
-};
+function save(file,data){fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(data,null,2),'utf8');}
+function get(url,headers={}){return new Promise(resolve=>https.get(url,{headers},r=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>{try{resolve(JSON.parse(d))}catch{resolve({})}})}).on('error',()=>resolve({})));}
+function mods(){const f=path.join(root,'моды(3).txt');if(!fs.existsSync(f))return [];const a=fs.readFileSync(f,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);let r=[];for(let i=0;i<a.length;i+=2)r.push({name:a[i],author:a[i+1]||''});return r;}
+async function find(mod){const key=process.env.NEXUS_API_KEY;if(!key)return null;const q=encodeURIComponent(mod.name+' '+mod.author+' russian translation');const j=await get('https://api.nexusmods.com/v1/games/stardewvalley/search.json?terms='+q,{apikey:key});const arr=Array.isArray(j)?j:(j.results||[]);return arr.find(x=>/russian|ru|translation|рус/i.test((x.name||'')+' '+(x.summary||'')))||null;}
+module.exports=async(req,res)=>{const list=mods();let done=0,found=[],none=[];save(state,{running:true,total:list.length,processed:0,downloaded:0});for(const m of list){try{const t=await find(m);if(t)found.push({...m,modId:t.mod_id,nameRU:t.name});else none.push(m);}catch(e){none.push({...m,error:e.message});}done++;save(state,{running:true,total:list.length,processed:done,foundTranslations:found.length,noTranslations:none.length,current:m.name});}
+save(out,{found,none});save(state,{running:false,total:list.length,processed:done,foundTranslations:found.length,noTranslations:none.length});res.json({ok:true,total:list.length,foundTranslations:found.length,noTranslations:none.length});};
