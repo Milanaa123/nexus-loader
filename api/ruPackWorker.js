@@ -1,6 +1,7 @@
 const worker = require('../scripts/ru-pack-worker');
 const fs = require('fs');
 const path = require('path');
+const { spawn } = require('child_process');
 
 module.exports = async function(req, res) {
   const action = (req.body && req.body.action) || (req.query && req.query.action) || 'status';
@@ -13,37 +14,27 @@ module.exports = async function(req, res) {
         try {
           const queue = JSON.parse(fs.readFileSync(queueFile, 'utf8'));
           const items = queue.items || queue.mods || [];
-          if (items.length) {
-            return res.json({ ok: true, data: { ...progress, total: items.length, remaining: items.length } });
-          }
+          if (items.length) return res.json({ ok:true, data:{...progress,total:items.length,remaining:items.length} });
         } catch {}
       }
-      return res.json({ ok: true, data: progress });
+      return res.json({ ok:true, data:progress });
     }
 
     if (action === 'start') {
       const current = worker.loadProgress();
-      if (current.running) {
-        return res.json({ ok: true, status: 'already_running', data: current });
-      }
+      if (current.running) return res.json({ ok:true, status:'already_running', data:current });
 
-      setImmediate(() => {
-        worker.start().catch((err) => {
-          const progress = worker.loadProgress();
-          worker.saveProgress({
-            ...progress,
-            running: false,
-            status: 'error',
-            lastError: err.message
-          });
-        });
+      const child = spawn(process.execPath, [path.join(__dirname, '..', 'scripts', 'ru-pack-daemon.js')], {
+        detached:true,
+        stdio:'ignore'
       });
+      child.unref();
 
-      return res.json({ ok: true, status: 'started', data: worker.loadProgress() });
+      return res.json({ ok:true, status:'worker_started', data:worker.loadProgress() });
     }
 
-    return res.status(400).json({ ok:false, error:'Unknown action' });
-  } catch (e) {
-    return res.status(500).json({ ok:false, error:e.message });
+    return res.status(400).json({ok:false,error:'Unknown action'});
+  } catch(e) {
+    return res.status(500).json({ok:false,error:e.message});
   }
 };
