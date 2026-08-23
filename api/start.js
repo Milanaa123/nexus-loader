@@ -5,39 +5,32 @@ function clean(line) {
   return String(line || '').trim();
 }
 
-function isIgnored(line) {
+function ignored(line) {
   return !line || line.startsWith('(') || line.startsWith('[') || line.startsWith('#');
 }
 
-function isCategory(line) {
-  const categories = ['Expansions','NPCs','Frameworks','Maps','Gameplay','Visuals','UI','Items','Animals','Buildings'];
-  return categories.includes(line);
-}
-
 function parseMods(text) {
-  const lines = text.split(/\r?\n/).map(clean);
+  const lines = text.split(/\r?\n/).map(clean).filter(Boolean);
   const result = [];
 
   for (let i = 0; i < lines.length; i++) {
+    if (ignored(lines[i])) continue;
+
     const name = lines[i];
-    if (isIgnored(name)) continue;
+    const author = lines[i + 1] || '';
+    const category = lines[i + 2] || '';
 
-    const author = lines[i + 1];
-    const category = lines[i + 2];
+    if (!author || ignored(author)) continue;
 
-    if (!author || isIgnored(author)) continue;
+    result.push({
+      name,
+      author,
+      category,
+      done:false,
+      status:'waiting'
+    });
 
-    // A real record has: name -> author -> category
-    if (category && isCategory(category)) {
-      result.push({
-        name,
-        author,
-        category,
-        done:false,
-        status:'waiting'
-      });
-      i += 2;
-    }
+    i += 2;
   }
 
   return result;
@@ -67,6 +60,6 @@ module.exports = async function(req, res) {
     total:queue.length,
     expected:'530',
     queueCreated:true,
-    message:'Mod list parsed with strict records'
+    message:'Mod list parsed'
   });
 };
