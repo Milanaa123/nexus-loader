@@ -5,8 +5,13 @@ function clean(line) {
   return String(line || '').trim();
 }
 
-function isSection(line) {
+function isIgnored(line) {
   return !line || line.startsWith('(') || line.startsWith('[') || line.startsWith('#');
+}
+
+function isCategory(line) {
+  const categories = ['Expansions','NPCs','Frameworks','Maps','Gameplay','Visuals','UI','Items','Animals','Buildings'];
+  return categories.includes(line);
 }
 
 function parseMods(text) {
@@ -15,32 +20,23 @@ function parseMods(text) {
 
   for (let i = 0; i < lines.length; i++) {
     const name = lines[i];
-    if (isSection(name)) continue;
+    if (isIgnored(name)) continue;
 
-    let author = '';
-    let category = '';
+    const author = lines[i + 1];
+    const category = lines[i + 2];
 
-    for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
-      const line = lines[j];
-      if (isSection(line)) continue;
+    if (!author || isIgnored(author)) continue;
 
-      if (!author) {
-        author = line;
-        continue;
-      }
-
-      category = line;
-      break;
-    }
-
-    if (name && author) {
+    // A real record has: name -> author -> category
+    if (category && isCategory(category)) {
       result.push({
         name,
         author,
         category,
-        done: false,
-        status: 'waiting'
+        done:false,
+        status:'waiting'
       });
+      i += 2;
     }
   }
 
@@ -69,7 +65,8 @@ module.exports = async function(req, res) {
   return res.json({
     ok:true,
     total:queue.length,
+    expected:'530',
     queueCreated:true,
-    message:'Mod list parsed successfully'
+    message:'Mod list parsed with strict records'
   });
 };
