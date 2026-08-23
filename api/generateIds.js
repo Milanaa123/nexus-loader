@@ -9,14 +9,13 @@ async function nexusSearch(name){
  const key=process.env.NEXUS_API_KEY;
  if(!key) throw new Error('NEXUS_API_KEY missing');
  for(const q of variants(name)){
-  const r=await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/mods.json?query=${encodeURIComponent(q)}`,{headers:{apikey:key,accept:'application/json'}});
-  if(!r.ok){
-   throw new Error(`Nexus HTTP ${r.status}`);
-  }
+  const r=await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/search.json?query=${encodeURIComponent(q)}`,{headers:{apikey:key,accept:'application/json'}});
+  if(!r.ok) throw new Error(`Nexus HTTP ${r.status}`);
   const data=await r.json();
-  if(Array.isArray(data)&&data.length){
-   const exact=data.find(m=>(m.name||'').toLowerCase()===name.toLowerCase());
-   return (exact||data[0]).mod_id;
+  const items=data.results||data;
+  if(Array.isArray(items)&&items.length){
+   const exact=items.find(m=>(m.name||'').toLowerCase()===name.toLowerCase());
+   return (exact||items[0]).mod_id||null;
   }
  }
  return null;
@@ -35,9 +34,9 @@ async function run(names){
   try{id=await nexusSearch(names[i]);}catch(e){errors++;lastError=e.message;}
   if(id)found++;
   result.push({name:names[i],modId:id,status:id?'found':'not_found'});
-  fs.writeFileSync(outFile,JSON.stringify(result,null,2));
+  fs.writeFileSync(outFile,JSON.stringify(result,null,2),'utf8');
   saveState({running:true,total:names.length,processed:i+1,found,errors,lastError,current:names[i]});
  }
- saveState({running:false,total:names.length,processed:names.length,found,errors,lastError,file:outFile});
+ saveState({running:false,total:names.length,processed:names.length,found,errors,lastError,file:outFile,remaining:0});
 }
 module.exports=async(req,res)=>{const names=loadInput();if(!names.length)return res.status(404).json({ok:false,error:'mods list not found'});run(names);res.json({ok:true,status:'started',total:names.length});};
