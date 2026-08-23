@@ -1,29 +1,47 @@
 const fs = require('fs');
 const path = require('path');
 
+function clean(line) {
+  return String(line || '').trim();
+}
+
+function isSection(line) {
+  return !line || line.startsWith('(') || line.startsWith('[') || line.startsWith('#');
+}
+
 function parseMods(text) {
-  const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  const lines = text.split(/\r?\n/).map(clean);
   const result = [];
 
-  for (let i = 0; i < lines.length;) {
-    const name = lines[i++];
-    if (!name || name.startsWith('#') || name.startsWith('[')) continue;
+  for (let i = 0; i < lines.length; i++) {
+    const name = lines[i];
+    if (isSection(name)) continue;
 
-    const author = lines[i] || '';
-    if (author) i++;
-
+    let author = '';
     let category = '';
-    if (lines[i] && !lines[i].startsWith('http') && !lines[i].startsWith('#')) {
-      category = lines[i++];
+
+    for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+      const line = lines[j];
+      if (isSection(line)) continue;
+
+      if (!author) {
+        author = line;
+        continue;
+      }
+
+      category = line;
+      break;
     }
 
-    result.push({
-      name,
-      author,
-      category,
-      done: false,
-      status: 'queued'
-    });
+    if (name && author) {
+      result.push({
+        name,
+        author,
+        category,
+        done: false,
+        status: 'waiting'
+      });
+    }
   }
 
   return result;
@@ -31,28 +49,27 @@ function parseMods(text) {
 
 module.exports = async function(req, res) {
   const root = path.join(__dirname, '..');
-  const queueFile = path.join(root, 'queue.json');
   const listFile = path.join(root, 'моды(3).txt');
+  const queueFile = path.join(root, 'queue.json');
 
   if (!fs.existsSync(listFile)) {
     return res.status(404).json({ ok:false, error:'моды(3).txt not found' });
   }
 
   const queue = parseMods(fs.readFileSync(listFile, 'utf8'));
-  fs.writeFileSync(queueFile, JSON.stringify(queue, null, 2));
 
+  fs.writeFileSync(queueFile, JSON.stringify(queue, null, 2));
   fs.writeFileSync(path.join(root, 'worker-state.json'), JSON.stringify({
-    running: true,
-    total: queue.length,
-    processed: 0,
-    remaining: queue.length,
-    startedAt: new Date().toISOString()
+    running:true,
+    total:queue.length,
+    remaining:queue.length,
+    startedAt:new Date().toISOString()
   }, null, 2));
 
   return res.json({
     ok:true,
-    total: queue.length,
+    total:queue.length,
     queueCreated:true,
-    message:'Loaded mods from mod list'
+    message:'Mod list parsed successfully'
   });
 };
