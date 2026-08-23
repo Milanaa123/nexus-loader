@@ -1,35 +1,25 @@
 const worker = require('./ru-pack-worker');
 
-let stopping = false;
-
 async function run() {
-  console.log('RU background worker online');
+  console.log('RU background worker started');
 
-  while (!stopping) {
+  while (true) {
     try {
       const progress = worker.loadProgress();
 
-      if (!progress.running) {
-        await worker.start();
+      if (progress.running) {
+        console.log(
+          'Processing:',
+          progress.current,
+          `${progress.processed}/${progress.total}`
+        );
       }
 
       await new Promise(resolve => setTimeout(resolve, 5000));
-    } catch (err) {
-      const current = worker.loadProgress();
-      worker.saveProgress({
-        ...current,
-        running: false,
-        status: 'error',
-        lastError: err.message
-      });
-      console.error('Worker error:', err.message);
-      await new Promise(resolve => setTimeout(resolve, 10000));
+    } catch (e) {
+      console.error('Worker error:', e.message);
     }
   }
 }
-
-process.on('SIGTERM', () => {
-  stopping = true;
-});
 
 run();
