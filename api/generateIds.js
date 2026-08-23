@@ -8,8 +8,9 @@ const errFile=path.join(workDir,'mods_errors.json');
 let running=false;
 function save(f,x){fs.mkdirSync(workDir,{recursive:true});fs.writeFileSync(f,JSON.stringify(x,null,2),'utf8');}
 function parseInput(){
- const file=path.join(__dirname,'..','mods_for_render.csv');
- if(!fs.existsSync(file)) return [];
+ const files=[path.join(__dirname,'..','mods_for_render_530.csv'),path.join(__dirname,'..','mods_for_render.csv')];
+ const file=files.find(f=>fs.existsSync(f));
+ if(!file) return [];
  const lines=fs.readFileSync(file,'utf8').split(/\r?\n/).filter(Boolean);
  const mods=[];
  for(let i=1;i<lines.length;i++){
@@ -40,7 +41,7 @@ async function worker(mods){
 module.exports=async(req,res)=>{
  if(running)return res.json({ok:true,status:'already_running'});
  const mods=parseInput();
- if(!mods.length)return res.status(404).json({ok:false,error:'mods_for_render.csv not found'});
+ if(!mods.length)return res.status(404).json({ok:false,error:'mods_for_render_530.csv not found'});
  running=true;
  save(stateFile,{running:true,total:mods.length,processed:0,found:0,notFound:0,errors:0});
  worker(mods).catch(e=>{running=false;save(stateFile,{running:false,error:e.message});});
