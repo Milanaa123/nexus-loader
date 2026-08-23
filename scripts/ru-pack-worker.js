@@ -19,14 +19,10 @@ function writeJson(file, data) {
 }
 
 function loadQueue() {
-  if (!fs.existsSync(QUEUE)) {
-    importQueue();
-  }
+  if (!fs.existsSync(QUEUE)) importQueue();
   const q = readJson(QUEUE, { items: [] });
   if (Array.isArray(q)) return q;
-  if (Array.isArray(q.items)) return q.items;
-  if (Array.isArray(q.mods)) return q.mods;
-  return [];
+  return q.items || q.mods || [];
 }
 
 function loadProgress() {
@@ -39,25 +35,27 @@ function saveProgress(progress) {
 
 async function processQueue(items) {
   if (!items.length) {
-    const p = loadProgress();
-    p.running = false;
-    p.status = 'empty_queue';
-    saveProgress(p);
-    return p;
+    saveProgress({ ...loadProgress(), running:false, status:'empty_queue' });
+    return;
   }
-  if (fs.existsSync(LOCK)) return loadProgress();
+
   fs.mkdirSync(WORK, {recursive:true});
+  if (fs.existsSync(LOCK)) fs.unlinkSync(LOCK);
   fs.writeFileSync(LOCK, Date.now().toString());
+
   try {
+    console.log('RU worker started:', items.length);
     ensure();
     const progress = loadProgress();
     progress.total = items.length;
     progress.running = true;
     progress.status = 'processing';
     saveProgress(progress);
+
     for (let i = progress.processed || 0; i < items.length; i++) {
       progress.current = items[i].modId || items[i].name || String(i);
       saveProgress(progress);
+      console.log('Processing:', progress.current);
       try {
         const result = await downloadMod(items[i]);
         if (result) progress.downloaded = (progress.downloaded || 0) + 1;
@@ -65,16 +63,13 @@ async function processQueue(items) {
       } catch(e) {
         progress.failed = (progress.failed || 0) + 1;
         progress.lastError = e.message;
+        console.log('Worker error:', e.message);
       }
       progress.processed = i + 1;
       progress.remaining = progress.total - progress.processed;
       saveProgress(progress);
     }
-    progress.running = false;
-    progress.status = 'finished';
-    progress.current = null;
-    saveProgress(progress);
-    return progress;
+    saveProgress({ ...progress, running:false, status:'finished', current:null });
   } finally {
     try { fs.unlinkSync(LOCK); } catch {}
   }
