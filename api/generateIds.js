@@ -23,14 +23,14 @@ async function nexusSearch(name){
 
 function loadInput(){
  const files=[
-  path.join(__dirname,'..','моды(3).txt'),
-  path.join(__dirname,'..','mods_full_list.txt')
+  path.join(__dirname,'..','input','upload_here','mods_536_clean_for_nexus_generator.txt'),
+  path.join(__dirname,'..','input','mods_536_for_nexus_loader.txt')
  ];
  for(const f of files){
   if(fs.existsSync(f)){
    const text=fs.readFileSync(f,'utf8');
    const arr=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-   if(arr.length>5) return arr;
+   if(arr.length>0) return arr;
   }
  }
  return [];
