@@ -1,11 +1,24 @@
 const worker = require('../scripts/ru-pack-worker');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = async function(req, res) {
   const action = (req.body && req.body.action) || (req.query && req.query.action) || 'status';
 
   try {
     if (action === 'status') {
-      return res.json({ ok: true, data: worker.loadProgress() });
+      const progress = worker.loadProgress();
+      if (!progress.total) {
+        const queueFile = path.join(__dirname, '..', 'data', 'queue', 'ru-pack-queue.json');
+        try {
+          const queue = JSON.parse(fs.readFileSync(queueFile, 'utf8'));
+          const items = queue.items || queue.mods || [];
+          if (items.length) {
+            return res.json({ ok: true, data: { ...progress, total: items.length, remaining: items.length } });
+          }
+        } catch {}
+      }
+      return res.json({ ok: true, data: progress });
     }
 
     if (action === 'start') {
