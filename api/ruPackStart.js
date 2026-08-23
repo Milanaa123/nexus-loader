@@ -5,23 +5,39 @@ module.exports = async function (req, res) {
   const root = path.join(__dirname, '..');
   const workDir = path.join(root, 'RU_PACK_WORK');
   const progressFile = path.join(workDir, 'progress.json');
-  const queueFile = path.join(workDir, 'queue.json');
+  const queueCandidates = [
+    path.join(root, 'data', 'queue', 'ru-pack-queue.json'),
+    path.join(workDir, 'queue.json')
+  ];
+  const queueFile = queueCandidates.find(fs.existsSync);
 
   fs.mkdirSync(workDir, { recursive: true });
 
-  const queue = fs.existsSync(queueFile)
-    ? JSON.parse(fs.readFileSync(queueFile, 'utf8'))
-    : { mods: [] };
+  if (!queueFile) {
+    return res.status(400).json({
+      ok: false,
+      error: 'Queue not found. Build persistent queue first.'
+    });
+  }
 
-  const total = queue.mods?.length || 535;
+  const queue = JSON.parse(fs.readFileSync(queueFile, 'utf8'));
+  const items = queue.items || queue.mods || [];
+
+  if (!items.length) {
+    return res.status(400).json({
+      ok: false,
+      error: 'Queue is empty'
+    });
+  }
+
   const old = fs.existsSync(progressFile)
     ? JSON.parse(fs.readFileSync(progressFile, 'utf8'))
     : {};
 
   const progress = {
-    total,
+    total: items.length,
     processed: old.processed || 0,
-    remaining: Math.max(total - (old.processed || 0), 0),
+    remaining: Math.max(items.length - (old.processed || 0), 0),
     foundTranslations: old.foundTranslations || 0,
     downloaded: old.downloaded || 0,
     noTranslations: old.noTranslations || 0,
