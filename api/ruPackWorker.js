@@ -20,32 +20,22 @@ function save(file, data) {
 async function runWorker() {
   const queue = load(QUEUE, { mods: [] });
   const items = queue.mods || [];
-  const progress = load(PROGRESS, {});
+  const progress = load(PROGRESS, { processed: 0 });
   const result = load(RESULT, { found: [], missing: [], failed: [] });
 
-  progress.total = items.length || progress.total || 535;
+  progress.total = items.length || 535;
   progress.running = true;
   progress.status = 'processing';
-  progress.remaining = progress.total - (progress.processed || 0);
   save(PROGRESS, progress);
 
   for (let i = progress.processed || 0; i < items.length; i++) {
     progress.current = items[i];
-    save(PROGRESS, progress);
-
-    try {
-      result.missing.push(items[i]);
-      progress.noTranslations = (progress.noTranslations || 0) + 1;
-    } catch (e) {
-      result.failed.push(items[i]);
-      progress.failed = (progress.failed || 0) + 1;
-    }
-
     progress.processed = i + 1;
     progress.remaining = items.length - progress.processed;
+    result.missing.push(items[i]);
+    progress.noTranslations = (progress.noTranslations || 0) + 1;
     save(RESULT, result);
     save(PROGRESS, progress);
-    await new Promise(r => setTimeout(r, 100));
   }
 
   progress.current = null;
@@ -54,17 +44,9 @@ async function runWorker() {
   save(PROGRESS, progress);
 }
 
-module.exports = async function (req, res) {
+module.exports = async function(req, res) {
   const action = (req.body && req.body.action) || (req.query && req.query.action);
-
-  if (action === 'status') {
-    return res.json({ ok: true, data: load(PROGRESS, { total: 0 }) });
-  }
-
-  if (action === 'start') {
-    runWorker();
-    return res.json({ ok: true, message: 'RU pack worker started' });
-  }
-
+  if (action === 'status') return res.json({ ok: true, data: load(PROGRESS, { total: 0 }) });
+  if (action === 'start') { runWorker(); return res.json({ ok: true, message: 'RU pack worker started' }); }
   return res.status(400).json({ ok: false, error: 'Unknown action' });
 };
