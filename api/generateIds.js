@@ -3,26 +3,45 @@ const path=require('path');
 const workDir=path.join(__dirname,'..','RU_PACK_WORK');
 const stateFile=path.join(workDir,'generator_status.json');
 const outFile=path.join(workDir,'mods_with_ids.json');
+const notFoundFile=path.join(workDir,'mods_not_found.json');
+const ambiguousFile=path.join(workDir,'mods_ambiguous.json');
 const errFile=path.join(workDir,'mods_errors.json');
-function saveState(x){fs.mkdirSync(workDir,{recursive:true});fs.writeFileSync(stateFile,JSON.stringify(x,null,2),'utf8');}
+function save(p,x){fs.mkdirSync(workDir,{recursive:true});fs.writeFileSync(p,JSON.stringify(x,null,2),'utf8');}
 function variants(n){return [...new Set([n,n.replace(/\([^)]*\)/g,'').trim(),n.replace(/[._-]/g,' ').replace(/\s+/g,' ').trim()])];}
-async function nexusSearch(name){
- const key=process.env.NEXUS_API_KEY;
- if(!key) throw new Error('NEXUS_API_KEY missing');
- const query=`query($filter: ModsFilter!){mods(filter:$filter,first:10){nodes{id name}}}`;
+function parseInput(){
+ const files=['mods_536_clean_for_nexus_generator.txt','mods_536_clean_for_nexus_generator-1.txt','mods_536_for_nexus_loader.txt'];
+ for(const n of files){const f=path.join(__dirname,'..','input','upload_here',n);if(fs.existsSync(f)){
+  const lines=fs.readFileSync(f,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const out=[];
+  for(let i=0;i<lines.length;i+=3){if(lines[i]&&lines[i+1])out.push({name:lines[i].replace(/^\([^)]*\)\s*/,'').trim(),author:lines[i+1],category:lines[i+2]||''});}
+  return out;
+ }}
+ return [];
+}
+async function search(name,author){
+ const key=process.env.NEXUS_API_KEY;if(!key)throw Error('NEXUS_API_KEY missing');
+ const query=`query($filter: ModsFilter!){mods(filter:$filter,first:20){nodes{id name author{name}}}}`;
  for(const q of variants(name)){
   const r=await fetch('https://api.nexusmods.com/v2/graphql',{method:'POST',headers:{apikey:key,'content-type':'application/json','User-Agent':'nexus-loader'},body:JSON.stringify({query,variables:{filter:{name:q}}})});
-  const text=await r.text();
-  if(!r.ok) throw new Error(`GraphQL ${r.status}: ${text.slice(0,200)}`);
-  let json;try{json=JSON.parse(text)}catch(e){continue;}
-  if(json.errors) throw new Error(`GraphQL: ${JSON.stringify(json.errors).slice(0,200)}`);
-  const items=json.data?.mods?.nodes||[];
-  const exact=items.find(x=>(x.name||'').toLowerCase()===name.toLowerCase());
-  if(exact)return String(exact.id);
-  if(items[0])return String(items[0].id);
+  const j=await r.json();
+  if(j.errors)throw Error(JSON.stringify(j.errors));
+  const items=j.data?.mods?.nodes||[];
+  const exact=items.find(x=>(x.name||'').toLowerCase()===name.toLowerCase() && (!author || x.author?.name?.toLowerCase()===author.toLowerCase()));
+  if(exact)return {id:String(exact.id),status:'found_exact'};
+  const byName=items.filter(x=>(x.name||'').toLowerCase()===name.toLowerCase());
+  if(byName.length===1)return {id:String(byName[0].id),status:'found_name'};
+  if(byName.length>1)return {status:'ambiguous',items:byName};
  }
  return null;
 }
-function loadInput(){for(const n of ['mods_536_clean_for_nexus_generator.txt','mods_536_clean_for_nexus_generator-1.txt','mods_536_for_nexus_loader.txt']){const f=path.join(__dirname,'..','input','upload_here',n);if(fs.existsSync(f))return fs.readFileSync(f,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);}return [];}
-async function run(names){let result=[],errors=[],found=0;for(let i=0;i<names.length;i++){let id=null,error=null;try{id=await nexusSearch(names[i]);}catch(e){error=e.message;errors.push({name:names[i],error});}if(id)found++;result.push({name:names[i],modId:id,status:id?'found':'not_found'});fs.mkdirSync(workDir,{recursive:true});fs.writeFileSync(outFile,JSON.stringify(result,null,2));fs.writeFileSync(errFile,JSON.stringify(errors,null,2));saveState({running:true,total:names.length,processed:i+1,found,errors:errors.length,lastError:error,current:names[i],remaining:names.length-i-1});}saveState({running:false,total:names.length,processed:names.length,found,errors:errors.length,file:outFile,errorFile:errFile,remaining:0});}
-module.exports=async(req,res)=>{const names=loadInput();if(!names.length)return res.status(404).json({ok:false,error:'mods list not found'});run(names);res.json({ok:true,status:'started',total:names.length});};
+module.exports=async(req,res)=>{
+ const mods=parseInput();if(!mods.length)return res.status(404).json({ok:false,error:'mods list not found'});
+ const found=[],notFound=[],ambiguous=[],errors=[];
+ for(let i=0;i<mods.length;i++){
+  try{const r=await search(mods[i].name,mods[i].author);if(r?.id)found.push({...mods[i],modId:r.id,status:r.status});else if(r?.status==='ambiguous')ambiguous.push({...mods[i],results:r.items});else notFound.push(mods[i]);}
+  catch(e){errors.push({mod:mods[i],error:e.message});}
+  save(outFile,found);save(notFoundFile,notFound);save(ambiguousFile,ambiguous);save(errFile,errors);save(stateFile,{running:true,total:mods.length,processed:i+1,found:found.length,notFound:notFound.length,ambiguous:ambiguous.length,errors:errors.length,current:mods[i].name,remaining:mods.length-i-1});
+ }
+ save(stateFile,{running:false,total:mods.length,processed:mods.length,found:found.length,notFound:notFound.length,ambiguous:ambiguous.length,errors:errors.length});
+ res.json({ok:true,status:'started',total:mods.length});
+};
