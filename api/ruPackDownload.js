@@ -1,4 +1,5 @@
 const worker = require('../scripts/ru-pack-worker');
+const importer = require('../scripts/import_mod_queue');
 
 module.exports = async function (req, res) {
   try {
@@ -13,6 +14,12 @@ module.exports = async function (req, res) {
       const progress = worker.loadProgress();
       if (progress.running) {
         return res.json({ ok: true, status: 'already_running', data: progress });
+      }
+
+      if (typeof importer === 'function') {
+        importer();
+      } else if (importer && typeof importer.createQueue === 'function') {
+        importer.createQueue();
       }
 
       setImmediate(() => {
