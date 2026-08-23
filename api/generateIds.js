@@ -8,11 +8,14 @@ const errFile=path.join(workDir,'mods_errors.json');
 let running=false;
 function save(f,x){fs.mkdirSync(workDir,{recursive:true});fs.writeFileSync(f,JSON.stringify(x,null,2),'utf8');}
 function parseInput(){
- const file=path.join(__dirname,'..','input','upload_here','mods_536_ready_for_nexus.txt');
+ const file=path.join(__dirname,'..','mods_for_render.csv');
  if(!fs.existsSync(file)) return [];
- const lines=fs.readFileSync(file,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ const lines=fs.readFileSync(file,'utf8').split(/\r?\n/).filter(Boolean);
  const mods=[];
- for(let i=0;i<lines.length;i+=3){if(lines[i])mods.push({name:lines[i],author:lines[i+1]||'',category:lines[i+2]||''});}
+ for(let i=1;i<lines.length;i++){
+  const parts=lines[i].split(',');
+  if(parts[0]) mods.push({name:parts[0].trim(),author:(parts[1]||'').trim(),category:(parts[2]||'').trim()});
+ }
  return mods;
 }
 async function search(mod){
@@ -32,13 +35,12 @@ async function worker(mods){
   save(outFile,found);save(notFoundFile,notFound);save(errFile,errors);
   save(stateFile,{running:true,total:mods.length,processed:i+1,found:found.length,notFound:notFound.length,errors:errors.length,current:mods[i].name,remaining:mods.length-i-1});
  }
- running=false;
  save(stateFile,{running:false,total:mods.length,processed:mods.length,found:found.length,notFound:notFound.length,errors:errors.length});
 }
 module.exports=async(req,res)=>{
  if(running)return res.json({ok:true,status:'already_running'});
  const mods=parseInput();
- if(!mods.length)return res.status(404).json({ok:false,error:'mods list not found'});
+ if(!mods.length)return res.status(404).json({ok:false,error:'mods_for_render.csv not found'});
  running=true;
  save(stateFile,{running:true,total:mods.length,processed:0,found:0,notFound:0,errors:0});
  worker(mods).catch(e=>{running=false;save(stateFile,{running:false,error:e.message});});
