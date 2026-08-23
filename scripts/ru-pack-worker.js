@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { downloadMod, ensure } = require('./nexus-downloader');
+const { run: importQueue } = require('./import_mod_queue');
 
 const ROOT = path.join(__dirname, '..');
 const WORK = path.join(ROOT, 'RU_PACK_WORK');
@@ -9,16 +10,18 @@ const QUEUE = path.join(ROOT, 'data', 'queue', 'ru-pack-queue.json');
 const LOCK = path.join(WORK, 'worker.lock');
 
 function readJson(file, fallback) {
-  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
-  catch { return fallback; }
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; }
 }
 
 function writeJson(file, data) {
-  fs.mkdirSync(WORK, { recursive: true });
+  fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 }
 
 function loadQueue() {
+  if (!fs.existsSync(QUEUE)) {
+    importQueue();
+  }
   const q = readJson(QUEUE, { items: [] });
   if (Array.isArray(q)) return q;
   if (Array.isArray(q.items)) return q.items;
@@ -27,7 +30,7 @@ function loadQueue() {
 }
 
 function loadProgress() {
-  return readJson(PROGRESS, { total: 0, processed: 0, remaining: 0, downloaded: 0, failed: 0, foundTranslations: 0, noTranslations: 0, current: null, running: false });
+  return readJson(PROGRESS, { total:0, processed:0, remaining:0, downloaded:0, failed:0, current:null, running:false });
 }
 
 function saveProgress(progress) {
@@ -36,50 +39,37 @@ function saveProgress(progress) {
 
 async function processQueue(items) {
   if (!items.length) {
-    const empty = loadProgress();
-    empty.running = false;
-    empty.status = 'empty_queue';
-    empty.error = 'queue file missing or empty';
-    saveProgress(empty);
-    return empty;
+    const p = loadProgress();
+    p.running = false;
+    p.status = 'empty_queue';
+    saveProgress(p);
+    return p;
   }
-
   if (fs.existsSync(LOCK)) return loadProgress();
-  fs.mkdirSync(WORK, { recursive: true });
-  fs.writeFileSync(LOCK, String(Date.now()));
-
+  fs.mkdirSync(WORK, {recursive:true});
+  fs.writeFileSync(LOCK, Date.now().toString());
   try {
     ensure();
     const progress = loadProgress();
-    if (progress.total !== items.length) {
-      progress.processed = 0;
-      progress.downloaded = 0;
-      progress.failed = 0;
-      progress.noTranslations = 0;
-    }
     progress.total = items.length;
-    progress.remaining = Math.max(0, progress.total - progress.processed);
     progress.running = true;
     progress.status = 'processing';
     saveProgress(progress);
-
     for (let i = progress.processed || 0; i < items.length; i++) {
-      const item = items[i];
-      progress.current = item.modId || item.name || item;
+      progress.current = items[i].modId || items[i].name || String(i);
       saveProgress(progress);
       try {
-        const result = await downloadMod(item);
+        const result = await downloadMod(items[i]);
         if (result) progress.downloaded = (progress.downloaded || 0) + 1;
-        else progress.noTranslations++;
-      } catch (e) {
-        progress.failed++;
+        else progress.noTranslations = (progress.noTranslations || 0) + 1;
+      } catch(e) {
+        progress.failed = (progress.failed || 0) + 1;
         progress.lastError = e.message;
       }
       progress.processed = i + 1;
-      progress.remaining = Math.max(0, progress.total - progress.processed);
+      progress.remaining = progress.total - progress.processed;
       saveProgress(progress);
     }
-
     progress.running = false;
     progress.status = 'finished';
     progress.current = null;
@@ -90,9 +80,8 @@ async function processQueue(items) {
   }
 }
 
-async function start(options = {}) {
-  const queue = Array.isArray(options.queue) && options.queue.length ? options.queue : loadQueue();
-  return processQueue(queue);
+async function start(options={}) {
+  return processQueue(options.queue && options.queue.length ? options.queue : loadQueue());
 }
 
 module.exports = { start, processQueue, loadProgress, saveProgress };
