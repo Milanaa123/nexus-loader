@@ -8,10 +8,47 @@ function getJson(url, headers = {}) {
       let data = '';
       r.on('data', c => data += c);
       r.on('end', () => {
-        try { resolve(JSON.parse(data)); } catch (e) { resolve({}); }
+        try { resolve(JSON.parse(data)); } catch (_) { resolve({}); }
       });
     }).on('error', reject);
   });
+}
+
+function normalize(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9а-яё]/gi, '');
+}
+
+async function searchMod(name, author, apiKey) {
+  const q = encodeURIComponent(`${name} ${author || ''}`.trim());
+  const data = await getJson(
+    `https://api.nexusmods.com/v1/games/stardewvalley/search.json?terms=${q}`,
+    { apikey: apiKey }
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+async function findTranslation(mod) {
+  const apiKey = process.env.NEXUS_API_KEY;
+  if (!apiKey) return { status: 'missing_api_key' };
+
+  const found = await searchMod(mod.name, mod.author, apiKey);
+  const target = found.find(x => {
+    const title = normalize(x.name);
+    return title.includes('russian') || title.includes('ru') || title.includes('рус');
+  });
+
+  if (!target) {
+    return {
+      status: 'no_translation_found',
+      checked: true
+    };
+  }
+
+  return {
+    status: 'translation_found',
+    nexusModId: target.mod_id,
+    translationName: target.name
+  };
 }
 
 module.exports = async function(req, res) {
@@ -27,18 +64,16 @@ module.exports = async function(req, res) {
   const result = [];
 
   for (const mod of batch) {
-    let status = 'waiting';
-    if (mod.modId && process.env.NEXUS_API_KEY) {
-      const data = await getJson(
-        `https://api.nexusmods.com/v1/games/stardewvalley/mods/${mod.modId}.json`,
-        { apikey: process.env.NEXUS_API_KEY }
-      );
-      status = data.name ? 'found_on_nexus' : 'not_found';
-    } else {
-      status = 'missing_mod_id_or_api_key';
+    try {
+      const check = await findTranslation(mod);
+      mod.status = check.status;
+      mod.translation = check;
+      result.push({ name: mod.name, status: check.status });
+    } catch (e) {
+      mod.status = 'error_continue';
+      mod.error = e.message;
+      result.push({ name: mod.name, status: 'error_continue' });
     }
-    mod.status = status;
-    result.push({ name: mod.name, status });
   }
 
   fs.writeFileSync(queueFile, JSON.stringify(queue, null, 2));
@@ -46,6 +81,7 @@ module.exports = async function(req, res) {
   return res.json({
     ok: true,
     processed: result.length,
-    batch: result
+    batch: result,
+    message: 'Worker continues after missing translations'
   });
 };
