@@ -9,13 +9,13 @@ async function nexusSearch(name){
  const key=process.env.NEXUS_API_KEY;
  if(!key) throw new Error('NEXUS_API_KEY missing');
  for(const q of variants(name)){
-  const url=`https://api.nexusmods.com/v1/games/stardewvalley/mods/search.json?query=${encodeURIComponent(q)}`;
+  const url=`https://api.nexusmods.com/v1/games/stardewvalley/mods.json?name=${encodeURIComponent(q)}`;
   const r=await fetch(url,{headers:{apikey:key,accept:'application/json','User-Agent':'nexus-loader'}});
   const text=await r.text();
-  if(!r.ok) throw new Error(`Nexus API HTTP ${r.status}: ${text.slice(0,100)}`);
-  let data;try{data=JSON.parse(text)}catch(e){throw new Error('Nexus invalid JSON')}
-  const items=data.results||data.mods||[];
-  if(Array.isArray(items)&&items.length){
+  if(!r.ok) throw new Error(`Nexus API HTTP ${r.status}: ${text.slice(0,120)}`);
+  let data;try{data=JSON.parse(text)}catch(e){continue;}
+  const items=Array.isArray(data)?data:(data.mods||data.results||[]);
+  if(items.length){
    const exact=items.find(x=>(x.name||'').toLowerCase()===name.toLowerCase());
    return (exact||items[0]).mod_id||null;
   }
