@@ -9,13 +9,22 @@ async function nexusSearch(name){
  const key=process.env.NEXUS_API_KEY;
  if(!key) throw new Error('NEXUS_API_KEY missing');
  for(const q of variants(name)){
-  const r=await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/search.json?query=${encodeURIComponent(q)}`,{headers:{apikey:key,accept:'application/json'}});
-  if(!r.ok) throw new Error(`Nexus HTTP ${r.status}`);
-  const data=await r.json();
-  const items=data.results||data;
-  if(Array.isArray(items)&&items.length){
-   const exact=items.find(m=>(m.name||'').toLowerCase()===name.toLowerCase());
-   return (exact||items[0]).mod_id||null;
+  const urls=[
+   `https://api.nexusmods.com/v1/games/stardewvalley/mods/search.json?query=${encodeURIComponent(q)}`,
+   `https://api.nexusmods.com/v1/games/stardewvalley/search.json?query=${encodeURIComponent(q)}`
+  ];
+  for(const url of urls){
+   const r=await fetch(url,{headers:{apikey:key,accept:'application/json'}});
+   const text=await r.text();
+   let data={};try{data=JSON.parse(text)}catch{}
+   if(r.status===404) continue;
+   if(!r.ok) throw new Error(`Nexus HTTP ${r.status}: ${text.slice(0,120)}`);
+   const items=data.results||data.mods||data;
+   if(Array.isArray(items)&&items.length){
+    const exact=items.find(m=>(m.name||m.title||'').toLowerCase()===name.toLowerCase());
+    const item=exact||items[0];
+    return item.mod_id||item.modId||null;
+   }
   }
  }
  return null;
