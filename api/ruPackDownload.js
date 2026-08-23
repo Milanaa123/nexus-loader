@@ -10,8 +10,16 @@ module.exports = async function (req, res) {
     }
 
     if (action === 'start') {
-      const result = await worker.start(req.body || {});
-      return res.json({ ok: true, data: result });
+      const progress = worker.loadProgress();
+      if (progress.running) {
+        return res.json({ ok: true, status: 'already_running', data: progress });
+      }
+
+      setImmediate(() => {
+        worker.start(req.body || {}).catch(() => {});
+      });
+
+      return res.json({ ok: true, status: 'started' });
     }
 
     return res.status(400).json({ ok: false, error: 'Unknown action' });
