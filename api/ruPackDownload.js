@@ -5,7 +5,8 @@ module.exports = async function (req, res) {
     const action = (req.body && req.body.action) || (req.query && req.query.action) || 'status';
 
     if (action === 'status') {
-      return res.json({ ok: true, service: 'ruPackDownload', status: 'ready' });
+      const progress = worker.loadProgress();
+      return res.json({ ok: true, data: progress });
     }
 
     if (action === 'start') {
