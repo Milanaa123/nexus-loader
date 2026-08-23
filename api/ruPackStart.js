@@ -14,37 +14,30 @@ module.exports = async function (req, res) {
     : { mods: [] };
 
   const total = queue.mods?.length || 535;
+  const old = fs.existsSync(progressFile)
+    ? JSON.parse(fs.readFileSync(progressFile, 'utf8'))
+    : {};
 
   const progress = {
     total,
-    processed: 0,
-    remaining: total,
-    foundTranslations: 0,
-    downloaded: 0,
-    noTranslations: 0,
-    failed: 0,
-    current: null,
+    processed: old.processed || 0,
+    remaining: Math.max(total - (old.processed || 0), 0),
+    foundTranslations: old.foundTranslations || 0,
+    downloaded: old.downloaded || 0,
+    noTranslations: old.noTranslations || 0,
+    failed: old.failed || 0,
+    current: old.current || null,
     running: true,
     status: 'processing',
     updatedAt: new Date().toISOString()
   };
 
-  fs.writeFileSync(progressFile, JSON.stringify(progress, null, 2), 'utf8');
+  fs.writeFileSync(progressFile, JSON.stringify(progress, null, 2));
 
-  const worker = require('./ruPackWorker');
-  worker({ body: { action: 'start' }, query: {} }, {
+  require('./ruPackWorker')({ body: { action: 'start' }, query: {} }, {
     json: () => {},
     status: () => ({ json: () => {} })
-  }).catch(err => {
-    const failed = {
-      ...progress,
-      running: false,
-      status: 'failed',
-      error: err.message,
-      updatedAt: new Date().toISOString()
-    };
-    fs.writeFileSync(progressFile, JSON.stringify(failed, null, 2), 'utf8');
-  });
+  }).catch(() => {});
 
   return res.json({ ok: true, message: 'RU pack worker started', progress });
 };
