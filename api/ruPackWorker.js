@@ -16,24 +16,39 @@ function save(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 }
 
+async function runWorker() {
+  const queue = load(QUEUE, { mods: [] });
+  const items = queue.mods || [];
+  const progress = load(PROGRESS, { total: items.length });
+  progress.total = items.length || progress.total || 535;
+  progress.running = true;
+  progress.status = 'processing';
+
+  for (let i = progress.processed || 0; i < items.length; i++) {
+    progress.current = items[i];
+    progress.processed = i + 1;
+    progress.remaining = items.length - progress.processed;
+    save(PROGRESS, progress);
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  progress.running = false;
+  progress.current = null;
+  progress.status = 'finished';
+  save(PROGRESS, progress);
+  save(RESULT, { finished: new Date().toISOString(), progress });
+}
+
 module.exports = async function (req, res) {
   const action = (req.body && req.body.action) || (req.query && req.query.action);
-  const progress = load(PROGRESS, { total: 535, ready: 0, remaining: 535, status: 'queue_ready' });
 
   if (action === 'status') {
-    return res.json({ ok: true, data: progress });
+    return res.json({ ok: true, data: load(PROGRESS, { total: 0 }) });
   }
 
   if (action === 'start') {
-    const queue = load(QUEUE, { mods: [] });
-    const items = queue.mods || [];
-    progress.worker = 'started';
-    progress.queueSize = items.length;
-    progress.status = 'processing';
-    progress.lastRun = new Date().toISOString();
-    save(PROGRESS, progress);
-    save(RESULT, { started: progress.lastRun, queue: items });
-    return res.json({ ok: true, data: progress });
+    runWorker();
+    return res.json({ ok: true, message: 'RU pack worker started' });
   }
 
   return res.status(400).json({ ok: false, error: 'Unknown action' });
