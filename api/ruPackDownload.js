@@ -16,10 +16,18 @@ module.exports = async function (req, res) {
       }
 
       setImmediate(() => {
-        worker.start(req.body || {}).catch(() => {});
+        worker.start(req.body || {}).catch((err) => {
+          const current = worker.loadProgress();
+          worker.saveProgress({
+            ...current,
+            running: false,
+            status: 'error',
+            error: err.message
+          });
+        });
       });
 
-      return res.json({ ok: true, status: 'started' });
+      return res.json({ ok: true, status: 'started', data: worker.loadProgress() });
     }
 
     return res.status(400).json({ ok: false, error: 'Unknown action' });
