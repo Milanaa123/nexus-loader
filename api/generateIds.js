@@ -10,15 +10,26 @@ function saveState(data){
  fs.writeFileSync(stateFile,JSON.stringify(data,null,2),'utf8');
 }
 
+function cleanName(name){
+ return name.replace(/\s+/g,' ').replace(/[._-]/g,' ').trim();
+}
+
 async function nexusSearch(name){
  const key=process.env.NEXUS_API_KEY;
- if(!key) return null;
- try{
-  const r=await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/mods.json?query=${encodeURIComponent(name)}`,{headers:{apikey:key}});
-  if(!r.ok)return null;
-  const data=await r.json();
-  return Array.isArray(data)&&data[0]?data[0].mod_id:null;
- }catch(e){return null;}
+ if(!key) throw new Error('NEXUS_API_KEY missing');
+ const queries=[name, cleanName(name)];
+ for(const q of queries){
+  try{
+   const r=await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/mods.json?query=${encodeURIComponent(q)}`,{headers:{apikey:key}});
+   if(!r.ok) continue;
+   const data=await r.json();
+   if(Array.isArray(data)&&data.length){
+    const exact=data.find(x=>x.name&&x.name.toLowerCase()===name.toLowerCase());
+    return (exact||data[0]).mod_id;
+   }
+  }catch(e){}
+ }
+ return null;
 }
 
 function loadInput(){
@@ -28,9 +39,7 @@ function loadInput(){
   'mods_536_for_nexus_loader.txt'
  ].map(f=>path.join(__dirname,'..','input','upload_here',f));
  for(const f of files){
-  if(fs.existsSync(f)){
-   return fs.readFileSync(f,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  }
+  if(fs.existsSync(f)) return fs.readFileSync(f,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
  }
  return [];
 }
@@ -41,7 +50,8 @@ async function run(){
  saveState({running:true,total:names.length,processed:0,found});
  for(let i=0;i<names.length;i++){
   const name=names[i];
-  const modId=await nexusSearch(name);
+  let modId=null;
+  try{modId=await nexusSearch(name);}catch(e){saveState({running:false,error:e.message});return;}
   if(modId)found++;
   result.push({name,modId,status:modId?'found':'not_found'});
   fs.writeFileSync(outFile,JSON.stringify(result,null,2),'utf8');
