@@ -23,17 +23,27 @@ async function runWorker() {
   const progress = load(PROGRESS, { processed: 0 });
   const result = load(RESULT, { found: [], missing: [], failed: [] });
 
-  progress.total = items.length || 535;
+  progress.total = items.length || progress.total || 535;
   progress.running = true;
   progress.status = 'processing';
   save(PROGRESS, progress);
 
   for (let i = progress.processed || 0; i < items.length; i++) {
     progress.current = items[i];
+    save(PROGRESS, progress);
+
+    try {
+      // поиск/скачивание подключается здесь
+      result.missing.push(items[i]);
+      progress.noTranslations = (progress.noTranslations || 0) + 1;
+    } catch (e) {
+      result.failed.push({ mod: items[i], error: e.message });
+      progress.failed = (progress.failed || 0) + 1;
+    }
+
     progress.processed = i + 1;
     progress.remaining = items.length - progress.processed;
-    result.missing.push(items[i]);
-    progress.noTranslations = (progress.noTranslations || 0) + 1;
+    progress.updatedAt = new Date().toISOString();
     save(RESULT, result);
     save(PROGRESS, progress);
   }
