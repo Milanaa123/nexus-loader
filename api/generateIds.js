@@ -8,16 +8,17 @@ function variants(n){return [...new Set([n,n.replace(/\([^)]*\)/g,'').trim(),n.r
 async function nexusSearch(name){
  const key=process.env.NEXUS_API_KEY;
  if(!key) throw new Error('NEXUS_API_KEY missing');
+ const query=`query($filter:String!){mods(filter:$filter,first:5){nodes{id name}}}`;
  for(const q of variants(name)){
-  const url=`https://api.nexusmods.com/v1/games/stardewvalley/mods.json?name=${encodeURIComponent(q)}`;
-  const r=await fetch(url,{headers:{apikey:key,accept:'application/json','User-Agent':'nexus-loader'}});
+  const r=await fetch('https://graphql.nexusmods.com/',{method:'POST',headers:{apikey:key,'content-type':'application/json','User-Agent':'nexus-loader'},body:JSON.stringify({query,variables:{filter:q}})});
   const text=await r.text();
-  if(!r.ok) throw new Error(`Nexus API HTTP ${r.status}: ${text.slice(0,120)}`);
+  if(!r.ok) throw new Error(`Nexus GraphQL HTTP ${r.status}: ${text.slice(0,120)}`);
   let data;try{data=JSON.parse(text)}catch(e){continue;}
-  const items=Array.isArray(data)?data:(data.mods||data.results||[]);
+  if(data.errors) throw new Error(`Nexus GraphQL error: ${JSON.stringify(data.errors).slice(0,120)}`);
+  const items=data.data?.mods?.nodes||[];
   if(items.length){
    const exact=items.find(x=>(x.name||'').toLowerCase()===name.toLowerCase());
-   return (exact||items[0]).mod_id||null;
+   return String((exact||items[0]).id);
   }
  }
  return null;
