@@ -1,6 +1,6 @@
 const fetch = global.fetch;
 
-async function findTranslation({game='stardewvalley', modName, author}) {
+async function findTranslation({game='stardewvalley', modName, author, modId}) {
   const key = process.env.NEXUS_API_KEY;
   if (!key) throw new Error('NEXUS_API_KEY missing');
 
@@ -17,13 +17,15 @@ async function findTranslation({game='stardewvalley', modName, author}) {
   const translation = mods.find(m => {
     const name = (m.name || '').toLowerCase();
     const russian = name.includes('russian') || name.includes('рус');
-    const sameAuthor = author && m.author?.name && m.author.name.toLowerCase() === author.toLowerCase();
-    return russian || sameAuthor;
+    const authorMatch = author && m.author?.name && m.author.name.toLowerCase() === author.toLowerCase();
+    const translationNameMatch = name.includes((modName || '').toLowerCase());
+    return russian && translationNameMatch || (russian && authorMatch);
   });
 
   if (!translation) return null;
 
   return {
+    originalModId: modId || null,
     translationId: String(translation.id),
     translationName: translation.name,
     translationAuthor: translation.author?.name || null
