@@ -9,9 +9,9 @@ function variants(n){return [...new Set([n,n.replace(/\([^)]*\)/g,'').trim(),n.r
 async function nexusSearch(name){
  const key=process.env.NEXUS_API_KEY;
  if(!key) throw new Error('NEXUS_API_KEY missing');
- const query=`query($filter:String!){mods(filter:$filter,first:10){nodes{id name}}}`;
+ const query=`query($filter: ModsFilter!){mods(filter:$filter,first:10){nodes{id name}}}`;
  for(const q of variants(name)){
-  const r=await fetch('https://api.nexusmods.com/v2/graphql',{method:'POST',headers:{apikey:key,'content-type':'application/json','User-Agent':'nexus-loader'},body:JSON.stringify({query,variables:{filter:q}})});
+  const r=await fetch('https://api.nexusmods.com/v2/graphql',{method:'POST',headers:{apikey:key,'content-type':'application/json','User-Agent':'nexus-loader'},body:JSON.stringify({query,variables:{filter:{name:q}}})});
   const text=await r.text();
   if(!r.ok) throw new Error(`GraphQL ${r.status}: ${text.slice(0,200)}`);
   let json;try{json=JSON.parse(text)}catch(e){continue;}
@@ -24,5 +24,5 @@ async function nexusSearch(name){
  return null;
 }
 function loadInput(){for(const n of ['mods_536_clean_for_nexus_generator.txt','mods_536_clean_for_nexus_generator-1.txt','mods_536_for_nexus_loader.txt']){const f=path.join(__dirname,'..','input','upload_here',n);if(fs.existsSync(f))return fs.readFileSync(f,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);}return [];}
-async function run(names){let result=[],errors=[],found=0;for(let i=0;i<names.length;i++){let id=null;let error=null;try{id=await nexusSearch(names[i]);}catch(e){error=e.message;errors.push({name:names[i],error});}if(id)found++;result.push({name:names[i],modId:id,status:id?'found':'not_found'});fs.mkdirSync(workDir,{recursive:true});fs.writeFileSync(outFile,JSON.stringify(result,null,2));fs.writeFileSync(errFile,JSON.stringify(errors,null,2));saveState({running:true,total:names.length,processed:i+1,found,errors:errors.length,lastError:error,current:names[i],remaining:names.length-i-1});}saveState({running:false,total:names.length,processed:names.length,found,errors:errors.length,file:outFile,errorFile:errFile,remaining:0});}
+async function run(names){let result=[],errors=[],found=0;for(let i=0;i<names.length;i++){let id=null,error=null;try{id=await nexusSearch(names[i]);}catch(e){error=e.message;errors.push({name:names[i],error});}if(id)found++;result.push({name:names[i],modId:id,status:id?'found':'not_found'});fs.mkdirSync(workDir,{recursive:true});fs.writeFileSync(outFile,JSON.stringify(result,null,2));fs.writeFileSync(errFile,JSON.stringify(errors,null,2));saveState({running:true,total:names.length,processed:i+1,found,errors:errors.length,lastError:error,current:names[i],remaining:names.length-i-1});}saveState({running:false,total:names.length,processed:names.length,found,errors:errors.length,file:outFile,errorFile:errFile,remaining:0});}
 module.exports=async(req,res)=>{const names=loadInput();if(!names.length)return res.status(404).json({ok:false,error:'mods list not found'});run(names);res.json({ok:true,status:'started',total:names.length});};
