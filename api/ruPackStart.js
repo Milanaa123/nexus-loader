@@ -9,21 +9,25 @@ module.exports = async function (req, res) {
 
   fs.mkdirSync(workDir, { recursive: true });
 
-  if (!fs.existsSync(queueFile)) {
-    try {
-      require('../scripts/import_mod_queue');
-    } catch (e) {
-      return res.status(400).json({
-        ok: false,
-        error: 'Queue build failed: ' + e.message
-      });
-    }
+  function buildQueue() {
+    delete require.cache[require.resolve('../scripts/import_mod_queue')];
+    require('../scripts/import_mod_queue');
   }
 
-  if (!fs.existsSync(queueFile)) {
+  try {
+    let rebuild = !fs.existsSync(queueFile);
+
+    if (!rebuild) {
+      const current = JSON.parse(fs.readFileSync(queueFile, 'utf8'));
+      const items = current.items || current.mods || [];
+      rebuild = items.length === 0;
+    }
+
+    if (rebuild) buildQueue();
+  } catch (e) {
     return res.status(400).json({
       ok: false,
-      error: 'Queue build failed'
+      error: 'Queue build failed: ' + e.message
     });
   }
 
@@ -31,7 +35,7 @@ module.exports = async function (req, res) {
   const items = queue.items || queue.mods || [];
 
   if (!items.length) {
-    return res.status(400).json({ ok: false, error: 'Queue is empty' });
+    return res.status(400).json({ ok: false, error: 'Queue is empty after rebuild' });
   }
 
   const progress = {
