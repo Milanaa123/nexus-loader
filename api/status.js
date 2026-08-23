@@ -14,6 +14,11 @@ module.exports = async function(req,res){
   processed:data.processed||0,
   remaining:Math.max(0,(data.total||0)-(data.processed||0)),
   current:data.current||null,
+  foundTranslations:data.foundTranslations||0,
+  noTranslations:data.noTranslations||0,
+  downloaded:data.downloaded||0,
+  failed:data.failed||0,
+  logs:data.logs||[],
   error:data.error||null
  });
 };
