@@ -8,6 +8,14 @@ const outFile=path.join(workDir,'mods_with_ids.json');
 let running=false;
 
 function save(file,data){fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(data,null,2),'utf8')}
+function log(message){
+ let state={};
+ try{state=JSON.parse(fs.readFileSync(stateFile,'utf8'))}catch{}
+ state.logs=state.logs||[];
+ state.logs.push(new Date().toISOString()+' '+message);
+ if(state.logs.length>100)state.logs=state.logs.slice(-100);
+ save(stateFile,state);
+}
 
 function parseInput(){
  const files=[path.join(__dirname,'..','input','mods_for_render_530.csv'),path.join(__dirname,'..','mods_for_render_530.csv'),path.join(__dirname,'..','input','mods_for_render.csv')];
@@ -19,23 +27,30 @@ function parseInput(){
 async function search(mod){
  const key=process.env.NEXUS_API_KEY;
  if(!key)throw Error('NEXUS_API_KEY missing');
- const r=await fetch('https://api.nexusmods.com/v2/graphql',{method:'POST',headers:{apikey:key,'content-type':'application/json','User-Agent':'nexus-loader'},body:JSON.stringify({query:'query($filter: ModsFilter!){mods(filter:$filter,first:10){nodes{id name}}}',variables:{filter:{name:mod.name}}})});
+ const r=await fetch('https://api.nexusmods.com/v2/graphql',{method:'POST',headers:{apikey:key,'content-type':'application/json','User-Agent':'nexus-loader'},body:JSON.stringify({query:'query($filter: ModsFilter!){mods(filter:$filter,first:20){nodes{id name author{name}}}}',variables:{filter:{name:mod.name}}})});
  const j=await r.json();
- const n=(j.data?.mods?.nodes||[]).find(x=>x.name.toLowerCase()===mod.name.toLowerCase());
+ const nodes=j.data?.mods?.nodes||[];
+ const n=nodes.find(x=>x.name.toLowerCase()===mod.name.toLowerCase() && (!mod.author || x.author?.name?.toLowerCase()===mod.author.toLowerCase()));
  return n?String(n.id):null;
 }
 
 async function run(mods){
  let found=[];
- save(stateFile,{running:true,total:mods.length,processed:0,current:null,status:'id_search'});
+ save(stateFile,{running:true,total:mods.length,processed:0,current:null,status:'id_search',logs:[]});
+ log('Начат поиск модов по названию и автору');
  for(let i=0;i<mods.length;i++){
-  try{const id=await search(mods[i]);if(id)found.push({...mods[i],modId:id});}
-  catch(e){console.log(e.message)}
-  save(stateFile,{running:true,total:mods.length,processed:i+1,current:mods[i].name,status:'id_search'});
+  try{
+   log('Поиск: '+mods[i].name+' | '+mods[i].author);
+   const id=await search(mods[i]);
+   if(id){found.push({...mods[i],modId:id});log('Найден ID: '+id)}
+   else log('Не найден: '+mods[i].name);
+  }catch(e){log('Ошибка '+mods[i].name+': '+e.message)}
+  save(stateFile,{running:true,total:mods.length,processed:i+1,current:mods[i].name,status:'id_search',found:found.length});
  }
  save(outFile,found);
- save(stateFile,{running:true,total:found.length,processed:0,current:null,status:'starting_worker'});
- setImmediate(()=>startRuWorker({queue:found}).catch(e=>save(stateFile,{running:false,error:e.message})));
+ save(stateFile,{running:true,total:found.length,processed:0,current:null,status:'starting_worker',found:found.length});
+ log('Поиск завершён. Запуск поиска русификаторов');
+ setImmediate(()=>startRuWorker({queue:found}).catch(e=>{log('Worker error: '+e.message);save(stateFile,{running:false,error:e.message})}));
 }
 
 module.exports=async(req,res)=>{
