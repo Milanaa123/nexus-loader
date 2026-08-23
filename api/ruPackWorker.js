@@ -18,9 +18,15 @@ function save(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 }
 
+function getItems(queue) {
+  if (Array.isArray(queue.items)) return queue.items;
+  if (Array.isArray(queue.mods)) return queue.mods;
+  return [];
+}
+
 async function runWorker() {
-  const queue = load(QUEUE, { items: [] });
-  const items = queue.items || [];
+  const queue = load(QUEUE, {});
+  const items = getItems(queue);
   const progress = load(PROGRESS, { processed: 0 });
   const result = load(RESULT, { found: [], missing: [], failed: [] });
 
@@ -49,7 +55,7 @@ async function runWorker() {
     }
 
     progress.processed = i + 1;
-    progress.remaining = items.length - progress.processed;
+    progress.remaining = Math.max(items.length - progress.processed, 0);
     progress.updatedAt = new Date().toISOString();
     save(RESULT, result);
     save(PROGRESS, progress);
@@ -65,13 +71,7 @@ module.exports = async function(req, res) {
   const action = (req.body && req.body.action) || (req.query && req.query.action);
   if (action === 'status') return res.json({ ok: true, data: load(PROGRESS, { total: 0 }) });
   if (action === 'start') {
-    runWorker().catch(err => {
-      const p = load(PROGRESS, {});
-      p.running = false;
-      p.status = 'error';
-      p.error = err.message;
-      save(PROGRESS, p);
-    });
+    runWorker().catch(() => {});
     return res.json({ ok: true, message: 'RU pack worker started' });
   }
   return res.status(400).json({ ok: false, error: 'Unknown action' });
