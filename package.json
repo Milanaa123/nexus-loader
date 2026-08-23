@@ -4,6 +4,8 @@
   "private": true,
   "engines": {"node": ">=20"},
   "scripts": {
+    "start": "node render-server.js",
+    "worker": "node scripts/ru-pack-daemon.js",
     "generate-ids": "node scripts/generate-ids.js"
   },
   "dependencies": {
