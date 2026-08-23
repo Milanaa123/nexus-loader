@@ -1,0 +1,536 @@
+(1.6) 6480’s Giant Crops
+(AT) Greenhouse Set
+(AT)(CP) Pixie’s MCM Bedroom Furniture
+(AT)(CP) Pixie’s MCM Rugs
+(CP) Birds Didn’t Invent Poi
+(CP) Blue Eggs and Golden Mayo (Now with extra Ostrich)
+(CP) Camping tent with tarp
+(CP) Cuter Mushroom Log
+(CP) Demetrius’s Tomato Aesthetics
+(CP) Full beard for Philip - RSV
+(CP) Help Wanted Pad and Pin Retexture
+(CP) Hitme’s Spouse Portraits Reworked
+(CP) HxW Farmers Market Furniture - Wildflour Set
+(CP) I Fixed Him - A Shane Consistency Mod
+(CP) Jorts and Jean - The Helper Cats SVE Festival Location Fix
+(CP) Lively Leo’s Treehouse
+(CP) Orangeblossom’s 500 Kudos Milestone Gift
+(CP) Shardust’s Hairstyles - November 2025 update
+(CP) Staffy dog
+(FF) Wall-Mounted Shelves
+(OUTDATED) Hats Won’t Mess Up Hair
+8bit’s Hairstyles
+A Secret Forest Walk
+A Warm Welcome
+AGE Gabriel Retextured (Seasonal)
+AGE Zinnia Retextured (Seasonal)
+AT - Crop Variety
+AT x CP - MolaMole’s Telephone
+AT x CP - Molamole’s Catalogue Retexture
+AT x CP - Molamole’s Mailbox
+AT x CP - Molamole’s Mini-ShippingBin
+AT x CP - Molamole’s ShippingBin
+AT x CP - Molamole’s Tree Of The Winter Star Retexture
+AT x CP - Molamole’s Wallpaper and Flooring textures
+AT x CP x CC - Molamole’s Pet Toys and Houses
+AToMS - Archie’s Tilesheets of Miscellaneous Stuff
+Additional Hairstyles (CP)
+Adventurer’s Guild Expanded for 1.6
+Aimon’s Bus Interior
+Aimon’s Fancy Shed (aka Redesigned Shed Layout)
+Aimon’s Tidy Cozy Cellar
+Alecto the Witch (new NPC)
+Alex’s Ice Cream Stand Sells A Few More Items
+Alpacas
+Alternative Textures
+Alvadea’s Tilesheets
+Always Hay
+Always Raining in the Valley - Custom NPCs for Sunberry
+Ancient Seeds in Garden Pots Allowed
+Animals Don’t Remove Grass
+Animated East Scarp Fish
+Animated Fish
+Animated Fish SVE
+Animated Ridgeside Village Fish
+Armory Cabinet
+Artisan Goods Keep Quality
+Auto-Stack Bait and Ammo
+AutoAnimalDoors
+AutoGate
+Banners Expanded
+Battery Pack From Joja
+Beach Additional Storage Space Area
+Beach Extension For Crab Pod
+Beach Farm Redone
+Beach Wave Sounds
+Berry Season Reminder
+Berry Woods
+Better Beehouses
+Better Clinic Beds
+Better Crafting
+Better Festival Notifications
+Better Friendship
+Better Honey Mead
+Better Meowmere
+Better Moss Soup
+Better Shipping Bin
+Better Signs - Lock Signs to Prevent Accidental Changes
+Better Slime Hutch by glymr (Slime Hutch Expanded - choose Greenhouse or
+glymr Buildings
+Bennoloth Items
+temisthem Livestock and Animals
+Neopffe Visuals and Graphics
+Tocseoj Gameplay Mechanics
+Entoarox User Interface
+Theoddon Audio
+Taskmaster2 Visuals and Graphics
+drbirbdev Modding Tools
+zilchaz Locations
+ichortower Visuals and Graphics
+AlanBF Visuals and Graphics
+CHA4S3E Items
+ncarigon Gameplay Mechanics
+ClawClawClaw Dialogue
+Spiderbuttons Items
+Spiderbuttons Modding Tools
+MolaMole Visuals and Graphics
+Pathoschild Cheats
+Pathoschild Cheats
+MaykellW Crops
+MolaMole Visuals and Graphics
+MolaMole Visuals and Graphics
+MolaMole Visuals and Graphics
+ClairesStoryofSeasons Dialogue
+sophiesalacia Modding Tools
+zilchaz Dialogue
+gizzymo Dialogue
+LeFauxMatt Gameplay Mechanics
+Pathoschild Gameplay Mechanics
+weissnicht01 Miscellaneous
+AgentLyoko Dialogue
+LoganDoidao989 Items
+KhloeLeclair Visuals and Graphics
+Coii Player
+Coludy12 User Interface
+TheTrain2000 Pets / Horses
+monsoonsheep Miscellaneous
+rokugin Modding Tools
+NormanPCN Gameplay Mechanics
+vgperson User Interface
+IllogicalMoodSwing Visuals and Graphics
+lemurkat Events
+Pathoschild Modding Tools
+vkunicorn Visuals and Graphics
+Mearakat Livestock and Animals
+Vanguard3000 User Interface
+gaussfire Gameplay Mechanics
+MizuJakkaru Items
+MizuJakkaru Crops
+MizuJakkaru Crops
+cocacola1018 Visuals and Graphics
+skellady Furniture
+sexynes Crafting
+TheFrenchDodo New Characters
+vapor64 Crops
+gzhynko Crops
+Spiderbuttons Modding Tools
+stardewforest Visuals and Graphics
+LeFauxMatt Modding Tools
+Digus Gameplay Mechanics
+Jaksha6472 Gameplay Mechanics
+PeacefulEnd Modding Tools
+Datamancer1110 Dialogue
+herbivoor User Interface
+EscaMMC Modding Tools
+aedenthorn Pets / Horses
+TheMightyAmondee Modding Tools
+Dragoon23 Furniture
+JennaJuffuffles Livestock and Animals
+DaisyNiko Modding Tools
+AirynS New Characters
+AgentLyoko Events
+RafiaBee Gameplay Mechanics
+kauf0 User Interface
+Wizadroid Items
+EscaMMC Gameplay Mechanics
+MangusuPixel User Interface
+sadnumbme Dialogue
+Aimon111 Expansions
+Jonqora Characters
+aedenthorn Gameplay Mechanics
+drawberry138 Characters
+drawberry138 Characters
+drawberry138 Characters
+drawberry138 Characters
+LavenderSkelly Portraits
+Sakorona Gameplay Mechanics
+PeacefulEnd Modding Tools
+Nookick Visuals and Graphics
+Cr00kshanks Events
+lemurkat Expansions
+bananasalmon Characters
+TenebrousNova New Characters
+junimods Livestock and Animals
+junimods Livestock and Animals
+junimods Buildings
+junimods Miscellaneous
+junimods Buildings
+Drorie Dialogue
+Rivalrabbit Livestock and Animals
+Rivalrabbit Livestock and Animals
+Rivalrabbit Gameplay Mechanics
+LucyTheOrange Expansions
+TheMightyAmondee Gameplay Mechanics
+shekurika User Interface
+CherryChain Modding Tools
+LeFauxMatt Items
+zombifier Modding Tools
+zombifier Modding Tools
+scrotorrr Events
+Stoel1994 Buildings
+EscaMMC Modding Tools
+Fiorbeth Gameplay Mechanics
+livipup Buildings
+CyanFire Miscellaneous
+PlatinumCats Player
+Pathoschild Gameplay Mechanics
+Furuchooo Crafting
+nunnovyerbizniz Modding Tools
+Speshkitty User Interface
+zombifier Buildings
+Ericlegacy21 Fishing
+AirynS Miscellaneous
+6480 Crafting
+Kurila Crafting
+scrotorrr Clothing
+nicoconot Miscellaneous
+Minothilos Items
+AvalonMFX Gameplay Mechanics
+Furbling Portraits
+Leroymilo Modding Tools
+aedenthorn Furniture
+BadNetCode Gameplay Mechanics
+jltaylor1 Modding Tools
+LeFauxMatt Gameplay Mechanics
+Hanatsuki Modding Tools
+spacechase0 Modding Tools
+Kantrip Dialogue
+aedenthorn Gameplay Mechanics
+JoXW User Interface
+DedeBug Characters
+Latteholn Interiors
+slimerrain Crops
+arachnida Miscellaneous
+StunkyMcDoo123 Crops
+skellady Furniture
+sadnumbme Dialogue
+vokus221 Miscellaneous
+cupoflifenoodles Gameplay Mechanics
+6480 Crops
+emurphy42 Dialogue
+guxelbit Furniture
+RacingRabbit Dialogue
+tlitookilakin User Interface
+monsoonsheep Gameplay Mechanics
+silvermoonchan Dialogue
+BussinBungus Dialogue
+weizinai Gameplay Mechanics
+and Powdermelon
+Homewrecker Lance
+Horse Overhaul - Thin - Faster - Saddle Bags - Friendship
+Hugs and Kisses Continued
+HxW Bathroom Furniture
+HxW Buildable Bakery
+HxW Buildable Flower Shop
+HxW Buildable Tea Shop
+HxW Buildable Winery
+HxW Decorative Plants Furniture Set
+HxW Everything Catalogue
+HxW Farmer’s Market Furniture - Bakery Set
+HxW Farmer’s Market Furniture - Core
+HxW Farmer’s Market Furniture - Fishmonger and Butcher Set
+HxW Greenhouse Furniture
+HxW Kitchen Lovers - Pantry and Clutter Furniture
+HxW Outdoor Flower Furniture
+HxW Plant Lovers Furniture
+HxW Tilesheets
+HxW Winery Furniture
+Hxw Bakery and Cafe Furniture
+Hxw Florist Furniture
+Hyper Realistic Coins
+Ichor’s Wobbly Cat
+Immersive Saloon
+Increased Fish Tank Capacity
+Indoor Sprinklers
+Instant Shaft
+Interactive Dog House and Cat Tree
+Item Extensions
+Izabelleanne’s Sheltie Collie dog
+JP’s More Warp Points v2 (CJB Cheats Menu) (1.6)
+Jio Alternate Marriage Dialogue
+Joja Blackmarket
+JojaFinancial
+Jorts and Jean Stardew Valley Expanded Compatibility Patch (Removes
+glymr Maps
+tiakall New Characters
+NermNermNerm Gameplay Mechanics
+KeDili Items
+AirynS Events
+Noav7 Furniture
+atelier99 New Characters
+ZoeyHoshi Items
+sophiesalacia Gameplay Mechanics
+sdvhead Expansions
+ItsLunatyx Maps
+zoedoll New Characters
+MindMeltMax Gameplay Mechanics
+aedenthorn Livestock and Animals
+xiddav Locations
+mushymato Livestock and Animals
+cajcbell Livestock and Animals
+0Logophile0 Furniture
+Pathoschild User Interface
+BussinBungus User Interface
+K3vinLevin Player
+Zexu2K Gameplay Mechanics
+LuanArroz Visuals and Graphics
+Lumisteria Visuals and Graphics
+Lumisteria Visuals and Graphics
+7thAxis New Characters
+MolaMole Visuals and Graphics
+Tapper Framework)
+Maggs Townsfolk Daily Dialogue Expansion
+Mail Framework Mod
+Mail Services Mod
+Mako’s Spam Mail
+Mapping Extensions and Extra Properties (MEEP)
+Mastery Extended
+Max Cast Stamina
+Meadowlands Minecarts
+Menu Blur
+Messy Crops
+Metalcore Goes Cottagecore - East Scarp Addon
+Miihau’s Abigail Event Expansion
+Miihau’s Events- Gender Neutrality Tokens Patches
+Miihau’s Haley Event Expansion
+Miihau’s Leah Event Expansion
+Miihau’s Penny Event Expansion
+Miihau’s Shane Event Expansion
+Minecart Travel Menu
+Mini Bars - Healthbars Mod
+Mini Greenhouse in the Farmhouse 2
+Mini Wind Turbines
+Misc Map Actions Properties - MMAP
+Mister Ginger (cat NPC)
+Mizu’s Quail
+Mizu’s Turkey
+Moon Cycle
+More Books
+More Consistent Books
+More Consistent Vanilla Buff Icons (Tweak - New Icons - Skills - Content
+DylanJames User Interface
+OMEGAlinc Expansions
+zilchaz Maps
+dyanosis Gameplay Mechanics
+Aimon111 Maps
+Aimon111 Maps
+Aimon111 Maps
+KhloeLeclair Modding Tools
+sneakyham Player
+Mammutor Crafting
+guxelbit Furniture
+guxelbit Furniture
+Synthicated Maps
+Regnander Maps
+Regnander Maps
+bcmpinc Gameplay Mechanics
+recon88 Gameplay Mechanics
+CherryChain Gameplay Mechanics
+PeacefulEnd Items
+alextofu Gameplay Mechanics
+Bouhm User Interface
+chocolatte12 Expansions
+CarelessImm0rtal Audio
+idermailer Visuals and Graphics
+ClawClawClaw Miscellaneous
+AirynS Events
+Bennoloth Items
+AirynS Miscellaneous
+dogtre4t Clothing
+Pathoschild Cheats
+bagibagriela New Characters
+DolphinIsNotaFish Characters
+orangeblossom7 Furniture
+orangeblossom7 Furniture
+Otterlyadorable Livestock and Animals
+DaisyNiko Maps
+PlatinumCats Furniture
+PlatinumCats Modding Tools
+hadiwrites42 Buildings
+AgentLyoko Events
+bmarquismarkail Gameplay Mechanics
+ncarigon Gameplay Mechanics
+zilchaz Miscellaneous
+focustense Gameplay Mechanics
+LucyTheOrange Expansions
+Goldenrevolver Gameplay Mechanics
+stardemod Gameplay Mechanics
+suhbean Pets / Horses
+indecisiv Furniture
+Kreestijan Gameplay Mechanics
+aedenthorn Gameplay Mechanics
+Sneakabout Miscellaneous
+weizinai Modding Tools
+GingerNinja7921 Items
+farmerbeans Visuals and Graphics
+caterpixie Furniture
+nraittanna Characters
+poohnhi Modding Tools
+aerinanxiety User Interface
+FearGodFishFish Furniture
+hwamei Livestock and Animals
+Louplex Maps
+Digus Modding Tools
+IllogicalMoodSwing User Interface
+aedenthorn Gameplay Mechanics
+steventhorne Gameplay Mechanics
+AirynS Visuals and Graphics
+azhrael Gameplay Mechanics
+YunHikari Gameplay Mechanics
+Omegasis Gameplay Mechanics
+Vlgor Interiors
+AirynS Events
+Vlgor User Interface
+armful Gameplay Mechanics
+Furuchooo Crafting
+Rafseazz Expansions
+SliimeScholar New Characters
+GingerNinja7921 Items
+CyanFire Characters
+cptnmatruz Events
+Wildflourmods Characters
+w8AwA8w Characters
+recon88 Gameplay Mechanics
+plurffle Gameplay Mechanics
+plurffle Livestock and Animals
+rokugin Gameplay Mechanics
+Dragoon23 Miscellaneous
+bananafishies Dialogue
+weizinai User Interface
+Amichwan Gameplay Mechanics
+BinaryLip User Interface
+Spiderbuttons User Interface
+sunshineydays Portraits
+Poltergeister Characters
+Poltergeister Characters
+Poltergeister Characters
+Rafseazz Clothing
+PixelHag Portraits
+Coffelino Visuals and Graphics
+dollynhoevida Furniture
+sdboyakuma Visuals and Graphics
+ichortower Modding Tools
+Speshkitty Gameplay Mechanics
+Sharogg Modding Tools
+AltoIgloo User Interface
+CherryChain Modding Tools
+bananasalmon Gameplay Mechanics
+TheMightyAmondee Miscellaneous
+TheMightyAmondee Miscellaneous
+TheMightyAmondee Cheats
+BussinBungus User Interface
+aedenthorn User Interface
+Morghoula Visuals and Graphics
+madishartte Items
+omena007 Crafting
+dendenhsmy Visuals and Graphics
+Entoarox Gameplay Mechanics
+Helper - UI Support)
+Skull Cave Entrance Remade
+Skull Cavern Elevator
+Slime Hutch Water Spots 1.6
+Slumberwood’s Psychrolutes
+Slumberwood’s Rats
+Social Page Order Redux
+Soffy’s Better Museum Display Cases (With Glasses)
+Solarium at the Spa Revisited
+Sophia SVE Dialogue Expansion
+SorryLab Core
+Soup’s Mixed Seed Recipes
+SpaceCore
+Spacecore Luck Skill
+Spawn Supply Crates On Beach
+Special Order Notifications
+Special Orders for Auto-Petter for 1.6
+Special Power Utilities (SPU)
+Spill The Tea (Farmer Drinking Sprites)
+Spiral Mine Map Shortcuts
+Spouses React to Player ‘Death’
+Sprinkler Mod Redux
+Squid-like Squid Kids
+Standardized Seed Sprites
+Stardew Valley Expanded
+StardewHack
+StardewUI Continued
+Stardust Core
+Status Announcements
+Stop Flower Harvest
+Summer Bird and Cicada Sounds (no flies sound)
+Sunberry Village
+Sweet Gem Berry Extended - English Translation
+Sword and Sorcery - A Fantasy Expansion for East Scarp
+TV Channel Tweak
+TV Forecast Rain Replacer
+Terracotta Garden Pots
+The Arcanian Exchange
+The Last Smoluanu - A Dwarf Expansion.
+The Love of Cooking
+The Museum Pays - Get Paid Donating to the Museum
+The Ranch Expansion Marnie and Jas
+The Return Of Custom Backpack Framework
+The Return Of More Backpack Upgrades
+They Deserve It Too - Portraits for Central Station
+They Deserve It Too - Portraits for East Scarp
+They Deserve It Too - Portraits for Extras
+They Deserve It Too - Portraits for Vendors
+Thunder and Frogs Sounds
+Thyrenoth’s Aideen Seasonal Portraits
+Tiny Totem Statue Obelisks
+Train Info
+Trinket Tinker
+Trinkets To Treasures (Simplified)
+Trolley - An Ecosystem Expansion
+Tweakable Meadowlands Farm
+UI Info Suite 2 Alternative
+Ultimate Guide To Clowning
+Unique Gift Dialogues Expanded
+Unique Winter Star
+Unique Winter Star - Ridgeside Village
+Unique Winter Star - SVE
+Unlockable Bundles
+Upgradable Bombs
+Upgrade Sprinklers
+Various Coal Ores (1.6)
+Vegan in the Valley
+Vegas’ Item Compatibility Patch
+Vegas’ Oops All Mixed Seeds
+Visible Fish - see catchable fish in the water
+Wallet Items Retexture
+Waterfall Forest Farms (WaFF and WaFFLE)
+Waterproof Items
+Wear More Rings
+What Does Trash Bear Want
+Willy Buys Back Your Rods
+Winter Gifts
+World Atlas
+Wren the Plumber - Custom NPC for Sunberry Village
+Xiddav’s Tilesheet
+Yagisan’s Bountiful Valley
+Yagisan’s Bountiful Valley for Ridgeside Village
+Yagisan’s Custom NPCs for NPC Map Locations
+Yet Another Harvest With Scythe Mod
+Zebrus Quest Board
+farmerjack’s Dialogue Expansions
+Anything Anywhere
+Reset Terrain Features
+ThreeHeartDancePartner 1.6
