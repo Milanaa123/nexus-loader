@@ -6,6 +6,7 @@ const ROOT = path.join(__dirname, '..');
 const WORK = path.join(ROOT, 'RU_PACK_WORK');
 const PROGRESS = path.join(WORK, 'progress.json');
 const QUEUE = path.join(WORK, 'queue.json');
+const LOCK = path.join(WORK, 'worker.lock');
 
 function readJson(file, fallback) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
@@ -36,40 +37,55 @@ function loadProgress() {
   });
 }
 
+function saveProgress(progress) {
+  writeJson(PROGRESS, {
+    ...progress,
+    updatedAt: new Date().toISOString()
+  });
+}
+
 async function processQueue(items) {
-  ensure();
+  if (fs.existsSync(LOCK)) return loadProgress();
+  fs.mkdirSync(WORK, { recursive: true });
+  fs.writeFileSync(LOCK, String(Date.now()));
 
-  const progress = loadProgress();
-  progress.total = items.length || progress.total;
-  progress.running = true;
-  progress.status = 'processing';
-  writeJson(PROGRESS, progress);
+  try {
+    ensure();
+    const progress = loadProgress();
 
-  for (let i = progress.processed || 0; i < items.length; i++) {
-    const item = items[i];
-    progress.current = item.modId || item.name || item;
-    progress.remaining = progress.total - progress.processed;
-    writeJson(PROGRESS, progress);
+    progress.total = items.length || progress.total;
+    progress.running = true;
+    progress.status = 'processing';
+    saveProgress(progress);
 
-    try {
-      const result = await downloadMod(item);
-      if (result) progress.downloaded = (progress.downloaded || 0) + 1;
-      else progress.noTranslations = (progress.noTranslations || 0) + 1;
-    } catch (e) {
-      progress.failed = (progress.failed || 0) + 1;
-      progress.lastError = e.message;
+    for (let i = progress.processed || 0; i < items.length; i++) {
+      const item = items[i];
+      progress.current = item.modId || item.name || item;
+      progress.remaining = progress.total - progress.processed;
+      saveProgress(progress);
+
+      try {
+        const result = await downloadMod(item);
+        if (result) progress.downloaded = (progress.downloaded || 0) + 1;
+        else progress.noTranslations = (progress.noTranslations || 0) + 1;
+      } catch (e) {
+        progress.failed = (progress.failed || 0) + 1;
+        progress.lastError = e.message;
+      }
+
+      progress.processed = i + 1;
+      progress.remaining = Math.max(0, progress.total - progress.processed);
+      saveProgress(progress);
     }
 
-    progress.processed = i + 1;
-    progress.remaining = progress.total - progress.processed;
-    writeJson(PROGRESS, progress);
+    progress.running = false;
+    progress.status = 'finished';
+    progress.current = null;
+    saveProgress(progress);
+    return progress;
+  } finally {
+    try { fs.unlinkSync(LOCK); } catch {}
   }
-
-  progress.running = false;
-  progress.status = 'finished';
-  progress.current = null;
-  writeJson(PROGRESS, progress);
-  return progress;
 }
 
 async function start(options = {}) {
@@ -77,4 +93,4 @@ async function start(options = {}) {
   return processQueue(queue);
 }
 
-module.exports = { start, processQueue, loadProgress, saveProgress: (x) => writeJson(PROGRESS, x) };
+module.exports = { start, processQueue, loadProgress, saveProgress };
