@@ -27,12 +27,7 @@ function loadQueue() {
 }
 
 function loadProgress() {
-  return readJson(PROGRESS, {
-    total: 0, processed: 0, remaining: 0,
-    downloaded: 0, failed: 0,
-    foundTranslations: 0, noTranslations: 0,
-    current: null, running: false
-  });
+  return readJson(PROGRESS, { total: 0, processed: 0, remaining: 0, downloaded: 0, failed: 0, foundTranslations: 0, noTranslations: 0, current: null, running: false });
 }
 
 function saveProgress(progress) {
@@ -44,6 +39,7 @@ async function processQueue(items) {
     const empty = loadProgress();
     empty.running = false;
     empty.status = 'empty_queue';
+    empty.error = 'queue file missing or empty';
     saveProgress(empty);
     return empty;
   }
@@ -55,14 +51,12 @@ async function processQueue(items) {
   try {
     ensure();
     const progress = loadProgress();
-
     if (progress.total !== items.length) {
       progress.processed = 0;
       progress.downloaded = 0;
       progress.failed = 0;
       progress.noTranslations = 0;
     }
-
     progress.total = items.length;
     progress.remaining = Math.max(0, progress.total - progress.processed);
     progress.running = true;
@@ -73,16 +67,14 @@ async function processQueue(items) {
       const item = items[i];
       progress.current = item.modId || item.name || item;
       saveProgress(progress);
-
       try {
         const result = await downloadMod(item);
         if (result) progress.downloaded = (progress.downloaded || 0) + 1;
-        else progress.noTranslations = (progress.noTranslations || 0) + 1;
+        else progress.noTranslations++;
       } catch (e) {
-        progress.failed = (progress.failed || 0) + 1;
+        progress.failed++;
         progress.lastError = e.message;
       }
-
       progress.processed = i + 1;
       progress.remaining = Math.max(0, progress.total - progress.processed);
       saveProgress(progress);
