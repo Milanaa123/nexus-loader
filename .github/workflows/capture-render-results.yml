@@ -1,0 +1,77 @@
+name: Capture Render Results
+
+on:
+  push:
+    branches:
+      - backup-2026-08-24-results
+    paths:
+      - .github/workflows/capture-render-results.yml
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: backup-2026-08-24-results
+
+      - name: Capture completed Render results
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p saved-results
+          curl -fsSL --retry 5 --retry-delay 2 https://nexus-loader.onrender.com/api/export -o saved-results/ru_results_full.json
+          curl -fsSL --retry 5 --retry-delay 2 https://nexus-loader.onrender.com/api/status -o saved-results/final_status.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('saved-results/ru_results_full.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          results = data.get('results') or []
+          if len(results) != 530:
+              raise SystemExit(f'Expected 530 results, got {len(results)}')
+          missing = [x.get('name') for x in results if not x.get('modId')]
+          if missing:
+              raise SystemExit(f'Missing modId for {len(missing)} entries: {missing[:10]}')
+          cache = [
+              {
+                  'name': x.get('name'),
+                  'author': x.get('author'),
+                  'modId': x.get('modId'),
+                  'translationId': x.get('translationId'),
+                  'fileId': x.get('fileId'),
+                  'fileName': x.get('fileName'),
+                  'status': x.get('status')
+              }
+              for x in results
+          ]
+          Path('saved-results/mod_ids_cache.json').write_text(
+              json.dumps(cache, ensure_ascii=False, indent=2), encoding='utf-8'
+          )
+          summary = {
+              'total': len(cache),
+              'modIds': sum(bool(x.get('modId')) for x in cache),
+              'translations': sum(bool(x.get('translationId')) for x in cache),
+              'fileIds': sum(bool(x.get('fileId')) for x in cache),
+              'downloaded': sum(x.get('status') == 'downloaded' for x in cache),
+              'noTranslation': sum(x.get('status') == 'no_translation' for x in cache),
+              'errors': sum(x.get('status') == 'error' for x in cache),
+          }
+          Path('saved-results/summary.json').write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf-8'
+          )
+          print(summary)
+          PY
+
+      - name: Commit immutable backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add saved-results/
+          git commit -m "Backup completed Nexus IDs and translation results"
+          git push origin HEAD:backup-2026-08-24-results
