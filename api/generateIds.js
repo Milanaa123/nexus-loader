@@ -17,11 +17,11 @@ function norm(v=''){return clean(v).toLowerCase().replace(/[^a-z0-9а-яё]+/gi,
 function words(v=''){return norm(v).split(' ').filter(Boolean);}
 function nameScore(target,candidate){const a=words(target),b=words(candidate);if(!a.length||!b.length)return 0;const exact=norm(target)===norm(candidate)?1:0;const recall=a.filter(w=>b.includes(w)).length/a.length;const precision=b.filter(w=>a.includes(w)).length/b.length;return exact*100+recall*60+precision*20;}
 function authorScore(expected,node){if(!expected)return 0;const e=norm(expected);const values=[node.author,node.uploader&&node.uploader.name].filter(Boolean).map(norm);return values.includes(e)?40:0;}
-function headers(){const key=process.env.NEXUS_API_KEY;if(!key)throw new Error('NEXUS_API_KEY missing');return {'Content-Type':'application/json','APIKEY':key,'User-Agent':'nexus-loader/2.0','Application-Name':'nexus-loader','Application-Version':'2.0'};}
+function headers(){const key=process.env.NEXUS_API_KEY;if(!key)throw new Error('NEXUS_API_KEY missing');return {'Content-Type':'application/json','APIKEY':key,'User-Agent':'nexus-loader/2.1','Application-Name':'nexus-loader','Application-Version':'2.1'};}
 
-async function gqlSearch(game,q){
+async function gqlSearch(game,q,op='WILDCARD',count=20){
  const query=`query NexusLoaderSearch($filter: ModsFilter, $count: Int) {\n  mods(filter: $filter, count: $count) {\n    totalCount\n    nodes { modId name author uploader { name memberId } game { domainName name id } version status }\n  }\n}`;
- const variables={filter:{gameDomainName:{value:game,op:'EQUALS'},name:{value:q,op:'WILDCARD'}},count:20};
+ const variables={filter:{gameDomainName:{value:game,op:'EQUALS'},name:{value:q,op}},count};
  const r=await fetch(GRAPHQL,{method:'POST',headers:headers(),body:JSON.stringify({query,variables})});
  const text=await r.text();let data;try{data=JSON.parse(text);}catch{throw new Error(`Nexus GraphQL HTTP ${r.status}: ${text.slice(0,180)}`);}
  if(!r.ok)throw new Error(`Nexus GraphQL HTTP ${r.status}: ${JSON.stringify(data).slice(0,220)}`);
@@ -38,12 +38,20 @@ function variants(name){
 
 async function searchMod(mod){
  let candidates=[];
- for(const q of variants(mod.name)){
-  try{
-   const list=await gqlSearch('stardewvalley',q);
-   log(`NEXUS ${q} results=${list.length}`);
-   candidates.push(...list);
-  }catch(e){log(`NEXUS ERROR ${q} ${e.message}`);}
+ const base=clean(mod.name);
+ try{
+  const exact=await gqlSearch('stardewvalley',base,'EQUALS',20);
+  log(`NEXUS EXACT ${base} results=${exact.length}`);
+  candidates.push(...exact);
+ }catch(e){log(`NEXUS EXACT ERROR ${base} ${e.message}`);}
+ if(!candidates.length){
+  for(const q of variants(mod.name)){
+   try{
+    const list=await gqlSearch('stardewvalley',q,'WILDCARD',30);
+    log(`NEXUS WILDCARD ${q} results=${list.length}`);
+    candidates.push(...list);
+   }catch(e){log(`NEXUS ERROR ${q} ${e.message}`);}
+  }
  }
  const unique=[...new Map(candidates.filter(x=>x&&x.modId).map(x=>[String(x.modId),x])).values()];
  const ranked=unique.map(x=>({...x,_score:nameScore(mod.name,x.name||'')+authorScore(mod.author,x)})).sort((a,b)=>b._score-a._score);
