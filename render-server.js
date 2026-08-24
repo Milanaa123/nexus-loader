@@ -67,7 +67,7 @@ async function runApi(req, res, apiName) {
 async function nexusSelfTest() {
   const key = process.env.NEXUS_API_KEY;
   if (!key) { console.log('NEXUS SELFTEST key=missing'); return; }
-  const headers = { 'Content-Type':'application/json', 'APIKEY':key, 'User-Agent':'nexus-loader/2.1', 'Application-Name':'nexus-loader', 'Application-Version':'2.1' };
+  const headers = { 'Content-Type':'application/json', 'APIKEY':key, 'User-Agent':'nexus-loader/2.2', 'Application-Name':'nexus-loader', 'Application-Version':'2.2' };
   try {
     const vr = await fetch('https://api.nexusmods.com/v1/users/validate.json', { headers });
     const vd = await vr.json().catch(() => ({}));
@@ -82,19 +82,31 @@ async function nexusSelfTest() {
     const nodes=d.data?.mods?.nodes||[];const err=d.errors?.map(x=>x.message).join(' | ')||'';
     return {status:r.status,nodes,err};
   }
-  for(const name of ['Content Patcher','Stardew Valley Expanded','Tractor Mod']){
+
+  const originals=[['Content Patcher','1915'],['Stardew Valley Expanded','3753'],['Tractor Mod','1401']];
+  for(const [name,expected] of originals){
     try{
       const x=await search(name,'EQUALS');
-      console.log(`NEXUS SELFTEST exact=${JSON.stringify(name)} status=${x.status} results=${x.nodes.length}${x.nodes[0]?` first=${x.nodes[0].name}#${x.nodes[0].modId}`:''}${x.err?` error=${x.err.slice(0,180)}`:''}`);
-    }catch(e){console.log(`NEXUS SELFTEST exact=${JSON.stringify(name)} error=${e.message}`);}
+      const first=x.nodes[0];
+      const pass=x.status===200&&x.nodes.length===1&&String(first?.modId)===expected;
+      console.log(`NEXUS SELFTEST exact=${JSON.stringify(name)} pass=${pass} status=${x.status} results=${x.nodes.length}${first?` first=${first.name}#${first.modId}`:''}${x.err?` error=${x.err.slice(0,180)}`:''}`);
+    }catch(e){console.log(`NEXUS SELFTEST exact=${JSON.stringify(name)} pass=false error=${e.message}`);}
   }
-  for(const name of ['Stardew Valley Expanded Russian','Tractor Mod Russian']){
-    try{
-      const x=await search(name,'WILDCARD');
-      const ru=x.nodes.filter(n=>/russian|рус|translation|перевод|\bru\b/i.test(n.name||''));
-      console.log(`NEXUS SELFTEST translation=${JSON.stringify(name)} status=${x.status} results=${x.nodes.length} ru=${ru.length}${ru[0]?` first=${ru[0].name}#${ru[0].modId}`:''}${x.err?` error=${x.err.slice(0,180)}`:''}`);
-    }catch(e){console.log(`NEXUS SELFTEST translation=${JSON.stringify(name)} error=${e.message}`);}
-  }
+
+  try {
+    delete require.cache[require.resolve('./scripts/find-translation')];
+    const {findTranslation}=require('./scripts/find-translation');
+    for(const test of [
+      {name:'Stardew Valley Expanded',id:'3753'},
+      {name:'Tractor Mod',id:'1401'}
+    ]){
+      try{
+        const result=await findTranslation({game:'stardewvalley',modName:test.name,author:'',modId:test.id});
+        if(result) console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} result=${result.translationName}#${result.translationId} score=${result.score} recall=${result.recall} precision=${result.precision}`);
+        else console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} result=none`);
+      }catch(e){console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} error=${e.message}`);}
+    }
+  } catch(e) { console.log('NEXUS SELFTEST resolver-load error='+e.message); }
 }
 
 const server = http.createServer(async (req, rawRes) => {
