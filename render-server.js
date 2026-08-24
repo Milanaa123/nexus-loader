@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
+require('./scripts/download-cached-translations');
 
 const HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT || 10000);
