@@ -5,6 +5,8 @@ on:
     branches: [archive-save]
     paths:
       - '.github/workflows/save-ru-archive.yml'
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
