@@ -2,6 +2,7 @@ const fs=require('fs');
 const path=require('path');
 const zlib=require('zlib');
 const AdmZip=require('adm-zip');
+const {spawnSync}=require('child_process');
 const {downloadMod}=require('./nexus-downloader');
 
 const ROOT=path.join(__dirname,'..');
@@ -13,6 +14,50 @@ const ARCHIVE=path.join(WORK,'RU_TRANSLATIONS_107.zip');
 
 function save(file,data){fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(data,null,2),'utf8');}
 function safeName(s){return String(s||'translation').replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,' ').trim().slice(0,120)||'translation';}
+function git(args){return spawnSync('git',args,{cwd:ROOT,encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:120000});}
+function persistArchiveToGit(archive){
+  try{
+    const inside=git(['rev-parse','--is-inside-work-tree']);
+    if(inside.status!==0||String(inside.stdout).trim()!=='true'){
+      console.log('CACHED RU GIT BACKUP SKIP no_git_worktree');
+      return {ok:false,reason:'no_git_worktree'};
+    }
+    const backupDir=path.join(ROOT,'saved-results');
+    const backupFile=path.join(backupDir,'RU_TRANSLATIONS_107.zip');
+    fs.mkdirSync(backupDir,{recursive:true});
+    fs.copyFileSync(archive.path,backupFile);
+    git(['config','user.name','nexus-loader']);
+    git(['config','user.email','nexus-loader@users.noreply.github.com']);
+    if(git(['checkout','-B','ru-archive-backup']).status!==0){
+      console.log('CACHED RU GIT BACKUP FAIL checkout');
+      return {ok:false,reason:'checkout_failed'};
+    }
+    if(git(['add','-f','saved-results/RU_TRANSLATIONS_107.zip']).status!==0){
+      console.log('CACHED RU GIT BACKUP FAIL add');
+      return {ok:false,reason:'add_failed'};
+    }
+    const status=git(['status','--porcelain','saved-results/RU_TRANSLATIONS_107.zip']);
+    if(String(status.stdout||'').trim()){
+      const commit=git(['commit','-m',`Save RU translations archive (${archive.count} files)`]);
+      if(commit.status!==0){
+        console.log('CACHED RU GIT BACKUP FAIL commit');
+        return {ok:false,reason:'commit_failed'};
+      }
+    }
+    const push=git(['push','-f','origin','HEAD:refs/heads/ru-archive-backup']);
+    if(push.status!==0){
+      console.log('CACHED RU GIT BACKUP FAIL push_auth_or_remote');
+      return {ok:false,reason:'push_failed'};
+    }
+    const rev=git(['rev-parse','HEAD']);
+    const sha=String(rev.stdout||'').trim();
+    console.log(`CACHED RU GIT BACKUP SAVED branch=ru-archive-backup sha=${sha} bytes=${archive.size}`);
+    return {ok:true,branch:'ru-archive-backup',sha};
+  }catch(e){
+    console.log('CACHED RU GIT BACKUP FAIL exception');
+    return {ok:false,reason:'exception'};
+  }
+}
 function loadCached(){
   const files=[1,2,3,4].map(n=>path.join(CACHE_DIR,`export-${n}.b64`));
   if(!files.every(fs.existsSync))throw new Error('Persistent translation cache is incomplete');
@@ -76,8 +121,11 @@ async function run(){
   const archive=buildArchive(results);
   console.log(`CACHED RU ARCHIVE READY count=${archive.count} bytes=${archive.size} path=${archive.path}`);
   progress.logs.push(`${new Date().toISOString()} ARCHIVE READY count=${archive.count} bytes=${archive.size}`);
+  const backup=persistArchiveToGit(archive);
+  if(backup.ok)progress.logs.push(`${new Date().toISOString()} GIT BACKUP SAVED branch=${backup.branch} sha=${backup.sha}`);
+  else progress.logs.push(`${new Date().toISOString()} GIT BACKUP NOT SAVED reason=${backup.reason}`);
   console.log(`CACHED RU DOWNLOAD FINISHED downloaded=${progress.downloaded}/${items.length} failed=${progress.failed}`);
-  save(PROGRESS,{...progress,running:false,status:'finished',current:null,translationId:null,fileId:null,remaining:0,archiveReady:true,archivePath:archive.path,archiveSize:archive.size,archiveCount:archive.count,finishedAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+  save(PROGRESS,{...progress,running:false,status:'finished',current:null,translationId:null,fileId:null,remaining:0,archiveReady:true,archivePath:archive.path,archiveSize:archive.size,archiveCount:archive.count,backup,finishedAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
 }
 
 if(!global.__cachedTranslationDownloadStarted){
@@ -88,4 +136,4 @@ if(!global.__cachedTranslationDownloadStarted){
   }));
 }
 
-module.exports={run,loadCached,buildArchive,ARCHIVE};
+module.exports={run,loadCached,buildArchive,persistArchiveToGit,ARCHIVE};
