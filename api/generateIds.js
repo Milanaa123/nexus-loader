@@ -13,7 +13,7 @@ function log(message){
  try{state=JSON.parse(fs.readFileSync(stateFile,'utf8'))}catch{}
  state.logs=state.logs||[];
  state.logs.push(new Date().toISOString()+' '+message);
- if(state.logs.length>100)state.logs=state.logs.slice(-100);
+ if(state.logs.length>200)state.logs=state.logs.slice(-200);
  save(stateFile,state);
 }
 
@@ -37,19 +37,20 @@ async function search(mod){
 async function run(mods){
  let found=[];
  save(stateFile,{running:true,total:mods.length,processed:0,current:null,status:'id_search',logs:[]});
- log('Начат поиск модов по названию и автору');
+ log('Начат поиск по названию и автору');
  for(let i=0;i<mods.length;i++){
+  const mod=mods[i];
   try{
-   log('Поиск: '+mods[i].name+' | '+mods[i].author);
-   const id=await search(mods[i]);
-   if(id){found.push({...mods[i],modId:id});log('Найден ID: '+id)}
-   else log('Не найден: '+mods[i].name);
-  }catch(e){log('Ошибка '+mods[i].name+': '+e.message)}
-  save(stateFile,{running:true,total:mods.length,processed:i+1,current:mods[i].name,status:'id_search',found:found.length});
+   log('Поиск: '+mod.name+' | '+mod.author);
+   const id=await search(mod);
+   if(id){found.push({...mod,modId:id});log('Найден Mod ID: '+id)}
+   else log('Mod ID не найден');
+  }catch(e){log('Ошибка: '+e.message)}
+  save(stateFile,{running:true,total:mods.length,processed:i+1,current:mod.name,status:'id_search',found:found.length,logs:JSON.parse(fs.readFileSync(stateFile,'utf8')).logs});
  }
  save(outFile,found);
- save(stateFile,{running:true,total:found.length,processed:0,current:null,status:'starting_worker',found:found.length});
- log('Поиск завершён. Запуск поиска русификаторов');
+ save(stateFile,{running:true,total:found.length,processed:0,current:null,status:'starting_worker',found:found.length,logs:[]});
+ log('Передача очереди в RU worker: '+found.length);
  setImmediate(()=>startRuWorker({queue:found}).catch(e=>{log('Worker error: '+e.message);save(stateFile,{running:false,error:e.message})}));
 }
 
