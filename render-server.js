@@ -64,35 +64,36 @@ async function runApi(req, res, apiName) {
   return handler(req, res);
 }
 
+function nexusHeaders() {
+  return { 'Content-Type':'application/json', 'APIKEY':process.env.NEXUS_API_KEY, 'User-Agent':'nexus-loader/2.3', 'Application-Name':'nexus-loader', 'Application-Version':'2.3' };
+}
+
 async function nexusSelfTest() {
   const key = process.env.NEXUS_API_KEY;
   if (!key) { console.log('NEXUS SELFTEST key=missing'); return; }
-  const headers = { 'Content-Type':'application/json', 'APIKEY':key, 'User-Agent':'nexus-loader/2.2', 'Application-Name':'nexus-loader', 'Application-Version':'2.2' };
+  const headers = nexusHeaders();
   try {
     const vr = await fetch('https://api.nexusmods.com/v1/users/validate.json', { headers });
     const vd = await vr.json().catch(() => ({}));
     console.log(`NEXUS SELFTEST validate=${vr.ok?'ok':'fail'} status=${vr.status} premium=${Boolean(vd.is_premium)}`);
   } catch (e) { console.log('NEXUS SELFTEST validate=error '+e.message); }
 
-  const gql = `query NexusLoaderSelfTest($filter: ModsFilter, $count: Int) { mods(filter: $filter, count: $count) { totalCount nodes { modId name author uploader { name } game { domainName } } } }`;
-  async function search(name,op='WILDCARD') {
-    const variables={filter:{gameDomainName:{value:'stardewvalley',op:'EQUALS'},name:{value:name,op}},count:30};
-    const r=await fetch('https://api.nexusmods.com/v2/graphql',{method:'POST',headers,body:JSON.stringify({query:gql,variables})});
-    const d=await r.json().catch(()=>({}));
-    const nodes=d.data?.mods?.nodes||[];const err=d.errors?.map(x=>x.message).join(' | ')||'';
-    return {status:r.status,nodes,err};
-  }
+  try {
+    delete require.cache[require.resolve('./api/generateIds')];
+    const idResolver=require('./api/generateIds');
+    for(const test of [
+      {name:'(CP) Content Patcher',author:'Pathoschild',expected:'1915'},
+      {name:'Stardew Valley Expanded',author:'FlashShifter',expected:'3753'},
+      {name:'Tractor Mod',author:'Pathoschild',expected:'1401'}
+    ]){
+      try{
+        const id=await idResolver.searchMod(test);
+        console.log(`NEXUS SELFTEST id-resolver=${JSON.stringify(test.name)} result=${id||'none'} expected=${test.expected} pass=${String(id||'')===test.expected}`);
+      }catch(e){console.log(`NEXUS SELFTEST id-resolver=${JSON.stringify(test.name)} pass=false error=${e.message}`);}
+    }
+  }catch(e){console.log('NEXUS SELFTEST id-resolver-load error='+e.message);}
 
-  const originals=[['Content Patcher','1915'],['Stardew Valley Expanded','3753'],['Tractor Mod','1401']];
-  for(const [name,expected] of originals){
-    try{
-      const x=await search(name,'EQUALS');
-      const first=x.nodes[0];
-      const pass=x.status===200&&x.nodes.length===1&&String(first?.modId)===expected;
-      console.log(`NEXUS SELFTEST exact=${JSON.stringify(name)} pass=${pass} status=${x.status} results=${x.nodes.length}${first?` first=${first.name}#${first.modId}`:''}${x.err?` error=${x.err.slice(0,180)}`:''}`);
-    }catch(e){console.log(`NEXUS SELFTEST exact=${JSON.stringify(name)} pass=false error=${e.message}`);}
-  }
-
+  let sveTranslation=null;
   try {
     delete require.cache[require.resolve('./scripts/find-translation')];
     const {findTranslation}=require('./scripts/find-translation');
@@ -102,11 +103,29 @@ async function nexusSelfTest() {
     ]){
       try{
         const result=await findTranslation({game:'stardewvalley',modName:test.name,author:'',modId:test.id});
-        if(result) console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} result=${result.translationName}#${result.translationId} score=${result.score} recall=${result.recall} precision=${result.precision}`);
-        else console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} result=none`);
+        if(result){
+          console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} result=${result.translationName}#${result.translationId} score=${result.score} recall=${result.recall} precision=${result.precision}`);
+          if(test.id==='3753')sveTranslation=result;
+        } else console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} result=none`);
       }catch(e){console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} error=${e.message}`);}
     }
   } catch(e) { console.log('NEXUS SELFTEST resolver-load error='+e.message); }
+
+  if(sveTranslation){
+    try{
+      delete require.cache[require.resolve('./scripts/nexus-downloader')];
+      const {chooseFile}=require('./scripts/nexus-downloader');
+      const chosen=await chooseFile('stardewvalley',sveTranslation.translationId);
+      const fileId=chosen?.file_id;
+      if(!fileId)throw new Error('no file selected');
+      const dl=await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/mods/${sveTranslation.translationId}/files/${fileId}/download_link.json`,{headers});
+      const links=await dl.json().catch(()=>[]);
+      const uri=links[0]?.URI||links[0]?.uri||null;
+      let headStatus=null;
+      if(uri){try{const hr=await fetch(uri,{method:'HEAD'});headStatus=hr.status;}catch(e){headStatus='error';}}
+      console.log(`NEXUS SELFTEST download-link mod=${sveTranslation.translationId} file=${fileId} apiStatus=${dl.status} link=${Boolean(uri)} headStatus=${headStatus} pass=${dl.ok&&Boolean(uri)}`);
+    }catch(e){console.log('NEXUS SELFTEST download-link pass=false error='+e.message);}
+  }
 }
 
 const server = http.createServer(async (req, rawRes) => {
