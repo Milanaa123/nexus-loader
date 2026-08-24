@@ -1,11 +1,13 @@
 const fs=require('fs');
 const path=require('path');
+const zlib=require('zlib');
 const {start:startRuWorker}=require('../scripts/ru-pack-worker');
 
 const ROOT=path.join(__dirname,'..');
 const WORK=path.join(ROOT,'RU_PACK_WORK');
 const stateFile=path.join(WORK,'generator_status.json');
 const outFile=path.join(WORK,'mods_with_ids.json');
+const CACHE_DIR=path.join(ROOT,'saved-results','cache');
 const GRAPHQL='https://api.nexusmods.com/v2/graphql';
 let running=false;
 
@@ -17,7 +19,19 @@ function norm(v=''){return clean(v).toLowerCase().replace(/[^a-z0-9а-яё]+/gi,
 function words(v=''){return norm(v).split(' ').filter(Boolean);}
 function nameScore(target,candidate){const a=words(target),b=words(candidate);if(!a.length||!b.length)return 0;const exact=norm(target)===norm(candidate)?1:0;const recall=a.filter(w=>b.includes(w)).length/a.length;const precision=b.filter(w=>a.includes(w)).length/b.length;return exact*100+recall*60+precision*20;}
 function authorScore(expected,node){if(!expected)return 0;const e=norm(expected);const values=[node.author,node.uploader&&node.uploader.name].filter(Boolean).map(norm);return values.includes(e)?40:0;}
-function headers(){const key=process.env.NEXUS_API_KEY;if(!key)throw new Error('NEXUS_API_KEY missing');return {'Content-Type':'application/json','APIKEY':key,'User-Agent':'nexus-loader/2.1','Application-Name':'nexus-loader','Application-Version':'2.1'};}
+function headers(){const key=process.env.NEXUS_API_KEY;if(!key)throw new Error('NEXUS_API_KEY missing');return {'Content-Type':'application/json','APIKEY':key,'User-Agent':'nexus-loader/2.2','Application-Name':'nexus-loader','Application-Version':'2.2'};}
+function cacheKey(name='',author=''){return String(name).trim().toLowerCase()+'\u0000'+String(author).trim().toLowerCase();}
+
+function loadPersistentResults(){
+ try{
+  const files=[1,2,3,4].map(n=>path.join(CACHE_DIR,`export-${n}.b64`));
+  if(!files.every(f=>fs.existsSync(f)))return[];
+  const b64=files.map(f=>fs.readFileSync(f,'utf8').trim()).join('');
+  const payload=JSON.parse(zlib.gunzipSync(Buffer.from(b64,'base64')).toString('utf8'));
+  const items=Array.isArray(payload.results)?payload.results:[];
+  return items.filter(x=>x&&x.name&&x.modId);
+ }catch(e){return[];}
+}
 
 async function gqlSearch(game,q,op='WILDCARD',count=20){
  const query=`query NexusLoaderSearch($filter: ModsFilter, $count: Int) {\n  mods(filter: $filter, count: $count) {\n    totalCount\n    nodes { modId name author uploader { name memberId } game { domainName name id } version status }\n  }\n}`;
@@ -69,16 +83,21 @@ function input(){
 }
 
 async function run(mods){
- const found=[];save(stateFile,{running:true,total:mods.length,processed:0,remaining:mods.length,status:'id_search',foundModIds:0,logs:[]});
+ const saved=loadPersistentResults();
+ const cache=new Map(saved.map(x=>[cacheKey(x.name,x.author),x]));
+ const found=[];let cached=0,searched=0;
+ save(stateFile,{running:true,total:mods.length,processed:0,remaining:mods.length,status:cache.size?'id_cache':'id_search',foundModIds:0,cachedModIds:0,searchedModIds:0,persistentCacheEntries:cache.size,logs:[]});
+ if(cache.size)log(`PERSISTENT CACHE loaded=${cache.size}`);
  for(let i=0;i<mods.length;i++){
-  const mod=mods[i];log(`Поиск: ${clean(mod.name)} | ${mod.author}`);
-  const id=await searchMod(mod).catch(e=>{log('ERROR '+e.message);return null;});
+  const mod=mods[i];const hit=cache.get(cacheKey(mod.name,mod.author));let id=null;
+  if(hit&&hit.modId){id=String(hit.modId);cached++;log(`CACHE HIT ${mod.name} | ${mod.author} | id=${id}`);}
+  else{searched++;log(`Поиск Nexus: ${clean(mod.name)} | ${mod.author}`);id=await searchMod(mod).catch(e=>{log('ERROR '+e.message);return null;});}
   if(id)found.push({...mod,modId:id});
-  const s=readState();save(stateFile,{...s,running:true,status:'id_search',total:mods.length,processed:i+1,remaining:mods.length-i-1,current:mod.name,modId:id,foundModIds:found.length});
+  const s=readState();save(stateFile,{...s,running:true,status:searched?'id_resolve':'id_cache',total:mods.length,processed:i+1,remaining:mods.length-i-1,current:mod.name,modId:id,foundModIds:found.length,cachedModIds:cached,searchedModIds:searched,persistentCacheEntries:cache.size});
  }
  save(outFile,found);
- const s=readState();save(stateFile,{...s,running:false,status:'id_search_finished',current:null,remaining:0,foundModIds:found.length});
- log(`ID SEARCH FINISHED found=${found.length}/${mods.length}`);
+ const s=readState();save(stateFile,{...s,running:false,status:'id_resolve_finished',current:null,remaining:0,foundModIds:found.length,cachedModIds:cached,searchedModIds:searched,persistentCacheEntries:cache.size});
+ log(`ID RESOLVE FINISHED found=${found.length}/${mods.length} cache=${cached} nexusSearch=${searched}`);
  if(found.length)await startRuWorker({queue:found});
 }
 
@@ -87,9 +106,10 @@ async function handler(req,res){
  const mods=input();
  if(!mods.length)return res.status(500).json({ok:false,error:'mods_for_render_530.csv not found or empty'});
  running=true;run(mods).catch(e=>{const s=readState();save(stateFile,{...s,running:false,status:'error',error:e.message});}).finally(()=>{running=false;});
- return res.json({ok:true,status:'started',total:mods.length});
+ return res.json({ok:true,status:'started',total:mods.length,persistentCacheEntries:loadPersistentResults().length});
 }
 handler.searchMod=searchMod;
 handler.input=input;
 handler.clean=clean;
+handler.loadPersistentResults=loadPersistentResults;
 module.exports=handler;
