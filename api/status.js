@@ -1,33 +1,37 @@
-const fs = require('fs');
-const path = require('path');
+const fs=require('fs');
+const path=require('path');
 
-module.exports = async function(req,res){
+module.exports=async function(req,res){
  const root=path.join(__dirname,'..');
  const generatorFile=path.join(root,'RU_PACK_WORK','generator_status.json');
  const progressFile=path.join(root,'RU_PACK_WORK','progress.json');
-
- let generator={};
- let progress={};
+ let generator={},progress={};
  try{generator=JSON.parse(fs.readFileSync(generatorFile,'utf8'));}catch{}
  try{progress=JSON.parse(fs.readFileSync(progressFile,'utf8'));}catch{}
 
- const logs=[...(generator.logs||[]),...(progress.logs||[])].slice(-200);
+ let active;
+ if(generator.running) active=generator;
+ else if(progress.running) active=progress;
+ else if(progress.status==='finished') active=progress;
+ else active=generator.status?generator:progress;
 
+ const logs=[...(generator.logs||[]),...(progress.logs||[])].slice(-300);
  return res.json({
   ok:true,
-  running:Boolean(progress.running || generator.running),
-  status:progress.status||generator.status||null,
-  total:progress.total||generator.total||0,
-  processed:progress.processed||generator.processed||0,
-  remaining:Math.max(0,(progress.total||generator.total||0)-(progress.processed||generator.processed||0)),
-  current:progress.current||generator.current||null,
-  foundTranslations:progress.foundTranslations||generator.foundTranslations||0,
-  noTranslations:progress.noTranslations||generator.noTranslations||0,
-  downloaded:progress.downloaded||generator.downloaded||0,
-  failed:progress.failed||generator.failed||0,
-  modId:progress.modId||generator.modId||null,
-  translationId:progress.translationId||generator.translationId||null,
+  running:Boolean(generator.running||progress.running),
+  status:active.status||null,
+  total:active.total||0,
+  processed:active.processed||0,
+  remaining:active.remaining!=null?active.remaining:Math.max(0,(active.total||0)-(active.processed||0)),
+  current:active.current||null,
+  foundModIds:generator.foundModIds||0,
+  foundTranslations:progress.foundTranslations||0,
+  noTranslations:progress.noTranslations||0,
+  downloaded:progress.downloaded||0,
+  failed:progress.failed||0,
+  modId:active.modId||null,
+  translationId:progress.translationId||null,
   logs,
-  error:progress.error||generator.error||null
+  error:active.error||progress.error||generator.error||null
  });
 };
