@@ -31,6 +31,7 @@ module.exports=async function(req,res){
   failed:progress.failed||0,
   modId:active.modId||null,
   translationId:progress.translationId||null,
+  sveDownloadUrl:'https://nexus-loader.onrender.com/api/downloadSVETranslation',
   logs,
   error:active.error||progress.error||generator.error||null
  });
