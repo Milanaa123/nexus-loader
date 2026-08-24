@@ -82,10 +82,14 @@ async function run(mods){
  if(found.length)await startRuWorker({queue:found});
 }
 
-module.exports=async(req,res)=>{
+async function handler(req,res){
  if(running)return res.json({ok:true,status:'already_running'});
  const mods=input();
  if(!mods.length)return res.status(500).json({ok:false,error:'mods_for_render_530.csv not found or empty'});
  running=true;run(mods).catch(e=>{const s=readState();save(stateFile,{...s,running:false,status:'error',error:e.message});}).finally(()=>{running=false;});
  return res.json({ok:true,status:'started',total:mods.length});
-};
+}
+handler.searchMod=searchMod;
+handler.input=input;
+handler.clean=clean;
+module.exports=handler;
