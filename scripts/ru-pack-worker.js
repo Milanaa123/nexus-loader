@@ -24,34 +24,47 @@ function loadQueue() {
 
 async function processQueue(items) {
   if (!items.length) {
-    saveProgress({running:false,status:'empty_queue',total:0,processed:0});
+    saveProgress({running:false,status:'empty_queue',total:0,processed:0,logs:[]});
     return;
   }
 
   ensure();
   let progress = readJson(PROGRESS, {});
-  progress = { ...progress, running:true, status:'processing', total:items.length, logs:progress.logs || [] };
+  progress = {...progress, running:true, status:'processing', total:items.length, logs:progress.logs || []};
   saveProgress(progress);
 
   for (let i = progress.processed || 0; i < items.length; i++) {
     const mod = items[i];
-    progress.current = mod.name || mod.modId || String(i);
-    progress.logs.push(`Поиск русификатора: ${progress.current}`);
+    const name = mod.name || mod.title || '';
+    const author = mod.author || '';
+
+    progress.current = name || String(i);
+    progress.logs.push(`Поиск: ${name} | ${author}`);
     saveProgress(progress);
 
     try {
-      const translation = await findTranslation(mod);
+      const translation = await findTranslation({
+        modName:name,
+        author,
+        modId:mod.modId || null
+      });
+
       if (translation) {
-        mod.translationId = translation.id;
-        progress.logs.push(`Русификатор найден ID: ${translation.id}`);
+        mod.translationId = translation.translationId;
+        progress.translationId = translation.translationId;
+        progress.logs.push(`Русификатор найден: ${translation.translationId}`);
       } else {
         progress.logs.push('Русификатор не найден');
       }
 
-      const result = await downloadMod(mod);
-      if (result) progress.downloaded = (progress.downloaded || 0) + 1;
-
-    } catch (e) {
+      if (!mod.translationId) {
+        progress.logs.push('Скачивание пропущено: нет ID перевода');
+      } else {
+        const result = await downloadMod({...mod, modId:mod.translationId});
+        if (result) progress.downloaded = (progress.downloaded || 0) + 1;
+        progress.logs.push('Скачивание завершено');
+      }
+    } catch(e) {
       progress.failed = (progress.failed || 0) + 1;
       progress.logs.push(`Ошибка: ${e.message}`);
     }
@@ -61,11 +74,11 @@ async function processQueue(items) {
     saveProgress(progress);
   }
 
-  saveProgress({...progress, running:false, status:'finished', current:null});
+  saveProgress({...progress,running:false,status:'finished',current:null});
 }
 
 async function start(options={}) {
   return processQueue(options.queue && options.queue.length ? options.queue : loadQueue());
 }
 
-module.exports = { start, processQueue };
+module.exports = {start,processQueue};
