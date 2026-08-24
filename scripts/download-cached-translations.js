@@ -26,6 +26,7 @@ function loadCached(){
 
 async function run(){
   const items=loadCached();
+  console.log(`CACHED RU DOWNLOAD START total=${items.length}`);
   let progress={running:true,status:'downloading_cached_translations',total:items.length,processed:0,remaining:items.length,downloaded:0,failed:0,current:null,startedAt:new Date().toISOString(),logs:[]};
   const results=[];
   save(PROGRESS,progress);save(RESULT,results);
@@ -42,10 +43,12 @@ async function run(){
       results.push({...item,status:'downloaded',path:dl.path,size:dl.size,fileName:dl.fileName||item.fileName||null});
       progress.downloaded++;
       progress.logs.push(`${new Date().toISOString()} DONE ${item.name||''} ${dl.size} bytes`);
+      console.log(`CACHED RU DOWNLOAD DONE ${i+1}/${items.length} ${item.name||''} translation=${item.translationId} file=${item.fileId} bytes=${dl.size}`);
     }catch(e){
       results.push({...item,status:'error',error:e.message});
       progress.failed++;
       progress.logs.push(`${new Date().toISOString()} ERROR ${item.name||''} ${e.message}`);
+      console.error(`CACHED RU DOWNLOAD FAIL ${i+1}/${items.length} ${item.name||''} ${e.message}`);
     }
     progress.processed=i+1;
     progress.remaining=items.length-progress.processed;
@@ -53,6 +56,7 @@ async function run(){
     save(PROGRESS,{...progress,updatedAt:new Date().toISOString()});
   }
   save(PROGRESS,{...progress,running:false,status:'finished',current:null,translationId:null,fileId:null,remaining:0,finishedAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+  console.log(`CACHED RU DOWNLOAD FINISHED downloaded=${progress.downloaded}/${items.length} failed=${progress.failed}`);
 }
 
 if(!global.__cachedTranslationDownloadStarted){
