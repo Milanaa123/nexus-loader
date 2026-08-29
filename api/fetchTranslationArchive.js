@@ -3,7 +3,8 @@ module.exports=async function(req,res){
     const allowed={
       '18092':{fileId:97534,label:'haley-ru'},
       '24334':{fileId:100631,label:'shane-ru'},
-      '18728':{fileId:null,label:'abigail-ru'}
+      '18728':{fileId:null,label:'abigail-ru'},
+      '42591':{fileId:null,label:'arv-sunberry-ru'}
     };
     const modId=String(req.query?.modId||'').trim();
     const spec=allowed[modId];
