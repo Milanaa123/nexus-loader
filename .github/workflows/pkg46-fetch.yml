@@ -22,3 +22,5 @@ jobs:
           path: arv-sunberry-ru.zip
           if-no-files-found: error
           retention-days: 1
+
+# trigger: package-46 continuation 2026-08-29
