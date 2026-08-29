@@ -1,0 +1,34 @@
+name: Capture translation archives
+
+on:
+  push:
+    paths:
+      - '.github/workflows/capture-translations.yml'
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch verified Russian translation archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captured
+          fetch_one() {
+            id="$1"; name="$2"
+            curl -fsSL "https://nexus-loader.onrender.com/api/fetchTranslationArchive?modId=${id}" -o "/tmp/${id}.json"
+            jq -e '.ok == true and (.base64|length) > 0' "/tmp/${id}.json" >/dev/null
+            jq -r '.base64' "/tmp/${id}.json" | base64 -d > "captured/${name}.zip"
+            unzip -t "captured/${name}.zip" >/dev/null
+            jq -r '"captured modId=\(.modId) fileId=\(.fileId) bytes=\(.bytes)"' "/tmp/${id}.json"
+          }
+          fetch_one 18092 'Haley_Event_Expansion_RU'
+          fetch_one 24334 'Shane_Event_Expansion_RU'
+          fetch_one 18728 'Abigail_Event_Expansion_RU'
+      - name: Upload archive bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: russian-event-translations
+          path: captured/*.zip
+          if-no-files-found: error
+          retention-days: 1
