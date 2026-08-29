@@ -78,7 +78,7 @@ module.exports = async function (req, res) {
       });
     }
 
-    if (action === "download") {
+    if (action === "download" || action === "proxyDownload") {
       const id = Number(b.modId || q.modId);
       if (!id)
         return res.status(400).json({ ok: false, error: "Invalid modId" });
