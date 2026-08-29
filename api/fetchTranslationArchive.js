@@ -10,7 +10,7 @@ module.exports=async function(req,res){
     if(!spec)return res.status(403).json({ok:false,error:'mod not allowed'});
     const key=process.env.NEXUS_API_KEY;
     if(!key)return res.status(500).json({ok:false,error:'NEXUS_API_KEY missing'});
-    const headers={APIKEY:key,'User-Agent':'nexus-loader/2.5','Application-Name':'nexus-loader','Application-Version':'2.5'};
+    const headers={APIKEY:key,'User-Agent':'nexus-loader/2.6','Application-Name':'nexus-loader','Application-Version':'2.6'};
     let fileId=Number(req.query?.fileId||spec.fileId||0),meta=null;
     if(!fileId){
       const fr=await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/mods/${modId}/files.json`,{headers});
@@ -32,6 +32,12 @@ module.exports=async function(req,res){
     if(!rr.ok)return res.status(502).json({ok:false,error:`mirror HTTP ${rr.status}`,fileId});
     const b=Buffer.from(await rr.arrayBuffer());
     if(b.length>2*1024*1024)return res.status(413).json({ok:false,error:'archive too large',bytes:b.length});
+    if(String(req.query?.raw||'')==='1'){
+      res.setHeader('Content-Type','application/zip');
+      res.setHeader('Content-Length',String(b.length));
+      res.setHeader('Content-Disposition',`attachment; filename="${spec.label}.zip"`);
+      return res.send(b);
+    }
     return res.json({ok:true,modId,fileId,label:spec.label,fileName:meta?.file_name||null,bytes:b.length,base64:b.toString('base64')});
   }catch(e){return res.status(500).json({ok:false,error:e.message||String(e)});}
 };
