@@ -1,0 +1,31 @@
+name: Package 50 verified bundle
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pkg50-fetch.yml'
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch package 50 bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-delay 3 -o PACKAGE_50_VERIFIED_RU_5.zip 'https://nexus-loader.onrender.com/api/pkg50bundle'
+          unzip -t PACKAGE_50_VERIFIED_RU_5.zip
+          unzip -l PACKAGE_50_VERIFIED_RU_5.zip | tee contents.txt
+          test "$(unzip -p PACKAGE_50_VERIFIED_RU_5.zip PACKAGE_50_TRANSLATION_REPORT.txt | grep -c 'missing=0 extra=0')" -eq 5
+          stat -c '%s' PACKAGE_50_VERIFIED_RU_5.zip | tee bytes.txt
+      - name: Upload package 50 bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-50-verified-ru-5
+          path: |
+            PACKAGE_50_VERIFIED_RU_5.zip
+            contents.txt
+            bytes.txt
+          if-no-files-found: error
+          retention-days: 7
