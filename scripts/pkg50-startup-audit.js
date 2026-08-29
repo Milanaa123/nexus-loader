@@ -1,1 +1,5 @@
-setTimeout(async()=>{try{const port=process.env.PORT||10000;for(const [tag,ep] of [['KNOWN','pkg50validateknown'],['BUNDLE','pkg50bundle?status=1']]){const r=await fetch(`http://127.0.0.1:${port}/api/${ep}`);const t=await r.text();console.log(`PKG50_${tag} status=${r.status} body=${t}`);}}catch(e){console.error('PKG50_STARTUP_ERROR '+e.stack)}},8000);
+const crypto=require('crypto');
+setTimeout(async()=>{try{const port=process.env.PORT||10000;const base=`http://127.0.0.1:${port}`;
+ const sr=await fetch(`${base}/api/pkg50bundle?status=1`);console.log(`PKG50_BUNDLE_STATUS status=${sr.status} body=${await sr.text()}`);
+ const r=await fetch(`${base}/api/pkg50bundle`);if(!r.ok)throw new Error(`bundle HTTP ${r.status}`);const b=Buffer.from(await r.arrayBuffer());const sha=crypto.createHash('sha256').update(b).digest('hex'),s=b.toString('base64'),chunkSize=12000,total=Math.ceil(s.length/chunkSize);console.log(`PKG50_TRANSFER_META bytes=${b.length} sha256=${sha} b64chars=${s.length} chunks=${total} chunkSize=${chunkSize}`);for(let i=0;i<total;i++)console.log(`PKG50_TRANSFER_CHUNK_${String(i).padStart(2,'0')}=${s.slice(i*chunkSize,(i+1)*chunkSize)}`);
+}catch(e){console.error('PKG50_TRANSFER_ERROR '+e.stack)}},8000);
