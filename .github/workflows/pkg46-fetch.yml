@@ -10,17 +10,30 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - name: Download Russian translation
+      - name: Capture translation response
+        shell: bash
         run: |
-          curl -fSL 'https://nexus-loader.onrender.com/api/fetchTranslationArchive?modId=42591&raw=1' -o arv-sunberry-ru.zip
-          unzip -t arv-sunberry-ru.zip
-          ls -lh arv-sunberry-ru.zip
-      - name: Upload archive
+          set +e
+          url='https://nexus-loader.onrender.com/api/fetchTranslationArchive?modId=42591&raw=1'
+          curl -sS -L -D response-headers.txt -o arv-sunberry-ru.zip -w '%{http_code}\n' "$url" > http-status.txt
+          file arv-sunberry-ru.zip > file-type.txt 2>&1 || true
+          unzip -t arv-sunberry-ru.zip > unzip-test.txt 2>&1 || true
+          ls -lh arv-sunberry-ru.zip > file-size.txt 2>&1 || true
+          cat http-status.txt
+          cat file-type.txt
+          cat unzip-test.txt
+      - name: Upload captured response
         uses: actions/upload-artifact@v4
         with:
-          name: pkg46-arv-sunberry-ru
-          path: arv-sunberry-ru.zip
+          name: pkg46-arv-sunberry-capture
+          path: |
+            arv-sunberry-ru.zip
+            response-headers.txt
+            http-status.txt
+            file-type.txt
+            unzip-test.txt
+            file-size.txt
           if-no-files-found: error
           retention-days: 1
 
-# trigger: package-46 continuation 2026-08-29
+# trigger: package-46 diagnostic capture 2026-08-29
