@@ -10,52 +10,25 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - name: Download missing source archives
+      - name: Download verified Render bundle
         shell: bash
         run: |
-          set -u
-          mkdir -p downloads
-          : > status.txt
+          set -euo pipefail
+          curl -fL --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 30 --max-time 600 \
+            -A 'Mozilla/5.0 nexus-loader/2.8' \
+            -o missing-537-sources.zip \
+            'https://nexus-loader.onrender.com/api/missing537bundle'
+          unzip -t missing-537-sources.zip
+          sha256sum missing-537-sources.zip | tee SHA256.txt
+          unzip -l missing-537-sources.zip | tee CONTENTS.txt
 
-          grab_zip() {
-            name="$1"; url="$2"
-            echo "== $name ==" | tee -a status.txt
-            if curl -fL --retry 4 --retry-all-errors --retry-delay 5 --connect-timeout 30 --max-time 300 -A 'Mozilla/5.0 nexus-loader/2.5' -o "downloads/$name" "$url"; then
-              if unzip -t "downloads/$name" >/dev/null 2>&1; then
-                echo "OK $name $(stat -c%s "downloads/$name")" | tee -a status.txt
-              else
-                echo "BADZIP $name" | tee -a status.txt
-                file "downloads/$name" | tee -a status.txt || true
-                head -c 300 "downloads/$name" | strings | head -20 | tee -a status.txt || true
-                rm -f "downloads/$name"
-              fi
-            else
-              echo "DOWNLOAD_FAIL $name" | tee -a status.txt
-              rm -f "downloads/$name"
-            fi
-          }
-
-          # Official Nexus API bridge already configured in this project/Render.
-          grab_zip 'Coiis_Hair_Sets_Pack.zip' 'https://nexus-loader.onrender.com/api/missingNexus?which=coii'
-          grab_zip 'HxW_Bakery_and_Cafe_Furniture.zip' 'https://nexus-loader.onrender.com/api/missingNexus?which=hxw'
-
-          # Author/community-maintained public releases.
-          grab_zip 'Anything_Anywhere.zip' 'https://github.com/Sparky56p/AnythingAnywhere/releases/download/1.8.2-unofficial.7-Sparky56p/AnythingAnywhere.1.8.2-unofficial.7-Sparky56p.zip'
-          grab_zip 'Reset_Terrain_Features.zip' 'https://github.com/Lake1059/ResetTerrainFeatures_NET6/releases/download/1.0.3-unofficial.3-Lake1059/SDV_1.6.10_RTF-1.0.3-unofficial.3-Lake1059.zip'
-          grab_zip 'Non_Destructive_NPCs.zip' 'https://forums.stardewvalley.net/attachments/nondestructivenpcs-1-6-0-zip.20119/'
-          grab_zip 'ThreeHeartDancePartner.zip' 'https://forums.stardewvalley.net/attachments/threeheartdancepartner-1-1-2-unofficial-2-flyingtnt-zip.20678/'
-          grab_zip 'Weather_Wonders_Beta.zip' 'https://www.curseforge.com/stardewvalley/mods/weather-wonders/download/6861103'
-
-          echo '--- FINAL ---'
-          cat status.txt
-          ls -lh downloads || true
-
-      - name: Upload successfully verified archives
+      - name: Upload verified bundle
         uses: actions/upload-artifact@v4
         with:
-          name: missing-537-source-archives
+          name: missing-537-render-bundle
           path: |
-            downloads/*.zip
-            status.txt
+            missing-537-sources.zip
+            SHA256.txt
+            CONTENTS.txt
           if-no-files-found: error
           retention-days: 7
