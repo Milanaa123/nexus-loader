@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.github/workflows/missing537-transfer.yml'
+  pull_request:
   workflow_dispatch:
 
 jobs:
