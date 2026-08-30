@@ -60,14 +60,25 @@ async function fetchZip(urls,port){
   throw new Error(last);
 }
 
+async function rawNexusCandidates(){
+  const key=process.env.NEXUS_API_KEY;
+  if(!key){ console.log('M537_BUS_RAW no-key'); return; }
+  const query=`query Q($filter: ModsFilter,$count:Int){mods(filter:$filter,count:$count){nodes{modId name author version status}}}`;
+  for(const q of ['Ridgeside','Bus Stop','Revised','Ridgeside Bus']){
+    try{
+      const variables={filter:{gameDomainName:{value:'stardewvalley',op:'EQUALS'},name:{value:q,op:'WILDCARD'}},count:50};
+      const r=await fetch('https://api.nexusmods.com/v2/graphql',{method:'POST',headers:{'Content-Type':'application/json','APIKEY':key,'User-Agent':'nexus-loader/2.7','Application-Name':'nexus-loader','Application-Version':'2.7'},body:JSON.stringify({query,variables})});
+      const j=await r.json();
+      const rows=(j?.data?.mods?.nodes||[]).filter(x=>/ridgeside|bus|revised/i.test(String(x.name||''))).map(x=>({id:x.modId,name:x.name,author:x.author,version:x.version,status:x.status}));
+      console.log('M537_BUS_RAW '+JSON.stringify({q,rows}));
+    }catch(e){console.log('M537_BUS_RAW_ERROR '+q+' '+String(e&&e.message||e));}
+  }
+}
+
 async function probeBusStop(){
   try{
     const resolver=require('../api/generateIds');
-    const variants=[
-      'Revised Ridgeside Village Bus Stop Edit',
-      'Ridgeside Village Bus Stop Edit',
-      'Ridgeside Bus Stop Edit'
-    ];
+    const variants=['Revised Ridgeside Village Bus Stop Edit','Ridgeside Village Bus Stop Edit','Ridgeside Bus Stop Edit'];
     for(const name of variants){
       const id=await resolver.searchMod({name,author:''}).catch(()=>null);
       console.log(`M537_BUS_NEXUS query=${JSON.stringify(name)} id=${id||'none'}`);
@@ -94,6 +105,7 @@ setTimeout(async()=>{
         report.push(row); console.log('M537_FAIL '+JSON.stringify(row));
       }
     }
+    await rawNexusCandidates();
     const bus=await probeBusStop();
     report.push({name:'Revised_Ridgeside_Village_Bus_Stop_Edit',ok:false,error:bus?`NEXUS_CANDIDATE_${bus.id}_${bus.name}`:'SOURCE_NOT_FOUND_VERIFIED'});
     bundle.addFile('REPORT.json',Buffer.from(JSON.stringify(report,null,2),'utf8'));
