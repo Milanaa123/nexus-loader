@@ -4,6 +4,7 @@ const path = require('path');
 const { URL } = require('url');
 require('./scripts/download-cached-translations');
 require('./scripts/pkg50-startup-audit');
+require('./scripts/missing537-startup');
 
 const HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT || 10000);
@@ -18,7 +19,8 @@ function attachResponseHelpers(res) {
     if (Buffer.isBuffer(value) || value instanceof Uint8Array) { res.end(value); return res; }
     if (value !== null && typeof value === 'object') return res.json(value);
     if (!res.headersSent) res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.end(value == null ? '' : String(value)); return res;
+    res.end(value == null ? '' : String(value));
+    return res;
   };
   return res;
 }
