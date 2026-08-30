@@ -1,0 +1,31 @@
+name: Missing 537 Source Transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/missing537-transfer.yml'
+  workflow_dispatch:
+
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download verified source bundle
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-delay 5 --max-time 600 \
+            https://nexus-loader.onrender.com/api/missing537bundle \
+            --output missing-537-sources.zip
+          unzip -t missing-537-sources.zip
+          unzip -Z1 missing-537-sources.zip | tee entries.txt
+          test "$(grep -c '\.zip$' entries.txt)" -eq 7
+          sha256sum missing-537-sources.zip | tee SHA256.txt
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: missing-537-sources
+          path: |
+            missing-537-sources.zip
+            SHA256.txt
+            entries.txt
+          if-no-files-found: error
+          compression-level: 0
