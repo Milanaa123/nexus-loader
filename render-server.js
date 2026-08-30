@@ -6,6 +6,7 @@ require('./scripts/download-cached-translations');
 require('./scripts/pkg50-startup-audit');
 require('./scripts/missing537-startup');
 require('./scripts/missing537-final-audit');
+require('./scripts/export-rar-ru');
 
 const HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT || 10000);
