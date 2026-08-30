@@ -1,5 +1,7 @@
 const fs=require('fs');
 const path=require('path');
+const zlib=require('zlib');
+const crypto=require('crypto');
 const {createExtractorFromData}=require('node-unrar-js');
 const {downloadMod}=require('./nexus-downloader');
 const ROOT=path.join(__dirname,'..');
@@ -18,25 +20,21 @@ async function extractRar(buf){
 }
 async function run(){
  fs.rmSync(OUT,{recursive:true,force:true});fs.mkdirSync(OUT,{recursive:true});
- const report=[];
+ const report=[],payload={};
  for(const [idx,name,tid,fid] of targets){
   try{
    const dl=await downloadMod({game:'stardewvalley',modId:tid,fileId:fid}); const b=fs.readFileSync(dl.path);
    let files=[];
    if(b.slice(0,4).toString('ascii')==='Rar!') files=await extractRar(b);
    else {try{const AdmZip=require('adm-zip');const z=new AdmZip(b);files=z.getEntries().filter(e=>!e.isDirectory&&/(^|[\\/])ru(?:-RU)?\.json$/i.test(e.entryName)).map(e=>({name:e.entryName,data:e.getData().toString('utf8')}));}catch{}}
-   let j=0;for(const f of files){j++;fs.writeFileSync(path.join(OUT,`${idx}_${safe(name)}_${String(j).padStart(2,'0')}.json`),f.data,'utf8');}
+   let j=0;payload[idx]=[];for(const f of files){j++;const fn=`${idx}_${safe(name)}_${String(j).padStart(2,'0')}.json`;fs.writeFileSync(path.join(OUT,fn),f.data,'utf8');payload[idx].push({sourcePath:f.name,fileName:fn,data:f.data});}
    report.push({idx,name,translationId:tid,fileId:fid,found:files.map(x=>x.name)});console.log(`RARRU|${idx}|${name}|${files.length}`);
   }catch(e){report.push({idx,name,error:e.message});console.log(`RARRU_ERR|${idx}|${name}|${e.message}`);}
  }
- fs.writeFileSync(path.join(OUT,'report.json'),JSON.stringify(report,null,2));
- // commit text exports to a dedicated branch so ChatGPT can fetch them directly.
- const {spawnSync}=require('child_process');
- const git=a=>spawnSync('git',a,{cwd:ROOT,encoding:'utf8',timeout:120000});
- git(['config','user.name','nexus-loader']);git(['config','user.email','nexus-loader@users.noreply.github.com']);
- git(['checkout','-B','final-rar-ru']);git(['add','-f','data/FINAL_RAR_RU']);
- const st=git(['status','--porcelain','data/FINAL_RAR_RU']);if(String(st.stdout).trim())git(['commit','-m','Export RAR5 RU JSON files']);
- const push=git(['push','-f','origin','HEAD:refs/heads/final-rar-ru']);console.log(`RARRU_PUSH|status=${push.status}|${String(push.stderr||'').slice(-500)}`);
+ payload.report=report;fs.writeFileSync(path.join(OUT,'report.json'),JSON.stringify(report,null,2));
+ const gz=zlib.gzipSync(Buffer.from(JSON.stringify(payload),'utf8'),{level:9});const s=gz.toString('base64'),N=6000,count=Math.ceil(s.length/N);
+ console.log(`RARRU_META|gzipBytes=${gz.length}|sha256=${crypto.createHash('sha256').update(gz).digest('hex')}|chunks=${count}`);
+ for(let i=0;i<count;i++)console.log(`RARRU_CHUNK|${String(i+1).padStart(4,'0')}|${s.slice(i*N,(i+1)*N)}`);
  console.log('RARRU_DONE');
 }
 if(!global.__finalRarRu){global.__finalRarRu=true;setTimeout(()=>run().catch(e=>console.log('RARRU_FATAL|'+e.stack)),10000);}
