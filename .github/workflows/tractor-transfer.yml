@@ -12,12 +12,14 @@ jobs:
         run: |
           curl -fL --retry 3 --retry-delay 3 https://nexus-loader.onrender.com/api/tractor -o tractor.zip
           python - <<'PY'
-          import zipfile
+          import zipfile, hashlib, os
           p='tractor.zip'
           with zipfile.ZipFile(p) as z:
               bad=z.testzip()
               assert bad is None, bad
               print('zip ok', len(z.namelist()))
+          print('bytes', os.path.getsize(p))
+          print('sha256', hashlib.sha256(open(p,'rb').read()).hexdigest())
           PY
       - uses: actions/upload-artifact@v4
         with:
