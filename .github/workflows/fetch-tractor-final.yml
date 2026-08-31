@@ -1,0 +1,27 @@
+name: Fetch Tractor Final
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fetch-tractor-final.yml'
+  workflow_dispatch:
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download official Tractor Mod 4.24.4
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --retry-delay 2 \
+            -A 'Mozilla/5.0' \
+            'https://www.curseforge.com/stardewvalley/mods/tractor-mod/download/7759722/file' \
+            -o 'Tractor Mod 4.24.4.zip'
+          unzip -t 'Tractor Mod 4.24.4.zip'
+          sha256sum 'Tractor Mod 4.24.4.zip' | tee tractor.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tractor-mod-4.24.4
+          path: |
+            Tractor Mod 4.24.4.zip
+            tractor.sha256
+          if-no-files-found: error
