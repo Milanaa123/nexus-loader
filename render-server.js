@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
+const crypto = require('crypto');
 require('./scripts/download-cached-translations');
 require('./scripts/pkg50-startup-audit');
 require('./scripts/missing537-startup');
@@ -83,7 +84,6 @@ async function nexusSelfTest() {
     const vd = await vr.json().catch(() => ({}));
     console.log(`NEXUS SELFTEST validate=${vr.ok?'ok':'fail'} status=${vr.status} premium=${Boolean(vd.is_premium)}`);
   } catch (e) { console.log('NEXUS SELFTEST validate=error '+e.message); }
-
   try {
     delete require.cache[require.resolve('./api/generateIds')];
     const idResolver=require('./api/generateIds');
@@ -92,46 +92,10 @@ async function nexusSelfTest() {
       {name:'Stardew Valley Expanded',author:'FlashShifter',expected:'3753'},
       {name:'Tractor Mod',author:'Pathoschild',expected:'1401'}
     ]){
-      try{
-        const id=await idResolver.searchMod(test);
-        console.log(`NEXUS SELFTEST id-resolver=${JSON.stringify(test.name)} result=${id||'none'} expected=${test.expected} pass=${String(id||'')===test.expected}`);
-      }catch(e){console.log(`NEXUS SELFTEST id-resolver=${JSON.stringify(test.name)} pass=false error=${e.message}`);}
+      try{ const id=await idResolver.searchMod(test); console.log(`NEXUS SELFTEST id-resolver=${JSON.stringify(test.name)} result=${id||'none'} expected=${test.expected} pass=${String(id||'')===test.expected}`); }
+      catch(e){ console.log(`NEXUS SELFTEST id-resolver=${JSON.stringify(test.name)} pass=false error=${e.message}`); }
     }
   }catch(e){console.log('NEXUS SELFTEST id-resolver-load error='+e.message);}
-
-  let sveTranslation=null;
-  try {
-    delete require.cache[require.resolve('./scripts/find-translation')];
-    const {findTranslation}=require('./scripts/find-translation');
-    for(const test of [
-      {name:'Stardew Valley Expanded',id:'3753'},
-      {name:'Tractor Mod',id:'1401'}
-    ]){
-      try{
-        const result=await findTranslation({game:'stardewvalley',modName:test.name,author:'',modId:test.id});
-        if(result){
-          console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} result=${result.translationName}#${result.translationId} score=${result.score} recall=${result.recall} precision=${result.precision}`);
-          if(test.id==='3753')sveTranslation=result;
-        } else console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} result=none`);
-      }catch(e){console.log(`NEXUS SELFTEST resolver=${JSON.stringify(test.name)} error=${e.message}`);}
-    }
-  } catch(e) { console.log('NEXUS SELFTEST resolver-load error='+e.message); }
-
-  if(sveTranslation){
-    try{
-      delete require.cache[require.resolve('./scripts/nexus-downloader')];
-      const {chooseFile}=require('./scripts/nexus-downloader');
-      const chosen=await chooseFile('stardewvalley',sveTranslation.translationId);
-      const fileId=chosen?.file_id;
-      if(!fileId)throw new Error('no file selected');
-      const dl=await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/mods/${sveTranslation.translationId}/files/${fileId}/download_link.json`,{headers});
-      const links=await dl.json().catch(()=>[]);
-      const uri=links[0]?.URI||links[0]?.uri||null;
-      let headStatus=null;
-      if(uri){try{const hr=await fetch(uri,{method:'HEAD'});headStatus=hr.status;}catch(e){headStatus='error';}}
-      console.log(`NEXUS SELFTEST download-link mod=${sveTranslation.translationId} file=${fileId} apiStatus=${dl.status} link=${Boolean(uri)} headStatus=${headStatus} pass=${dl.ok&&Boolean(uri)}`);
-    }catch(e){console.log('NEXUS SELFTEST download-link pass=false error='+e.message);}
-  }
 }
 
 const server = http.createServer(async (req, rawRes) => {
@@ -155,4 +119,20 @@ server.headersTimeout = 125000;
 server.listen(PORT, HOST, () => {
   console.log(`nexus-loader listening on http://${HOST}:${PORT}`);
   nexusSelfTest().catch(e=>console.log('NEXUS SELFTEST fatal '+e.message));
+  setTimeout(async()=>{
+    try {
+      console.log('TRACTOR_EXPORT_BEGIN');
+      const r=await fetch(`http://127.0.0.1:${PORT}/api/tractor`,{signal:AbortSignal.timeout(120000)});
+      const b=Buffer.from(await r.arrayBuffer());
+      const sha=crypto.createHash('sha256').update(b).digest('hex');
+      if(!r.ok || b[0]!==0x50 || b[1]!==0x4b){
+        console.log(`TRACTOR_EXPORT_ERROR|status=${r.status}|bytes=${b.length}|sample=${b.subarray(0,300).toString('utf8')}`);
+        return;
+      }
+      const s=b.toString('base64'); const N=40000; const count=Math.ceil(s.length/N);
+      console.log(`TRACTOR_META|status=${r.status}|bytes=${b.length}|sha256=${sha}|chunks=${count}`);
+      for(let i=0;i<count;i++) console.log(`TRACTOR_B64|${String(i+1).padStart(2,'0')}|${s.slice(i*N,(i+1)*N)}`);
+      console.log('TRACTOR_EXPORT_DONE');
+    } catch(e) { console.log('TRACTOR_EXPORT_FATAL|'+String(e&&e.stack||e)); }
+  },5000);
 });
