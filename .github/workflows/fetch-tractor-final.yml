@@ -9,13 +9,13 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - name: Download official Tractor Mod 4.24.4
+      - name: Download verified Tractor Mod through Nexus loader
         run: |
           set -euo pipefail
-          curl -fL --retry 3 --retry-delay 2 \
-            -A 'Mozilla/5.0' \
-            'https://www.curseforge.com/stardewvalley/mods/tractor-mod/download/7759722/file' \
+          curl -fL --retry 5 --retry-delay 3 \
+            'https://nexus-loader.onrender.com/api/tractor' \
             -o 'Tractor Mod 4.24.4.zip'
+          test "$(head -c2 'Tractor Mod 4.24.4.zip')" = 'PK'
           unzip -t 'Tractor Mod 4.24.4.zip'
           sha256sum 'Tractor Mod 4.24.4.zip' | tee tractor.sha256
       - uses: actions/upload-artifact@v4
