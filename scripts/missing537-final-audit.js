@@ -1,13 +1,20 @@
 setTimeout(async()=>{
   try{
     const port=process.env.PORT||10000;
-    const r=await fetch(`http://127.0.0.1:${port}/api/tractor`,{signal:AbortSignal.timeout(240000)});
-    const b=Buffer.from(await r.arrayBuffer());
-    const crypto=require('crypto');
-    if(!r.ok){console.log(`TRACTOR_ERROR|status=${r.status}|${b.toString('utf8').slice(0,1000)}`);return;}
-    const s=b.toString('base64'),N=50000,count=Math.ceil(s.length/N);
-    console.log(`TRACTOR_META|bytes=${b.length}|sha256=${crypto.createHash('sha256').update(b).digest('hex')}|chunks=${count}`);
-    for(let i=0;i<count;i++)console.log(`TRACTOR_CHUNK|${String(i+1).padStart(4,'0')}|${s.slice(i*N,(i+1)*N)}`);
-    console.log('TRACTOR_DONE');
-  }catch(e){console.log('TRACTOR_FATAL|'+String(e&&e.stack||e));}
+    for(const modId of ['40475','20109','23684','31958']){
+      try{
+        const r=await fetch(`http://127.0.0.1:${port}/api/nexusMeta?modId=${modId}`,{signal:AbortSignal.timeout(60000)});
+        const j=await r.json();
+        const files=(j.files||[]).filter(f=>String(f.category_name||'').toUpperCase()==='MAIN').sort((a,b)=>String(b.uploaded_time||'').localeCompare(String(a.uploaded_time||'')));
+        const f=files[0]||j.files?.[0];
+        console.log(`RU_META|mod=${modId}|status=${r.status}|file=${f?.file_id||''}|name=${f?.name||''}|version=${f?.version||''}|bytes=${f?.size_in_bytes||''}|preview=${f?.content_preview_link||''}`);
+        if(f?.content_preview_link){
+          const pr=await fetch(f.content_preview_link,{signal:AbortSignal.timeout(60000)});
+          const txt=await pr.text();
+          console.log(`RU_PREVIEW|mod=${modId}|status=${pr.status}|len=${txt.length}|${txt.slice(0,20000)}`);
+        }
+      }catch(e){console.log(`RU_META_ERROR|mod=${modId}|${String(e&&e.message||e)}`)}
+    }
+    console.log('RU_META_DONE');
+  }catch(e){console.log('RU_META_FATAL|'+String(e&&e.stack||e));}
 },10000);
