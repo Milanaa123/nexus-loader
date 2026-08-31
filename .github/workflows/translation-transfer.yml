@@ -1,0 +1,26 @@
+name: Translation transfer
+on:
+  push:
+    paths:
+      - '.github/translation-trigger.txt'
+      - '.github/workflows/translation-transfer.yml'
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Russian translation files
+        run: |
+          set -euxo pipefail
+          curl -fL --retry 4 --retry-delay 3 'https://nexus-loader.onrender.com/api/stardewmodsfile?id=914' -o sophia.bin
+          curl -fL --retry 4 --retry-delay 3 'https://nexus-loader.onrender.com/api/stardewmodsfile?id=927' -o saloon.bin
+          ls -lh sophia.bin saloon.bin
+          file sophia.bin saloon.bin
+          sha256sum sophia.bin saloon.bin
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ru-translations-current
+          path: |
+            sophia.bin
+            saloon.bin
+          retention-days: 1
