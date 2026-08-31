@@ -1,0 +1,26 @@
+name: Tractor transfer
+on:
+  push:
+    paths:
+      - '.github/tractor-trigger.txt'
+      - '.github/workflows/tractor-transfer.yml'
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Tractor
+        run: |
+          curl -fL --retry 3 --retry-delay 3 https://nexus-loader.onrender.com/api/tractor -o tractor.zip
+          python - <<'PY'
+          import zipfile
+          p='tractor.zip'
+          with zipfile.ZipFile(p) as z:
+              bad=z.testzip()
+              assert bad is None, bad
+              print('zip ok', len(z.namelist()))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tractor-mod-4.24.4
+          path: tractor.zip
+          if-no-files-found: error
