@@ -3,9 +3,9 @@ module.exports = async function tractor(req, res) {
     const key = process.env.NEXUS_API_KEY;
     const headers = key ? {
       APIKEY:key,
-      'User-Agent':'nexus-loader/2.7',
+      'User-Agent':'nexus-loader/2.8',
       'Application-Name':'nexus-loader',
-      'Application-Version':'2.7'
+      'Application-Version':'2.8'
     } : {};
     const game='stardewvalley', modId='1401';
     let chosen = null;
@@ -37,16 +37,20 @@ module.exports = async function tractor(req, res) {
     }
 
     if (!bytes) {
-      const cfUrl = 'https://www.curseforge.com/stardewvalley/mods/tractor-mod/download/7759722';
-      const r = await fetch(cfUrl, {
-        redirect:'follow',
-        headers:{'User-Agent':'Mozilla/5.0 nexus-loader/2.7'}
-      });
-      const b = Buffer.from(await r.arrayBuffer());
-      if (!r.ok || b.length < 5 || b[0] !== 0x50 || b[1] !== 0x4b) {
-        return res.status(502).json({ok:false,error:'Official CurseForge download did not return ZIP',status:r.status,bytes:b.length,finalUrl:r.url,chosen});
+      const urls = [
+        'https://mediafilez.forgecdn.net/files/7759/722/Tractor%20Mod%204.24.4%204.24.4.zip',
+        'https://edge.forgecdn.net/files/7759/722/Tractor%20Mod%204.24.4%204.24.4.zip'
+      ];
+      const attempts = [];
+      for (const cfUrl of urls) {
+        try {
+          const r = await fetch(cfUrl, {redirect:'follow',headers:{'User-Agent':'Mozilla/5.0 nexus-loader/2.8'}});
+          const b = Buffer.from(await r.arrayBuffer());
+          attempts.push({url:cfUrl,status:r.status,bytes:b.length,finalUrl:r.url,type:r.headers.get('content-type')});
+          if (r.ok && b.length > 4 && b[0] === 0x50 && b[1] === 0x4b) { bytes = b; break; }
+        } catch(e) { attempts.push({url:cfUrl,error:e.message}); }
       }
-      bytes = b;
+      if (!bytes) return res.status(502).json({ok:false,error:'Official CurseForge CDN did not return ZIP',attempts,chosen});
       if (!chosen) chosen = {file_id:160476,name:'Tractor Mod 4.24.4',version:'4.24.4'};
     }
 
