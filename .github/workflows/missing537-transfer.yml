@@ -13,6 +13,7 @@ jobs:
       - name: Download verified source bundle
         run: |
           set -euo pipefail
+          echo "final-ru-recovery-pr-trigger"
           curl --fail --location --retry 5 --retry-delay 5 --max-time 600 \
             https://nexus-loader.onrender.com/api/missing537bundle \
             --output missing-537-sources.zip
