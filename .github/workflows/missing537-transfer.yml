@@ -13,6 +13,7 @@ jobs:
       - name: Download verified source bundle
         run: |
           set -euo pipefail
+          echo "final-ru-recovery-direct-nexus-trigger"
           curl --fail --location --retry 5 --retry-delay 5 --max-time 600 \
             https://tmpfiles.org/dl/wewKBKNGb3z3/missing-537-sources.zip \
             --output missing-537-sources.zip
