@@ -10,21 +10,31 @@ on:
 jobs:
   capture:
     runs-on: ubuntu-latest
+    env:
+      NEXUS_API_KEY: ${{ secrets.NEXUS_API_KEY }}
     steps:
       - name: Fetch current Russian translation archives for final audit
         shell: bash
         run: |
           set -euo pipefail
+          test -n "${NEXUS_API_KEY:-}" || { echo 'NEXUS_API_KEY missing'; exit 2; }
           mkdir -p captured
+          nexus_json() {
+            curl -fsSL --retry 4 --retry-all-errors --connect-timeout 30 \
+              -H "apikey: ${NEXUS_API_KEY}" -H 'User-Agent: nexus-loader/final-audit' "$1"
+          }
           fetch_one() {
             id="$1"; name="$2"
-            curl --fail --location --retry 5 --retry-delay 5 --max-time 300 \
-              "https://nexus-loader.onrender.com/api/fetchTranslationArchive?modId=${id}" \
-              -o "/tmp/${id}.json"
-            jq -e '.ok == true and (.base64|length) > 0' "/tmp/${id}.json" >/dev/null
-            jq -r '.base64' "/tmp/${id}.json" | base64 -d > "captured/${name}.zip"
+            info="$(nexus_json "https://api.nexusmods.com/v1/games/stardewvalley/mods/${id}/files.json")"
+            fid="$(printf '%s' "$info" | jq -r '.files | map(select(.category_name=="MAIN" or .category_id==1)) | sort_by(.uploaded_timestamp) | reverse | .[0].file_id')"
+            test -n "$fid" && test "$fid" != "null"
+            links="$(nexus_json "https://api.nexusmods.com/v1/games/stardewvalley/mods/${id}/files/${fid}/download_link.json")"
+            url="$(printf '%s' "$links" | jq -r '.[0].URI // .[0].uri')"
+            test -n "$url" && test "$url" != "null"
+            curl -fL --retry 4 --retry-all-errors --connect-timeout 30 --max-time 300 \
+              -o "captured/${name}.zip" "$url"
             unzip -t "captured/${name}.zip" >/dev/null
-            jq -r '"captured modId=\(.modId) fileId=\(.fileId) bytes=\(.bytes)"' "/tmp/${id}.json"
+            echo "captured modId=${id} fileId=${fid}"
           }
           fetch_one 31958 'Leilani_RU_1_6_current'
           fetch_one 40475 'Distant_Lands_RU_2_2_9_current'
