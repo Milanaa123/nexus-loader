@@ -38,6 +38,13 @@ jobs:
           }
           fetch_one 31958 'Leilani_RU_1_6_current'
           fetch_one 40475 'Distant_Lands_RU_2_2_9_current'
+          fetch_one 23337 'Portraited_Changing_Skies_original'
+          fetch_one 4736 'DaisyNiko_Tilesheets_original'
+          fetch_one 21889 'Cuter_Slimes_Refreshed_original'
+          fetch_one 19487 'Coin_Icon_Replacer_original'
+          fetch_one 44822 'Arcanian_Exchange_RU_current'
+          fetch_one 37666 'Date_Night_Redux_RU_current'
+          fetch_one 30004 'Remapping_RU_current'
       - name: Upload archive bundle
         uses: actions/upload-artifact@v4
         with:
