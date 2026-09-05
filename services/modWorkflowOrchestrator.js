@@ -1,20 +1,22 @@
 const importer = require('./bulkImportService');
 const tracker = require('./jobProgressTracker');
 const persistence = require('./jobPersistence');
-const stateMachine = require('./jobStateMachine');
+const schema = require('./modJobSchema');
+const validator = require('./jobValidator');
 
 class ModWorkflowOrchestrator {
   importList(text) {
     const mods = importer.parse ? importer.parse(text) : [];
 
     return mods.map(mod => {
-      const job = tracker.create({
-        name: mod.name,
-        author: mod.author,
-        status: stateMachine.STATUSES.CREATED,
-        errors: []
-      });
+      const job = schema.createModJob(mod);
+      const check = validator.validateJob(job);
 
+      if (!check.valid) {
+        job.errors.push(...check.errors.map(message => ({ message })));
+      }
+
+      tracker.restore(job);
       persistence.save(job);
       return job;
     });
