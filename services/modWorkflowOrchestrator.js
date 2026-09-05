@@ -33,7 +33,13 @@ class ModWorkflowOrchestrator {
   }
 
   restore() {
-    return persistence.all();
+    const jobs = persistence.restoreAll();
+    tracker.restoreAll(jobs);
+    return tracker.all();
+  }
+
+  saveAll() {
+    return persistence.saveAll(tracker.all());
   }
 
   getProgress() {
