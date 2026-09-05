@@ -1,8 +1,8 @@
 const fs=require('fs');
-const path=require('path');
+const paths=require('../config/paths');
 
 module.exports=async function(req,res){
-  const archive=path.join(__dirname,'..','RU_PACK_WORK','RU_TRANSLATIONS_107.zip');
+  const archive=paths.workDir + '/RU_TRANSLATIONS_107.zip';
   if(!fs.existsSync(archive)){
     return res.status(404).json({ok:false,error:'Archive is not ready yet'});
   }
