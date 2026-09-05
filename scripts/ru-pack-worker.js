@@ -4,6 +4,7 @@ const {downloadMod,ensure}=require('./nexus-downloader');
 const {findTranslation}=require('./find-translation');
 const {run:importQueue}=require('./import_mod_queue');
 const {createPipelineResult,setStatus}=require('../lib/mod-status');
+const {buildModPackage}=require('../lib/build-pipeline');
 
 const ROOT=path.join(__dirname,'..');
 const WORK=path.join(ROOT,'RU_PACK_WORK');
@@ -20,33 +21,37 @@ function loadQueue(){if(!fs.existsSync(QUEUE))importQueue();const q=readJson(QUE
 async function processQueue(items){
  if(!items.length){saveProgress({running:false,status:'empty_queue',total:0,processed:0,remaining:0});return;}
  ensure();
- let progress={running:true,status:'translation_search',total:items.length,processed:0,remaining:items.length,foundTranslations:0,noTranslations:0,downloaded:0,failed:0,modId:null,translationId:null,logs:[]};
- const results=[];save(RESULT,results);
- saveProgress(progress);
+ let progress={running:true,status:'translation_search',total:items.length,processed:0,remaining:items.length,foundTranslations:0,noTranslations:0,downloaded:0,built:0,failed:0,logs:[]};
+ const results=[];save(RESULT,results);saveProgress(progress);
  for(let i=0;i<items.length;i++){
   const mod=items[i];const name=mod.name||mod.title||'';const author=mod.author||'';
-  const pipeline=createPipelineResult({name,author,modId:mod.modId||null});
-  const result={...pipeline,translationId:null,fileId:null};
-  result.status='found';
-  progress.current=name;progress.modId=mod.modId||null;progress.translationId=null;
-  addLog(progress,`Поиск перевода: ${name} | ${author} | Mod ID ${mod.modId||'-'}`);saveProgress(progress);
+  const result=createPipelineResult({name,author,modId:mod.modId||null});
+  result.translationId=null;
+  progress.current=name;
+  addLog(progress,`Processing ${name} | ${author}`);
   try{
    const translation=await findTranslation({modName:name,author,modId:mod.modId||null});
-   if(!translation){progress.noTranslations++;setStatus(result,'translation_missing');addLog(progress,'Перевод не найден');}
+   if(!translation){progress.noTranslations++;setStatus(result,'translation_missing');}
    else{
-    result.translationId=translation.translationId;progress.translationId=result.translationId;progress.foundTranslations++;
+    result.translationId=translation.translationId;
     setStatus(result,'translation_found');
-    addLog(progress,`Найден перевод: ${translation.translationName} | Translation ID ${result.translationId}`);saveProgress(progress);
-    progress.status='downloading';saveProgress(progress);
-    const downloaded=await downloadMod({game:'stardewvalley',modId:result.translationId});
-    result.fileId=downloaded.fileId;result.fileName=downloaded.fileName;result.path=downloaded.path;
-    setStatus(result,'translation_downloaded');progress.downloaded++;
-    addLog(progress,`Скачано: Translation ID ${result.translationId} | File ID ${downloaded.fileId} | ${downloaded.fileName||''}`);
+    const original=await downloadMod({game:'stardewvalley',modId:mod.modId});
+    result.originalPath=original.path;
+    setStatus(result,'original_downloaded');
+    const translated=await downloadMod({game:'stardewvalley',modId:result.translationId});
+    result.translationPath=translated.path;
+    setStatus(result,'translation_downloaded');
+    const built=await buildModPackage({name,original:original.path,translation:translated.path});
+    result.output=built.output;
+    result.sha256=built.sha256;
+    setStatus(result,'built');
+    progress.built++;
    }
-  }catch(e){progress.failed++;setStatus(result,'error',e.message);addLog(progress,`Ошибка: ${e.message}`);}
-  results.push(result);save(RESULT,results);progress.processed=i+1;progress.remaining=progress.total-progress.processed;progress.status='translation_search';saveProgress(progress);
+  }catch(e){progress.failed++;setStatus(result,'error',e.message);addLog(progress,`ERROR ${e.message}`);}
+  results.push(result);save(RESULT,results);
+  progress.processed=i+1;progress.remaining=progress.total-progress.processed;saveProgress(progress);
  }
- saveProgress({...progress,running:false,status:'finished',current:null,modId:null,translationId:null,remaining:0});
+ saveProgress({...progress,running:false,status:'finished',remaining:0,current:null});
 }
 
 async function start(options={}){return processQueue(options.queue&&options.queue.length?options.queue:loadQueue());}
