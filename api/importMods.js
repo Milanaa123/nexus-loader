@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { workDir } = require('../config/paths');
 
 const GAME = 'stardewvalley';
 
@@ -32,7 +33,6 @@ function csvLine(line) {
 function parseMods(text, format = 'auto') {
   const lines = text.split(/\r?\n/).map(clean).filter(Boolean);
   const result = [];
-
   const isCsv = format === 'csv' || (format === 'auto' && lines[0]?.toLowerCase().includes('name,author'));
 
   if (isCsv) {
@@ -65,18 +65,11 @@ module.exports = async function(req, res) {
   const queue = [];
 
   for (const modData of mods) {
-    const item = {
-      ...modData,
-      nexusModId: null,
-      status: 'not_found',
-      error: null
-    };
-
+    const item = { ...modData, nexusModId: null, status: 'not_found', error: null };
     try {
       const found = await nexus(`https://api.nexusmods.com/v1/games/${GAME}/mods.json?search=${encodeURIComponent(modData.name)}`);
       const candidates = Array.isArray(found) ? found : [];
       const matched = candidates.filter(x => !modData.author || String(x.author || '').toLowerCase().includes(modData.author.toLowerCase()));
-
       if (matched.length === 1 || (matched.length === 0 && candidates.length === 1)) {
         const mod = matched[0] || candidates[0];
         item.nexusModId = mod.mod_id;
@@ -89,12 +82,12 @@ module.exports = async function(req, res) {
       item.status = 'error';
       item.error = e.message;
     }
-
     queue.push(item);
   }
 
-  fs.mkdirSync('RU_PACK_WORK', { recursive:true });
-  fs.writeFileSync('RU_PACK_WORK/mods_with_ids.json', JSON.stringify(queue, null, 2));
+  fs.mkdirSync(workDir, { recursive:true });
+  const resultFile = path.join(workDir, 'mods_with_ids.json');
+  fs.writeFileSync(resultFile, JSON.stringify(queue, null, 2));
 
   res.json({
     ok:true,
@@ -102,6 +95,6 @@ module.exports = async function(req, res) {
     found:queue.filter(x => x.status === 'found').length,
     multiple:queue.filter(x => x.status === 'multiple_matches').length,
     errors:queue.filter(x => x.status === 'error').length,
-    file:'RU_PACK_WORK/mods_with_ids.json'
+    file:resultFile
   });
 };
