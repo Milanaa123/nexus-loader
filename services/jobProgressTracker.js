@@ -1,3 +1,5 @@
+const stateMachine = require('./jobStateMachine');
+
 class JobProgressTracker {
   constructor() {
     this.jobs = new Map();
@@ -8,8 +10,11 @@ class JobProgressTracker {
     const job = {
       id,
       mod,
-      status: 'queued',
+      status: stateMachine.STATUSES.CREATED,
       progress: 0,
+      history: [
+        { status: stateMachine.STATUSES.CREATED, at: new Date().toISOString() }
+      ],
       steps: {
         search: 'pending',
         download_original: 'pending',
@@ -22,6 +27,36 @@ class JobProgressTracker {
     };
 
     this.jobs.set(id, job);
+    return job;
+  }
+
+  transition(id, nextStatus) {
+    const job = this.jobs.get(id);
+    if (!job) return null;
+
+    const updated = stateMachine.move(job, nextStatus);
+    updated.history = [
+      ...(job.history || []),
+      { status: nextStatus, at: updated.updatedAt }
+    ];
+
+    this.jobs.set(id, updated);
+    return updated;
+  }
+
+  fail(id, error) {
+    const job = this.jobs.get(id);
+    if (!job) return null;
+
+    job.errors.push({
+      message: error.message || String(error),
+      at: new Date().toISOString()
+    });
+
+    if (job.status !== stateMachine.STATUSES.FAILED) {
+      return this.transition(id, stateMachine.STATUSES.FAILED);
+    }
+
     return job;
   }
 
