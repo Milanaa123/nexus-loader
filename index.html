@@ -1,1 +1,48 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nexus Loader</title><style>body{font-family:system-ui;background:#101217;color:#fff;max-width:900px;margin:20px auto;padding:15px}.card{background:#191c22;border:1px solid #333;padding:20px;border-radius:15px;margin:15px 0}button{padding:12px 18px;border-radius:10px;border:0;margin:5px;font-weight:bold}pre{white-space:pre-wrap}</style></head><body><h1>Nexus Loader 2.3</h1><div class="card"><h2>Nexus Premium</h2><button onclick="call({action:'validate'},'out')">Проверить Nexus Premium</button><pre id="out"></pre></div><div class="card"><h2>Русификаторы 530 модов</h2><button onclick="call('/api/ruPackStart','ru')">Запустить поиск и скачивание</button><button onclick="call('/api/status','ru')">Проверить счётчик</button><pre id="ru"></pre></div><div class="card"><h2>Старая очередь Nexus</h2><button onclick="call({action:'resolveQueue',modIds:[1401,3753,5509,8163,8401,11111],game:'stardewvalley'},'q')">Подготовить очередь</button><pre id="q"></pre></div><script>async function call(data,id){let url='/api/nexus';if(typeof data==='string'){url=data;data=null}let r=await fetch(url,{method:data?'POST':'GET',headers:{'content-type':'application/json'},body:data?JSON.stringify(data):undefined});document.getElementById(id).textContent=JSON.stringify(await r.json(),null,2)}</script></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nexus Loader</title>
+<style>
+body{font-family:system-ui;background:#101217;color:#fff;max-width:900px;margin:20px auto;padding:15px}
+.card{background:#191c22;border:1px solid #333;padding:20px;border-radius:15px;margin:15px 0}
+button{padding:12px 18px;border-radius:10px;border:0;margin:5px;font-weight:bold}
+textarea{width:100%;min-height:160px;background:#080a0e;color:#fff;padding:12px;border-radius:10px}
+pre{white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>Nexus Loader 2.4</h1>
+
+<div class="card">
+<h2>Массовый поиск модов</h2>
+<p>Формат строки: <b>Название мода Автор</b></p>
+<textarea id="mods">Alpaca aboba24
+Tractor Mod Pathoschild
+Automate Pathoschild</textarea>
+<br>
+<button onclick="bulkSearch()">Найти моды</button>
+<pre id="bulk"></pre>
+</div>
+
+<div class="card">
+<h2>Русификаторы 530+ модов</h2>
+<button onclick="call('/api/ruPackStart','ru')">Запустить поиск и скачивание</button>
+<button onclick="call('/api/status','ru')">Проверить счётчик</button>
+<pre id="ru"></pre>
+</div>
+
+<script>
+async function bulkSearch(){
+ const text=document.getElementById('mods').value;
+ const r=await fetch('/api/bulkModSearch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});
+ document.getElementById('bulk').textContent=JSON.stringify(await r.json(),null,2);
+}
+async function call(url,id){
+ let r=await fetch(url);
+ document.getElementById(id).textContent=JSON.stringify(await r.json(),null,2)
+}
+</script>
+</body>
+</html>
