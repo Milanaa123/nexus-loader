@@ -23,16 +23,24 @@ async function processQueue(items){
  if(!items.length){saveProgress({running:false,status:'empty_queue',total:0,processed:0,remaining:0});return;}
  ensure();
  fs.mkdirSync(OUTPUT,{recursive:true});
- let progress={running:true,status:'translation_search',total:items.length,processed:0,remaining:items.length,foundTranslations:0,noTranslations:0,downloaded:0,built:0,failed:0,logs:[]};
- const results=[];save(RESULT,results);saveProgress(progress);
+ let progress=state.getProgress();
+ progress={...progress,running:true,status:'processing',total:items.length,logs:progress.logs||[]};
+ let results=readJson(RESULT,[]);
+ let processed=state.getProcessed();
+ const done=new Set(processed.map(x=>x.modId||x.name));
+ saveProgress(progress);
+
  for(let i=0;i<items.length;i++){
-  const mod=items[i];const name=mod.name||mod.title||'';const author=mod.author||'';
+  const mod=items[i];
+  const key=mod.modId||mod.name;
+  if(done.has(key)) continue;
+  const name=mod.name||mod.title||'';const author=mod.author||'';
   const result=createPipelineResult({name,author,modId:mod.modId||null});
   progress.current=name;
   addLog(progress,`Processing ${name} | ${author}`);
   try{
    const translation=await findTranslation({modName:name,author,modId:mod.modId||null});
-   if(!translation){progress.noTranslations++;setStatus(result,'translation_missing');}
+   if(!translation){setStatus(result,'translation_missing');}
    else{
     result.translationId=translation.translationId;setStatus(result,'translation_found');
     const original=await downloadMod({game:'stardewvalley',modId:mod.modId});
@@ -40,10 +48,17 @@ async function processQueue(items){
     const translated=await downloadMod({game:'stardewvalley',modId:result.translationId});
     result.translationPath=translated.path;setStatus(result,'translation_downloaded');
     const built=buildReadyMod({name,originalPath:original.path,translationPath:translated.path,outputDir:OUTPUT});
-    result.output=built.output;result.sha256=built.sha256;result.validation=built.validation;setStatus(result,'built');progress.built++;addLog(progress,`Built ${built.output}`);
+    result.output=built.output;result.sha256=built.sha256;result.validation=built.validation;setStatus(result,'built');
    }
-  }catch(e){progress.failed++;setStatus(result,'error',e.message);addLog(progress,`ERROR ${e.message}`);state.saveErrors([...state.getErrors(),{name,message:e.message,date:new Date().toISOString()}]);}
-  results.push(result);state.saveProcessed(results);save(RESULT,results);progress.processed=i+1;progress.remaining=progress.total-progress.processed;saveProgress(progress);
+  }catch(e){setStatus(result,'error',e.message);state.saveErrors([...state.getErrors(),{name,message:e.message,date:new Date().toISOString()}]);}
+  results.push(result);
+  processed.push({name,author,modId:mod.modId||null,date:new Date().toISOString()});
+  done.add(key);
+  state.saveProcessed(processed);
+  save(RESULT,results);
+  progress.processed=(progress.processed||0)+1;
+  progress.remaining=Math.max(0,progress.total-progress.processed);
+  saveProgress(progress);
  }
  saveProgress({...progress,running:false,status:'finished',remaining:0,current:null});
 }
