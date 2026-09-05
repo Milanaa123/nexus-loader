@@ -30,6 +30,17 @@ class JobProgressTracker {
     return job;
   }
 
+  restore(job) {
+    if (!job || !job.id) return null;
+    this.jobs.set(job.id, job);
+    return job;
+  }
+
+  restoreAll(jobs = []) {
+    jobs.forEach(job => this.restore(job));
+    return this.all();
+  }
+
   transition(id, nextStatus) {
     const job = this.jobs.get(id);
     if (!job) return null;
