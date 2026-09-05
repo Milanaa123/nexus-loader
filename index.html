@@ -5,16 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nexus Loader</title>
 <style>
-body{font-family:system-ui;background:#101217;color:#fff;max-width:900px;margin:20px auto;padding:15px}
-.card{background:#191c22;border:1px solid #333;padding:20px;border-radius:15px;margin:15px 0}
-button{padding:12px 18px;border-radius:10px;border:0;margin:5px;font-weight:bold}
-textarea{width:100%;min-height:160px;background:#080a0e;color:#fff;padding:12px;border-radius:10px}
-pre{white-space:pre-wrap}
+body{font-family:system-ui;background:#101217;color:#fff;max-width:900px;margin:20px auto;padding:15px}.card{background:#191c22;border:1px solid #333;padding:20px;border-radius:15px;margin:15px 0}button{padding:12px 18px;border-radius:10px;border:0;margin:5px;font-weight:bold}textarea{width:100%;min-height:160px;background:#080a0e;color:#fff;padding:12px;border-radius:10px}pre{white-space:pre-wrap}
 </style>
 </head>
 <body>
-<h1>Nexus Loader 2.4</h1>
-
+<h1>Nexus Loader 2.5</h1>
 <div class="card">
 <h2>Массовый поиск модов</h2>
 <p>Формат строки: <b>Название мода Автор</b></p>
@@ -23,26 +18,20 @@ Tractor Mod Pathoschild
 Automate Pathoschild</textarea>
 <br>
 <button onclick="bulkSearch()">Найти моды</button>
+<button onclick="buildPlan()">Подготовить сборку</button>
 <pre id="bulk"></pre>
 </div>
-
 <div class="card">
 <h2>Русификаторы 530+ модов</h2>
 <button onclick="call('/api/ruPackStart','ru')">Запустить поиск и скачивание</button>
 <button onclick="call('/api/status','ru')">Проверить счётчик</button>
 <pre id="ru"></pre>
 </div>
-
 <script>
-async function bulkSearch(){
- const text=document.getElementById('mods').value;
- const r=await fetch('/api/bulkModSearch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});
- document.getElementById('bulk').textContent=JSON.stringify(await r.json(),null,2);
-}
-async function call(url,id){
- let r=await fetch(url);
- document.getElementById(id).textContent=JSON.stringify(await r.json(),null,2)
-}
+let found=[];
+async function bulkSearch(){const text=document.getElementById('mods').value;const r=await fetch('/api/bulkModSearch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});const j=await r.json();found=j.results||[];document.getElementById('bulk').textContent=JSON.stringify(j,null,2)}
+async function buildPlan(){const r=await fetch('/api/buildPlan',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mods:found})});document.getElementById('bulk').textContent=JSON.stringify(await r.json(),null,2)}
+async function call(url,id){let r=await fetch(url);document.getElementById(id).textContent=JSON.stringify(await r.json(),null,2)}
 </script>
 </body>
 </html>
