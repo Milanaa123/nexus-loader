@@ -9,7 +9,7 @@ body{font-family:system-ui;background:#101217;color:#fff;max-width:900px;margin:
 </style>
 </head>
 <body>
-<h1>Nexus Loader 2.5</h1>
+<h1>Nexus Loader 2.6</h1>
 <div class="card">
 <h2>Массовый поиск модов</h2>
 <p>Формат строки: <b>Название мода Автор</b></p>
@@ -22,9 +22,9 @@ Automate Pathoschild</textarea>
 <pre id="bulk"></pre>
 </div>
 <div class="card">
-<h2>Русификаторы 530+ модов</h2>
+<h2>Русификаторы</h2>
 <button onclick="call('/api/ruPackStart','ru')">Запустить поиск и скачивание</button>
-<button onclick="call('/api/status','ru')">Проверить счётчик</button>
+<button onclick="call('/api/packStatus','ru')">Проверить статус сборки</button>
 <pre id="ru"></pre>
 </div>
 <script>
