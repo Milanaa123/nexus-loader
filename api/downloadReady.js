@@ -1,14 +1,16 @@
 const fs = require('fs');
 const path = require('path');
+const paths = require('../config/paths');
 
 module.exports = async function(req, res){
   const name = String((req.query && req.query.name) || '').trim();
   if(!name) return res.status(400).json({ok:false,error:'name required'});
 
   const safe = path.basename(name);
-  const file = path.join(__dirname,'..','RU_PACK_WORK','output',safe);
+  const outputDir = path.resolve(paths.outputDir);
+  const file = path.join(outputDir, safe);
 
-  if(!file.startsWith(path.join(__dirname,'..','RU_PACK_WORK','output'))) {
+  if(!file.startsWith(outputDir + path.sep)) {
     return res.status(400).json({ok:false,error:'invalid path'});
   }
 
