@@ -1,4 +1,5 @@
 const stateMachine = require('./jobStateMachine');
+const schema = require('./modJobSchema');
 
 class JobProgressTracker {
   constructor() {
@@ -6,27 +7,8 @@ class JobProgressTracker {
   }
 
   create(mod) {
-    const id = `${mod.name}:${mod.author}`;
-    const job = {
-      id,
-      mod,
-      status: stateMachine.STATUSES.CREATED,
-      progress: 0,
-      history: [
-        { status: stateMachine.STATUSES.CREATED, at: new Date().toISOString() }
-      ],
-      steps: {
-        search: 'pending',
-        download_original: 'pending',
-        find_translation: 'pending',
-        merge_translation: 'pending',
-        validate: 'pending',
-        export: 'pending'
-      },
-      errors: []
-    };
-
-    this.jobs.set(id, job);
+    const job = schema.createModJob(mod);
+    this.jobs.set(job.id, job);
     return job;
   }
 
@@ -73,11 +55,14 @@ class JobProgressTracker {
 
   updateStep(id, step, status) {
     const job = this.jobs.get(id);
-    if (!job || !job.steps[step]) return null;
+    if (!job || !job.stages) return null;
 
-    job.steps[step] = status;
-    const completed = Object.values(job.steps).filter(v => v === 'done').length;
-    job.progress = Math.round((completed / Object.keys(job.steps).length) * 100);
+    const target = job.stages.find(item => item.name === step);
+    if (!target) return null;
+
+    target.status = status;
+    const completed = job.stages.filter(item => item.status === 'done').length;
+    job.progress = Math.round((completed / job.stages.length) * 100);
 
     return job;
   }
