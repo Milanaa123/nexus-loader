@@ -13,18 +13,36 @@ function clean(value = '') {
     .replace(/^"|"$/g, '');
 }
 
+function splitCsvLine(line, delimiter) {
+  const result = [];
+  let current = '';
+  let quoted = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') quoted = !quoted;
+    else if (char === delimiter && !quoted) {
+      result.push(clean(current));
+      current = '';
+    } else current += char;
+  }
+
+  result.push(clean(current));
+  return result;
+}
+
 function parseCsv(text) {
   text = text.replace(/^\uFEFF/, '');
   const lines = text.split(/\r?\n/).filter(line => line.trim());
   if (!lines.length) return [];
 
   const delimiter = lines[0].includes(';') ? ';' : ',';
-  const headers = lines.shift().split(delimiter).map(clean);
+  const headers = splitCsvLine(lines.shift(), delimiter);
 
   return lines.map(line => {
-    const cols = line.split(delimiter).map(clean);
+    const cols = splitCsvLine(line, delimiter);
     const row = {};
-    headers.forEach((h, i) => row[h] = cols[i] || '');
+    headers.forEach((header, i) => row[header] = cols[i] || '');
     return row;
   });
 }
