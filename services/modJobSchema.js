@@ -1,8 +1,7 @@
 // Unified job schema for bulk mod processing.
-// Keeps the same structure for search, download, translation and export stages.
+// Single structure for search, download, translation, merge, validation and export.
 
 const STAGES = [
-  'queued',
   'search_nexus',
   'download_original',
   'find_translation',
@@ -11,20 +10,35 @@ const STAGES = [
   'export'
 ];
 
-function createModJob(mod) {
+function createModJob(mod = {}) {
   return {
-    id: `${Date.now()}-${mod.name}`,
-    name: mod.name,
-    author: mod.author,
-    status: 'queued',
-    stage: 'queued',
-    nexusId: null,
-    translation: null,
-    error: null,
+    id: `${Date.now()}-${mod.name || 'unknown'}`,
+    mod: {
+      name: mod.name || '',
+      author: mod.author || ''
+    },
+    status: 'created',
+    progress: 0,
+    nexus: {
+      id: null,
+      version: null,
+      files: []
+    },
+    translation: {
+      found: false,
+      source: null,
+      version: null
+    },
     stages: STAGES.map(stage => ({
       name: stage,
-      status: stage === 'queued' ? 'pending' : 'waiting'
-    }))
+      status: 'pending'
+    })),
+    result: {
+      archive: null,
+      ready: false
+    },
+    history: [],
+    errors: []
   };
 }
 
