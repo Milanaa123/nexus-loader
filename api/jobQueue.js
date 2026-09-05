@@ -1,6 +1,7 @@
 const fs = require('fs');
+const paths = require('../config/paths');
 
-const FILE = 'RU_PACK_WORK/build_queue.json';
+const FILE = paths.queueFile;
 
 function load() {
   if (!fs.existsSync(FILE)) return [];
@@ -8,7 +9,7 @@ function load() {
 }
 
 function save(queue) {
-  fs.mkdirSync('RU_PACK_WORK', { recursive: true });
+  fs.mkdirSync(paths.queueDir, { recursive: true });
   fs.writeFileSync(FILE, JSON.stringify(queue, null, 2));
 }
 
