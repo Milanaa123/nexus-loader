@@ -3,6 +3,7 @@ const path=require('path');
 const {downloadMod,ensure}=require('./nexus-downloader');
 const {findTranslation}=require('./find-translation');
 const {run:importQueue}=require('./import_mod_queue');
+const {createPipelineResult,setStatus}=require('../lib/mod-status');
 
 const ROOT=path.join(__dirname,'..');
 const WORK=path.join(ROOT,'RU_PACK_WORK');
@@ -20,23 +21,29 @@ async function processQueue(items){
  if(!items.length){saveProgress({running:false,status:'empty_queue',total:0,processed:0,remaining:0});return;}
  ensure();
  let progress={running:true,status:'translation_search',total:items.length,processed:0,remaining:items.length,foundTranslations:0,noTranslations:0,downloaded:0,failed:0,modId:null,translationId:null,logs:[]};
- const results=[];save(RESULT,results);saveProgress(progress);
+ const results=[];save(RESULT,results);
+ saveProgress(progress);
  for(let i=0;i<items.length;i++){
   const mod=items[i];const name=mod.name||mod.title||'';const author=mod.author||'';
-  const result={name,author,modId:mod.modId||null,translationId:null,fileId:null,status:null};
-  progress.current=name;progress.modId=mod.modId||null;progress.translationId=null;addLog(progress,`Поиск перевода: ${name} | ${author} | Mod ID ${mod.modId||'-'}`);saveProgress(progress);
+  const pipeline=createPipelineResult({name,author,modId:mod.modId||null});
+  const result={...pipeline,translationId:null,fileId:null};
+  result.status='found';
+  progress.current=name;progress.modId=mod.modId||null;progress.translationId=null;
+  addLog(progress,`Поиск перевода: ${name} | ${author} | Mod ID ${mod.modId||'-'}`);saveProgress(progress);
   try{
    const translation=await findTranslation({modName:name,author,modId:mod.modId||null});
-   if(!translation){progress.noTranslations++;result.status='no_translation';addLog(progress,'Перевод не найден');}
+   if(!translation){progress.noTranslations++;setStatus(result,'translation_missing');addLog(progress,'Перевод не найден');}
    else{
     result.translationId=translation.translationId;progress.translationId=result.translationId;progress.foundTranslations++;
+    setStatus(result,'translation_found');
     addLog(progress,`Найден перевод: ${translation.translationName} | Translation ID ${result.translationId}`);saveProgress(progress);
     progress.status='downloading';saveProgress(progress);
     const downloaded=await downloadMod({game:'stardewvalley',modId:result.translationId});
-    result.fileId=downloaded.fileId;result.fileName=downloaded.fileName;result.path=downloaded.path;result.status='downloaded';progress.downloaded++;
+    result.fileId=downloaded.fileId;result.fileName=downloaded.fileName;result.path=downloaded.path;
+    setStatus(result,'translation_downloaded');progress.downloaded++;
     addLog(progress,`Скачано: Translation ID ${result.translationId} | File ID ${downloaded.fileId} | ${downloaded.fileName||''}`);
    }
-  }catch(e){progress.failed++;result.status='error';result.error=e.message;addLog(progress,`Ошибка: ${e.message}`);}
+  }catch(e){progress.failed++;setStatus(result,'error',e.message);addLog(progress,`Ошибка: ${e.message}`);}
   results.push(result);save(RESULT,results);progress.processed=i+1;progress.remaining=progress.total-progress.processed;progress.status='translation_search';saveProgress(progress);
  }
  saveProgress({...progress,running:false,status:'finished',current:null,modId:null,translationId:null,remaining:0});
