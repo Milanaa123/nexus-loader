@@ -11,47 +11,97 @@ async function nexus(url) {
   return r.json();
 }
 
-function parseMods(text) {
-  const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+function clean(value = '') {
+  return String(value).replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
+}
+
+function csvLine(line) {
   const result = [];
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].replace(/^\(.*?\)\s*/, '').trim();
-    const next = lines[i + 1] ? lines[i + 1].trim() : '';
-    const third = lines[i + 2] ? lines[i + 2].trim() : '';
-    if (line && next && third && !next.includes(' ') && !['Crops','Furniture','Items','Buildings','Dialogue','Maps','Audio','Characters','Expansions','Portraits','Visuals and Graphics','User Interface','Miscellaneous','Gameplay Mechanics','Crafting','Modding Tools','New Characters'].includes(third)) {
-      result.push({ name: line, author: next });
-      i += 2;
+  let current = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') quoted = !quoted;
+    else if (c === ',' && !quoted) { result.push(current); current = ''; }
+    else current += c;
+  }
+  result.push(current);
+  return result.map(clean);
+}
+
+function parseMods(text, format = 'auto') {
+  const lines = text.split(/\r?\n/).map(clean).filter(Boolean);
+  const result = [];
+
+  const isCsv = format === 'csv' || (format === 'auto' && lines[0]?.toLowerCase().includes('name,author'));
+
+  if (isCsv) {
+    for (const line of lines.slice(1)) {
+      const [name, author] = csvLine(line);
+      if (name) result.push({ name, author: author || '' });
+    }
+  } else {
+    for (const line of lines) {
+      const parts = line.split(/\s{2,}|\t/).map(clean).filter(Boolean);
+      if (parts.length >= 2) result.push({ name: parts[0], author: parts[1] });
     }
   }
-  return result;
+
+  const unique = new Map();
+  for (const item of result) {
+    const key = `${item.name.toLowerCase()}\u0000${item.author.toLowerCase()}`;
+    if (!unique.has(key)) unique.set(key, item);
+  }
+  return [...unique.values()];
 }
 
 module.exports = async function(req, res) {
-  if (req.query.action !== 'start') return res.json({ok:false,error:'use action=start'});
+  if (req.query.action !== 'start') return res.json({ ok:false, error:'use action=start' });
 
-  const source = path.join(process.cwd(), 'mods.txt');
-  if (!fs.existsSync(source)) return res.json({ok:false,error:'mods.txt not found'});
+  const source = path.join(process.cwd(), req.query.file || 'mods.txt');
+  if (!fs.existsSync(source)) return res.json({ ok:false, error:`input not found: ${source}` });
 
-  const mods = parseMods(fs.readFileSync(source, 'utf8'));
+  const mods = parseMods(fs.readFileSync(source, 'utf8'), req.query.format || 'auto');
   const queue = [];
 
   for (const modData of mods) {
-    const item = {...modData, nexusModId:null, translationFileId:null, status:'not_found'};
+    const item = {
+      ...modData,
+      nexusModId: null,
+      status: 'not_found',
+      error: null
+    };
+
     try {
       const found = await nexus(`https://api.nexusmods.com/v1/games/${GAME}/mods.json?search=${encodeURIComponent(modData.name)}`);
-      const mod = Array.isArray(found) ? found.find(x => !modData.author || String(x.author).toLowerCase().includes(modData.author.toLowerCase())) || found[0] : null;
-      if (mod) {
+      const candidates = Array.isArray(found) ? found : [];
+      const matched = candidates.filter(x => !modData.author || String(x.author || '').toLowerCase().includes(modData.author.toLowerCase()));
+
+      if (matched.length === 1 || (matched.length === 0 && candidates.length === 1)) {
+        const mod = matched[0] || candidates[0];
         item.nexusModId = mod.mod_id;
         item.status = 'found';
+      } else if (matched.length > 1 || candidates.length > 1) {
+        item.status = 'multiple_matches';
+        item.candidates = candidates.slice(0, 10).map(x => ({ id:x.mod_id, name:x.name, author:x.author }));
       }
-    } catch(e) {
-      item.status = 'search_error';
+    } catch (e) {
+      item.status = 'error';
       item.error = e.message;
     }
+
     queue.push(item);
   }
 
-  fs.mkdirSync('RU_PACK_WORK',{recursive:true});
-  fs.writeFileSync('RU_PACK_WORK/mods_with_ids.json', JSON.stringify(queue,null,2));
-  res.json({ok:true,total:queue.length,found:queue.filter(x=>x.nexusModId).length,file:'RU_PACK_WORK/mods_with_ids.json'});
+  fs.mkdirSync('RU_PACK_WORK', { recursive:true });
+  fs.writeFileSync('RU_PACK_WORK/mods_with_ids.json', JSON.stringify(queue, null, 2));
+
+  res.json({
+    ok:true,
+    total:queue.length,
+    found:queue.filter(x => x.status === 'found').length,
+    multiple:queue.filter(x => x.status === 'multiple_matches').length,
+    errors:queue.filter(x => x.status === 'error').length,
+    file:'RU_PACK_WORK/mods_with_ids.json'
+  });
 };
