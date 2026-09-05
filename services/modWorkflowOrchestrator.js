@@ -1,33 +1,39 @@
 const importer = require('./bulkImportService');
 const tracker = require('./jobProgressTracker');
+const persistence = require('./jobPersistence');
 const stateMachine = require('./jobStateMachine');
 
 class ModWorkflowOrchestrator {
   importList(text) {
     const mods = importer.parse ? importer.parse(text) : [];
 
-    return mods.map(mod => tracker.create({
-      name: mod.name,
-      author: mod.author,
-      status: stateMachine.STATUSES.CREATED,
-      history: [stateMachine.STATUSES.CREATED],
-      errors: []
-    }));
+    return mods.map(mod => {
+      const job = tracker.create({
+        name: mod.name,
+        author: mod.author,
+        status: stateMachine.STATUSES.CREATED,
+        errors: []
+      });
+
+      persistence.save(job);
+      return job;
+    });
   }
 
   advance(job, nextStatus) {
-    const updated = stateMachine.move(job, nextStatus);
-    updated.history = [...(job.history || []), nextStatus];
-    return tracker.update(updated);
+    const updated = tracker.transition(job.id, nextStatus);
+    persistence.save(updated);
+    return updated;
   }
 
   fail(job, error) {
-    return tracker.update({
-      ...job,
-      status: stateMachine.STATUSES.FAILED,
-      errors: [...(job.errors || []), String(error)],
-      updatedAt: new Date().toISOString()
-    });
+    const updated = tracker.fail(job.id, error);
+    persistence.save(updated);
+    return updated;
+  }
+
+  restore() {
+    return persistence.all();
   }
 
   getProgress() {
