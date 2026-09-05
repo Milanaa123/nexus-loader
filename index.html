@@ -5,37 +5,34 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nexus Loader</title>
 <style>
-body{font-family:system-ui;background:#101217;color:#fff;max-width:900px;margin:20px auto;padding:15px}.card{background:#191c22;border:1px solid #333;padding:20px;border-radius:15px;margin:15px 0}button{padding:12px 18px;border-radius:10px;border:0;margin:5px;font-weight:bold}textarea,input{width:100%;background:#080a0e;color:#fff;padding:12px;border-radius:10px;box-sizing:border-box}textarea{min-height:160px}pre{white-space:pre-wrap}
+body{font-family:system-ui;background:#101217;color:#fff;max-width:1000px;margin:20px auto;padding:15px}.card{background:#191c22;border:1px solid #333;padding:20px;border-radius:15px;margin:15px 0}button{padding:12px 18px;border-radius:10px;border:0;margin:5px;font-weight:bold}textarea{width:100%;min-height:140px;background:#080a0e;color:#fff;padding:12px;border-radius:10px}pre{white-space:pre-wrap}.file{margin:10px 0}
 </style>
 </head>
 <body>
-<h1>Nexus Loader 2.7</h1>
+<h1>Nexus Loader 2.8</h1>
 <div class="card">
 <h2>Импорт списка модов</h2>
-<input id="file" type="file" accept=".txt,.csv">
-<p>Или вставьте список:</p>
-<textarea id="mods">Alpaca aboba24
-Tractor Mod Pathoschild
+<p>TXT: Название Автор<br>CSV: name,author</p>
+<input class="file" id="file" type="file" accept=".txt,.csv">
+<textarea id="mods">Tractor Mod Pathoschild
 Automate Pathoschild</textarea>
-<br>
 <button onclick="startInput()">Запустить обработку</button>
-<button onclick="bulkSearch()">Найти моды</button>
-<button onclick="buildPlan()">Подготовить сборку</button>
-<pre id="bulk"></pre>
+<pre id="inputResult"></pre>
 </div>
 <div class="card">
-<h2>Русификаторы</h2>
-<button onclick="call('/api/ruPackStart','ru')">Запустить worker</button>
-<button onclick="call('/api/packStatus','ru')">Статус</button>
-<pre id="ru"></pre>
+<h2>Статус обработки</h2>
+<button onclick="status()">Обновить статус</button>
+<pre id="statusResult"></pre>
+</div>
+<div class="card">
+<h2>Готовые архивы</h2>
+<button onclick="ready()">Получить список</button>
+<div id="downloads"></div>
 </div>
 <script>
-let found=[];
-async function getText(){const f=document.getElementById('file').files[0];if(f)return await f.text();return document.getElementById('mods').value}
-async function startInput(){const text=await getText();const r=await fetch('/api/startFromInput',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});document.getElementById('bulk').textContent=JSON.stringify(await r.json(),null,2)}
-async function bulkSearch(){const text=await getText();const r=await fetch('/api/bulkModSearch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});const j=await r.json();found=j.results||[];document.getElementById('bulk').textContent=JSON.stringify(j,null,2)}
-async function buildPlan(){const r=await fetch('/api/buildPlan',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mods:found})});document.getElementById('bulk').textContent=JSON.stringify(await r.json(),null,2)}
-async function call(url,id){let r=await fetch(url);document.getElementById(id).textContent=JSON.stringify(await r.json(),null,2)}
+async function startInput(){let text=document.getElementById('mods').value;let f=document.getElementById('file').files[0];if(f)text=await f.text();let r=await fetch('/api/startFromInput',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});document.getElementById('inputResult').textContent=JSON.stringify(await r.json(),null,2)}
+async function status(){let r=await fetch('/api/packStatus');document.getElementById('statusResult').textContent=JSON.stringify(await r.json(),null,2)}
+async function ready(){let r=await fetch('/api/packStatus');let j=await r.json();let items=j.ready||j.results||[];document.getElementById('downloads').innerHTML=items.map(x=>`<div>${x.name||x.file}<a href="/api/downloadReady?file=${encodeURIComponent(x.file||x.archive)}"> скачать</a></div>`).join('')||'Нет готовых архивов'}
 </script>
 </body>
 </html>
