@@ -27,36 +27,37 @@ async function processQueue(items){
  progress={...progress,running:true,status:'processing',total:items.length,logs:progress.logs||[],startedAt:progress.startedAt||new Date().toISOString()};
  let results=readJson(RESULT,[]);
  let processed=state.getProcessed();
- const done=new Set(processed.map(x=>x.modId||x.name));
+ const done=new Set(processed.map(x=>x.modId||x.nexusModId||x.name));
  saveProgress(progress);
 
  for(let i=0;i<items.length;i++){
   const mod=items[i];
-  const key=mod.modId||mod.name;
+  const key=mod.modId||mod.nexusModId||mod.name;
   if(done.has(key)) continue;
-  const name=mod.name||mod.title||'';const author=mod.author||'';
-  const result=createPipelineResult({name,author,modId:mod.modId||null});
+  const name=mod.name||mod.title||'';
+  const author=mod.author||'';
+  let result=createPipelineResult({name,author,nexusModId:mod.modId||mod.nexusModId||null});
   progress.current=name;
   progress.index=i;
   addLog(progress,`Processing ${name} | ${author}`);
   try{
-   const translation=await findTranslation({modName:name,author,modId:mod.modId||null});
-   if(!translation){setStatus(result,'translation_missing');}
+   const translation=await findTranslation({modName:name,author,modId:mod.modId||mod.nexusModId||null});
+   if(!translation){result=setStatus(result,'translation_missing');}
    else{
-    result.translationId=translation.translationId;setStatus(result,'translation_found');
-    const original=await downloadMod({game:'stardewvalley',modId:mod.modId});
-    result.originalPath=original.path;setStatus(result,'original_downloaded');
-    const translated=await downloadMod({game:'stardewvalley',modId:result.translationId});
-    result.translationPath=translated.path;setStatus(result,'translation_downloaded');
+    result=setStatus(result,'translation_found',{translationId:translation.translationId});
+    const original=await downloadMod({game:'stardewvalley',modId:mod.modId||mod.nexusModId});
+    result=setStatus({...result,originalPath:original.path},'original_downloaded');
+    const translated=await downloadMod({game:'stardewvalley',modId:translation.translationId});
+    result=setStatus({...result,translationPath:translated.path},'translation_downloaded');
     const built=buildReadyMod({name,originalPath:original.path,translationPath:translated.path,outputDir:OUTPUT});
-    result.output=built.output;result.sha256=built.sha256;result.validation=built.validation;setStatus(result,'built');
+    result=setStatus({...result,outputFile:built.output,sha256:built.sha256,validation:built.validation},'built');
    }
   }catch(e){
-   setStatus(result,'error',e.message);
+   result=setStatus(result,'error',{error:e.message});
    state.appendError(e);
   }
   results.push(result);
-  processed.push({name,author,modId:mod.modId||null,date:new Date().toISOString(),status:result.status});
+  processed.push({name,author,nexusModId:result.nexusModId||null,status:result.status,date:new Date().toISOString()});
   done.add(key);
   state.saveProcessed(processed);
   save(RESULT,results);
