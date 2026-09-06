@@ -1,4 +1,5 @@
 const worker = require('./ru-pack-worker');
+const state = require('../lib/state-store');
 const fs = require('fs');
 const path = require('path');
 
@@ -10,7 +11,7 @@ let busy = false;
 async function tick() {
   if (busy) return;
   try {
-    const progress = worker.loadProgress();
+    const progress = state.getProgress();
     if (progress.running) return;
     if (!fs.existsSync(QUEUE)) return;
 
