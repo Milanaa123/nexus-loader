@@ -1,5 +1,6 @@
 const fs=require('fs');
-const {paths}=require('../config/paths');
+const path=require('path');
+const paths=require('../config/paths');
 const {downloadMod,ensure}=require('./nexus-downloader');
 const {findTranslation}=require('./find-translation');
 const {run:importQueue}=require('./import_mod_queue');
@@ -8,13 +9,13 @@ const {buildReadyMod}=require('../lib/build-pipeline');
 const state=require('../lib/state-store');
 
 const WORK=paths.workDir;
-const PROGRESS=require('path').join(WORK,'progress.json');
-const RESULT=require('path').join(WORK,'ru_results.json');
+const PROGRESS=path.join(WORK,'progress.json');
+const RESULT=path.join(WORK,'ru_results.json');
 const OUTPUT=paths.outputDir;
 const QUEUE=paths.queueFile;
 
 function readJson(file,fallback){try{return JSON.parse(fs.readFileSync(file,'utf8'));}catch{return fallback;}}
-function save(file,data){fs.mkdirSync(require('path').dirname(file),{recursive:true});const tmp=`${file}.${process.pid}.tmp`;fs.writeFileSync(tmp,JSON.stringify(data,null,2),'utf8');fs.renameSync(tmp,file);}
+function save(file,data){fs.mkdirSync(path.dirname(file),{recursive:true});const tmp=`${file}.${process.pid}.tmp`;fs.writeFileSync(tmp,JSON.stringify(data,null,2),'utf8');fs.renameSync(tmp,file);}
 function saveProgress(data){const value={...data,updatedAt:new Date().toISOString()};save(PROGRESS,value);state.saveProgress(value);}
 function addLog(p,t){p.logs=p.logs||[];p.logs.push(new Date().toISOString()+' '+t);if(p.logs.length>300)p.logs=p.logs.slice(-300);}
 function loadQueue(){if(!fs.existsSync(QUEUE))importQueue();const q=readJson(QUEUE,{items:[]});return Array.isArray(q)?q:(q.items||q.mods||[]);}
