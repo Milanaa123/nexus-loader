@@ -14,7 +14,7 @@ const OUTPUT=paths.outputDir;
 const QUEUE=paths.queueFile;
 
 function readJson(file,fallback){try{return JSON.parse(fs.readFileSync(file,'utf8'));}catch{return fallback;}}
-function save(file,data){fs.mkdirSync(require('path').dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(data,null,2),'utf8');}
+function save(file,data){fs.mkdirSync(require('path').dirname(file),{recursive:true});const tmp=`${file}.${process.pid}.tmp`;fs.writeFileSync(tmp,JSON.stringify(data,null,2),'utf8');fs.renameSync(tmp,file);}
 function saveProgress(data){const value={...data,updatedAt:new Date().toISOString()};save(PROGRESS,value);state.saveProgress(value);}
 function addLog(p,t){p.logs=p.logs||[];p.logs.push(new Date().toISOString()+' '+t);if(p.logs.length>300)p.logs=p.logs.slice(-300);}
 function loadQueue(){if(!fs.existsSync(QUEUE))importQueue();const q=readJson(QUEUE,{items:[]});return Array.isArray(q)?q:(q.items||q.mods||[]);}
@@ -24,7 +24,7 @@ async function processQueue(items){
  ensure();
  fs.mkdirSync(OUTPUT,{recursive:true});
  let progress=state.getProgress();
- progress={...progress,running:true,status:'processing',total:items.length,logs:progress.logs||[]};
+ progress={...progress,running:true,status:'processing',total:items.length,logs:progress.logs||[],startedAt:progress.startedAt||new Date().toISOString()};
  let results=readJson(RESULT,[]);
  let processed=state.getProcessed();
  const done=new Set(processed.map(x=>x.modId||x.name));
@@ -37,6 +37,7 @@ async function processQueue(items){
   const name=mod.name||mod.title||'';const author=mod.author||'';
   const result=createPipelineResult({name,author,modId:mod.modId||null});
   progress.current=name;
+  progress.index=i;
   addLog(progress,`Processing ${name} | ${author}`);
   try{
    const translation=await findTranslation({modName:name,author,modId:mod.modId||null});
@@ -50,9 +51,12 @@ async function processQueue(items){
     const built=buildReadyMod({name,originalPath:original.path,translationPath:translated.path,outputDir:OUTPUT});
     result.output=built.output;result.sha256=built.sha256;result.validation=built.validation;setStatus(result,'built');
    }
-  }catch(e){setStatus(result,'error',e.message);state.saveErrors([...state.getErrors(),{name,message:e.message,date:new Date().toISOString()}]);}
+  }catch(e){
+   setStatus(result,'error',e.message);
+   state.appendError(e);
+  }
   results.push(result);
-  processed.push({name,author,modId:mod.modId||null,date:new Date().toISOString()});
+  processed.push({name,author,modId:mod.modId||null,date:new Date().toISOString(),status:result.status});
   done.add(key);
   state.saveProcessed(processed);
   save(RESULT,results);
@@ -60,7 +64,7 @@ async function processQueue(items){
   progress.remaining=Math.max(0,progress.total-progress.processed);
   saveProgress(progress);
  }
- saveProgress({...progress,running:false,status:'finished',remaining:0,current:null});
+ saveProgress({...progress,running:false,status:'finished',remaining:0,current:null,finishedAt:new Date().toISOString()});
 }
 
 async function start(options={}){return processQueue(options.queue&&options.queue.length?options.queue:loadQueue());}
