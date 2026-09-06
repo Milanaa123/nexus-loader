@@ -3,14 +3,33 @@ const paths = require('../config/paths');
 
 const FILE = paths.queueFile;
 
+function ensureDir() {
+  fs.mkdirSync(paths.queueDir, { recursive: true });
+}
+
 function load() {
+  ensureDir();
   if (!fs.existsSync(FILE)) return [];
-  return JSON.parse(fs.readFileSync(FILE, 'utf8'));
+
+  try {
+    const data = JSON.parse(fs.readFileSync(FILE, 'utf8'));
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.items)) return data.items;
+    return [];
+  } catch (error) {
+    const broken = `${FILE}.broken`;
+    try {
+      fs.renameSync(FILE, broken);
+    } catch (_) {}
+    return [];
+  }
 }
 
 function save(queue) {
-  fs.mkdirSync(paths.queueDir, { recursive: true });
-  fs.writeFileSync(FILE, JSON.stringify(queue, null, 2));
+  ensureDir();
+  const temp = `${FILE}.${process.pid}.tmp`;
+  fs.writeFileSync(temp, JSON.stringify(queue, null, 2), 'utf8');
+  fs.renameSync(temp, FILE);
 }
 
 function addJobs(mods = []) {
@@ -23,7 +42,7 @@ function addJobs(mods = []) {
       queue.push({
         name: mod.name || null,
         author: mod.author || null,
-        modId: mod.modId || null,
+        modId: mod.modId || mod.nexusModId || null,
         translation: null,
         status: 'queued',
         createdAt: new Date().toISOString()
