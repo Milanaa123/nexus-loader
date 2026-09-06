@@ -1,12 +1,14 @@
 const fs=require('fs');
 const path=require('path');
 const paths=require('../config/paths');
-const {downloadMod,ensure}=require('./nexus-downloader');
 const {findTranslation}=require('./find-translation');
 const {run:importQueue}=require('./import_mod_queue');
 const {createPipelineResult,setStatus}=require('../lib/mod-status');
 const {buildReadyMod}=require('../lib/build-pipeline');
 const state=require('../lib/state-store');
+const {getProvider}=require('../providers/provider-registry');
+const {getGame}=require('../lib/game-registry');
+require('../providers/nexus-provider');
 
 const WORK=paths.workDir;
 const PROGRESS=path.join(WORK,'progress.json');
@@ -22,7 +24,6 @@ function loadQueue(){if(!fs.existsSync(QUEUE))importQueue();const q=readJson(QUE
 
 async function processQueue(items){
  if(!items.length){saveProgress({running:false,status:'empty_queue',total:0,processed:0,remaining:0});return;}
- ensure();
  fs.mkdirSync(OUTPUT,{recursive:true});
  let progress=state.getProgress();
  progress={...progress,running:true,status:'processing',total:items.length,logs:progress.logs||[],startedAt:progress.startedAt||new Date().toISOString()};
@@ -30,6 +31,9 @@ async function processQueue(items){
  let processed=state.getProcessed();
  const done=new Set(processed.map(x=>x.modId||x.nexusModId||x.name));
  saveProgress(progress);
+
+ const provider=getProvider('nexus');
+ if(!provider) throw new Error('No mod provider configured');
 
  for(let i=0;i<items.length;i++){
   const mod=items[i];
@@ -42,13 +46,15 @@ async function processQueue(items){
   progress.index=i;
   addLog(progress,`Processing ${name} | ${author}`);
   try{
+   const game=mod.game||'generic';
+   getGame(game);
    const translation=await findTranslation({modName:name,author,modId:mod.modId||mod.nexusModId||null});
    if(!translation){result=setStatus(result,'translation_missing');}
    else{
     result=setStatus(result,'translation_found',{translationId:translation.translationId});
-    const original=await downloadMod({game:'stardewvalley',modId:mod.modId||mod.nexusModId});
+    const original=await provider.download({game,modId:mod.modId||mod.nexusModId});
     result=setStatus({...result,originalPath:original.path},'original_downloaded');
-    const translated=await downloadMod({game:'stardewvalley',modId:translation.translationId});
+    const translated=await provider.download({game,modId:translation.translationId});
     result=setStatus({...result,translationPath:translated.path},'translation_downloaded');
     const built=buildReadyMod({name,originalPath:original.path,translationPath:translated.path,outputDir:OUTPUT});
     result=setStatus({...result,outputFile:built.output,sha256:built.sha256,validation:built.validation},'built');
