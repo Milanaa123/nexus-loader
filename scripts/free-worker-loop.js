@@ -1,33 +1,54 @@
 const worker = require('./ru-pack-worker');
-const state = require('../lib/state-store');
-const fs = require('fs');
-const path = require('path');
+const queue = require('../lib/job-queue');
+const health = require('../lib/runtime-health');
 
-const ROOT = path.join(__dirname, '..');
-const QUEUE = path.join(ROOT, 'data', 'queue', 'ru-pack-queue.json');
-
+const INTERVAL_MS = Math.max(1000, Number(process.env.NEXUS_LOADER_WORKER_INTERVAL_MS || 5000));
 let busy = false;
+let timer = null;
+let stopping = false;
 
 async function tick() {
-  if (busy) return;
+  if (busy || stopping) return;
+  const items = queue.load();
+  if (!items.length) {
+    health.mark('idle', { queued: 0 });
+    return;
+  }
+  busy = true;
+  health.mark('working', { queued: items.length });
   try {
-    const progress = state.getProgress();
-    if (progress.running) return;
-    if (!fs.existsSync(QUEUE)) return;
-
-    const queue = JSON.parse(fs.readFileSync(QUEUE, 'utf8'));
-    const items = queue.items || queue.mods || [];
-    if (!items.length) return;
-
-    busy = true;
     await worker.start({ queue: items });
-  } catch (e) {
-    console.error('Free worker loop error:', e.message);
+    health.mark('idle', { queued: items.length });
+  } catch (error) {
+    health.mark('error', { error: error.message || String(error) });
+    console.error('Worker loop error:', error.stack || error.message || error);
   } finally {
     busy = false;
   }
 }
 
-console.log('Free worker loop started');
-setInterval(tick, 5000);
-tick();
+function startLoop() {
+  if (timer) return timer;
+  stopping = false;
+  health.mark('starting');
+  timer = setInterval(() => { tick().catch(error => console.error('Worker tick fatal:', error)); }, INTERVAL_MS);
+  tick().catch(error => console.error('Worker initial tick fatal:', error));
+  return timer;
+}
+
+function stopLoop() {
+  stopping = true;
+  if (timer) clearInterval(timer);
+  timer = null;
+  health.mark('stopped');
+}
+
+if (require.main === module) {
+  console.log(`Nexus Loader worker loop started, interval=${INTERVAL_MS}ms`);
+  startLoop();
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => { stopLoop(); process.exit(0); });
+  }
+}
+
+module.exports = { tick, startLoop, stopLoop };

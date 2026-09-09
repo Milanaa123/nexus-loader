@@ -2,37 +2,35 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Nexus Loader</title>
 <style>
-body{font-family:system-ui;background:#101217;color:#fff;max-width:1000px;margin:20px auto;padding:15px}.card{background:#191c22;border:1px solid #333;padding:20px;border-radius:15px;margin:15px 0}button{padding:12px 18px;border-radius:10px;border:0;margin:5px;font-weight:bold}textarea{width:100%;min-height:140px;background:#080a0e;color:#fff;padding:12px;border-radius:10px}pre{white-space:pre-wrap}.file{margin:10px 0}
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,sans-serif}*{box-sizing:border-box}body{margin:0;background:#0d0f14;color:#f4f6fb}.wrap{max-width:980px;margin:auto;padding:18px}.hero{padding:18px 0 6px}.hero h1{margin:0;font-size:clamp(28px,8vw,46px)}.muted{color:#aab2c0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.card{background:#171a21;border:1px solid #2a2f3a;border-radius:16px;padding:16px;margin:12px 0}.stat{font-size:28px;font-weight:750}.row{display:flex;gap:10px;flex-wrap:wrap}.field{flex:1 1 240px}label{display:block;font-size:13px;color:#b9c1ce;margin-bottom:6px}input,textarea,button{font:inherit}input,textarea{width:100%;border:1px solid #343b49;background:#0e1117;color:#fff;border-radius:11px;padding:12px}textarea{min-height:170px;resize:vertical}button{border:0;border-radius:11px;padding:12px 16px;font-weight:700;cursor:pointer;background:#f0f3f8;color:#11151c}button.secondary{background:#252a34;color:#fff}.status{white-space:pre-wrap;overflow-wrap:anywhere;background:#0e1117;border-radius:10px;padding:12px;max-height:280px;overflow:auto}.ready{display:grid;gap:8px}.ready-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0e1117;padding:11px;border-radius:10px}.ready-item a{color:#fff}.error{color:#ff9b9b}.ok{color:#9bf0b5}@media(max-width:560px){.wrap{padding:12px}.card{padding:13px}.ready-item{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
-<h1>Nexus Loader 2.8</h1>
-<div class="card">
-<h2>Импорт списка модов</h2>
-<p>TXT: Название Автор<br>CSV: name,author</p>
-<input class="file" id="file" type="file" accept=".txt,.csv">
-<textarea id="mods">Tractor Mod Pathoschild
-Automate Pathoschild</textarea>
-<button onclick="startInput()">Запустить обработку</button>
-<pre id="inputResult"></pre>
-</div>
-<div class="card">
-<h2>Статус обработки</h2>
-<button onclick="status()">Обновить статус</button>
-<pre id="statusResult"></pre>
-</div>
-<div class="card">
-<h2>Готовые архивы</h2>
-<button onclick="ready()">Получить список</button>
-<div id="downloads"></div>
-</div>
+<main class="wrap">
+<section class="hero"><h1>Nexus Loader</h1><p class="muted">Универсальная очередь русификации модов Nexus Mods. Игра задаётся Nexus domain, например <b>skyrimspecialedition</b>, <b>fallout4</b>, <b>cyberpunk2077</b>.</p></section>
+<section class="card">
+<h2>Добавить моды</h2>
+<div class="row"><div class="field"><label for="game">Игра по умолчанию (Nexus domain, необязательно для Nexus URL)</label><input id="game" placeholder="skyrimspecialedition"></div><div class="field"><label for="file">TXT / CSV</label><input id="file" type="file" accept=".txt,.csv,text/plain,text/csv"></div></div>
+<p class="muted">Поддерживается: <code>Название Автор</code>, CSV <code>name,author,game</code> и прямые Nexus URL — по одному на строку.</p>
+<textarea id="mods" placeholder="SkyUI schlangster&#10;или&#10;https://www.nexusmods.com/skyrimspecialedition/mods/12604"></textarea>
+<div class="row"><button id="queueButton">Добавить в очередь</button><button class="secondary" id="refreshButton">Обновить статус</button></div>
+<div id="inputResult" class="status" hidden></div>
+</section>
+<section class="grid"><div class="card"><div class="muted">В очереди</div><div class="stat" id="queued">0</div></div><div class="card"><div class="muted">Готово</div><div class="stat" id="built">0</div></div><div class="card"><div class="muted">Нужна проверка</div><div class="stat" id="review">0</div></div><div class="card"><div class="muted">Ошибки</div><div class="stat" id="errors">0</div></div></section>
+<section class="card"><h2>Текущая обработка</h2><div id="progress" class="status">Загрузка…</div></section>
+<section class="card"><h2>Готовые архивы</h2><div id="downloads" class="ready"><span class="muted">Пока нет готовых архивов</span></div></section>
+</main>
 <script>
-async function startInput(){let text=document.getElementById('mods').value;let f=document.getElementById('file').files[0];if(f)text=await f.text();let r=await fetch('/api/startFromInput',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});document.getElementById('inputResult').textContent=JSON.stringify(await r.json(),null,2)}
-async function status(){let r=await fetch('/api/packStatus');document.getElementById('statusResult').textContent=JSON.stringify(await r.json(),null,2)}
-async function ready(){let r=await fetch('/api/packStatus');let j=await r.json();let items=j.ready||j.results||[];document.getElementById('downloads').innerHTML=items.map(x=>`<div>${x.name||x.file}<a href="/api/downloadReady?file=${encodeURIComponent(x.file||x.archive)}"> скачать</a></div>`).join('')||'Нет готовых архивов'}
+const $=id=>document.getElementById(id);
+function showInput(value,isError=false){const el=$('inputResult');el.hidden=false;el.className='status '+(isError?'error':'ok');el.textContent=typeof value==='string'?value:JSON.stringify(value,null,2)}
+async function api(url,options){const response=await fetch(url,options);let data;try{data=await response.json()}catch{data={ok:false,error:'invalid_server_response'}}if(!response.ok)throw new Error(data.error||`HTTP ${response.status}`);return data}
+async function enqueue(){try{let text=$('mods').value;const file=$('file').files[0];if(file)text=await file.text();const data=await api('/api/startFromInput',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text,game:$('game').value.trim()||null})});showInput(data);await refresh()}catch(error){showInput(error.message,true)}}
+function renderReady(items){const root=$('downloads');root.replaceChildren();if(!items.length){const empty=document.createElement('span');empty.className='muted';empty.textContent='Пока нет готовых архивов';root.append(empty);return}for(const item of items){const row=document.createElement('div');row.className='ready-item';const label=document.createElement('div');label.textContent=`${item.name||'Мод'}${item.game?' · '+item.game:''}`;const link=document.createElement('a');link.href='/api/downloadReady?name='+encodeURIComponent(item.file);link.textContent='Скачать ZIP';row.append(label,link);root.append(row)}}
+async function refresh(){try{const data=await api('/api/status');$('queued').textContent=data.queue?.total??0;$('built').textContent=data.summary?.built??0;$('review').textContent=data.summary?.needsReview??0;$('errors').textContent=data.summary?.errors??0;$('progress').textContent=JSON.stringify(data.progress||{},null,2);renderReady(data.ready||[])}catch(error){$('progress').textContent='Ошибка статуса: '+error.message}}
+$('queueButton').addEventListener('click',enqueue);$('refreshButton').addEventListener('click',refresh);refresh();setInterval(refresh,5000);
 </script>
 </body>
 </html>

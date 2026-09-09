@@ -1,73 +1,98 @@
 # Nexus Loader
 
-Автоматизированный инструмент для подготовки русифицированных модов Stardew Valley.
+Nexus Loader is a Node.js automation service for discovering Nexus Mods entries, finding Russian translation mods, downloading source files, merging translation overlays, validating archives, and producing persistent ready-to-use packages.
 
-## Возможности
+The core is game-domain agnostic: every job carries the Nexus game domain (for example `skyrimspecialedition`, `fallout4`, or `cyberpunk2077`) instead of relying on a hard-coded Stardew Valley pipeline.
 
-- импорт списка модов из TXT/CSV;
-- поиск модов через Nexus API;
-- проверка автора;
-- поиск русификаторов;
-- скачивание файлов;
-- сборка итогового `*_RU.zip`;
-- отслеживание статусов обработки.
+## Current architecture
 
-## Pipeline
+`input -> persistent queue -> worker -> Nexus provider -> translation resolver -> archive layer -> build/validation -> persistent result`
 
-```
-Input TXT/CSV
-   ↓
-Import
-   ↓
-Nexus Search
-   ↓
-Translation Search
-   ↓
-Download
-   ↓
-Validate
-   ↓
-Build RU Archive
-   ↓
-Ready ZIP
-```
+Core boundaries:
 
-## Запуск
+- `providers/` — external mod sources. Nexus is the first provider.
+- `games/` — game adapters with a generic fallback.
+- `lib/mod-processing-pipeline.js` — one mod's lifecycle.
+- `lib/job-queue.js` and `lib/state-store.js` — persistent queue/state.
+- `lib/archive-utils.js` — ZIP, 7z, RAR, tar/compressed-tar and direct-file preparation.
+- `scripts/free-worker-loop.js` — long-running worker process.
+- `render-server.js` + `api/` — web/API surface.
 
-Требуется Node.js >= 20.
+## Requirements
+
+- Node.js 20+
+- A Nexus Mods API key in `NEXUS_API_KEY`
+- Persistent disk for production deployments
+
+## Install
 
 ```bash
 npm install
+```
+
+## Run
+
+Web/API:
+
+```bash
 npm start
 ```
 
-Worker:
+Worker in a second process/service:
 
 ```bash
 npm run worker
 ```
 
-## Переменные окружения
-
-`NEXUS_API_KEY` хранится только в окружении сервера и не добавляется в репозиторий.
-
-## Статусы
-
-Используются состояния:
-
-- found
-- multiple_matches
-- translation_found
-- translation_missing
-- original_downloaded
-- translation_downloaded
-- built
-- error
-
-## Разработка
-
-Проверочный smoke-test:
+One worker pass:
 
 ```bash
-node tests/pipeline-smoke-test.js
+npm run worker:once
 ```
+
+## Input formats
+
+Plain text with a default game supplied by the UI/API:
+
+```text
+SkyUI schlangster
+Another Mod AuthorName
+```
+
+CSV:
+
+```csv
+name,author,game
+SkyUI,schlangster,skyrimspecialedition
+```
+
+Direct Nexus URLs:
+
+```text
+https://www.nexusmods.com/skyrimspecialedition/mods/12604
+```
+
+## Persistent storage
+
+Runtime data is kept outside temporary extraction directories:
+
+- `data/queue/` — queue
+- `data/state/` — progress, processed jobs, errors
+- `RU_PACK_WORK/downloads/` — cached downloads
+- `RU_PACK_WORK/output/` — finished archives
+- `RU_PACK_WORK/temp/` — transient extraction only; cleaned after builds
+
+All paths can be overridden through environment variables in `config/paths.js`.
+
+## Quality gates
+
+```bash
+npm run check
+npm test
+```
+
+GitHub Actions runs syntax checks and integration tests on every push to `main` and on pull requests.
+
+## Scope and extension model
+
+The generic pipeline can process Nexus jobs for any Nexus game domain. Archive and queue handling are generic. Some games have installation/localization semantics that cannot be inferred safely from file names alone; those rules belong in `games/<adapter>.js` rather than in the core. The generic adapter remains the fallback while explicit adapters can add stronger validation or merge rules without rewriting the provider/worker/storage layers.

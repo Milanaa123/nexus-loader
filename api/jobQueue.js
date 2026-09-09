@@ -1,58 +1,17 @@
-const fs = require('fs');
-const paths = require('../config/paths');
+const queue = require('../lib/job-queue');
 
-const FILE = paths.queueFile;
-
-function ensureDir() {
-  fs.mkdirSync(paths.queueDir, { recursive: true });
-}
-
-function load() {
-  ensureDir();
-  if (!fs.existsSync(FILE)) return [];
-
-  try {
-    const data = JSON.parse(fs.readFileSync(FILE, 'utf8'));
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data.items)) return data.items;
-    return [];
-  } catch (error) {
-    const broken = `${FILE}.broken`;
-    try {
-      fs.renameSync(FILE, broken);
-    } catch (_) {}
-    return [];
+async function jobQueueHandler(req, res) {
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return res.json({ ok: true, ...queue.stats(), items: queue.load() });
   }
-}
-
-function save(queue) {
-  ensureDir();
-  const temp = `${FILE}.${process.pid}.tmp`;
-  fs.writeFileSync(temp, JSON.stringify(queue, null, 2), 'utf8');
-  fs.renameSync(temp, FILE);
-}
-
-function addJobs(mods = []) {
-  const queue = load();
-  const existing = new Set(queue.map(x => `${x.name}|${x.author}`));
-
-  for (const mod of mods) {
-    const key = `${mod.name}|${mod.author}`;
-    if (!existing.has(key)) {
-      queue.push({
-        name: mod.name || null,
-        author: mod.author || null,
-        modId: mod.modId || mod.nexusModId || null,
-        translation: null,
-        status: 'queued',
-        createdAt: new Date().toISOString()
-      });
-      existing.add(key);
-    }
+  if (req.method === 'POST') {
+    const mods = Array.isArray(req.body?.mods) ? req.body.mods : [];
+    if (!mods.length) return res.status(400).json({ ok: false, error: 'mods_required' });
+    const result = queue.addJobs(mods, req.body?.provider || 'nexus');
+    return res.status(202).json({ ok: true, status: 'queued', added: result.added, updated: result.updated, total: result.items.length });
   }
-
-  save(queue);
-  return queue;
+  return res.status(405).json({ ok: false, error: 'method_not_allowed' });
 }
 
-module.exports = { load, save, addJobs };
+Object.assign(jobQueueHandler, queue);
+module.exports = jobQueueHandler;

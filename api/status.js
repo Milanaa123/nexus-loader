@@ -1,38 +1,55 @@
-const fs=require('fs');
-const path=require('path');
+const fs = require('fs');
+const path = require('path');
+const paths = require('../config/paths');
+const state = require('../lib/state-store');
+const queue = require('../lib/job-queue');
+const { listProviders } = require('../providers/provider-registry');
+const { listGames } = require('../lib/game-registry');
+const pkg = require('../package.json');
+require('../providers/nexus-provider');
 
-module.exports=async function(req,res){
- const root=path.join(__dirname,'..');
- const generatorFile=path.join(root,'RU_PACK_WORK','generator_status.json');
- const progressFile=path.join(root,'RU_PACK_WORK','progress.json');
- let generator={},progress={};
- try{generator=JSON.parse(fs.readFileSync(generatorFile,'utf8'));}catch{}
- try{progress=JSON.parse(fs.readFileSync(progressFile,'utf8'));}catch{}
+function readResults() {
+  const file = path.join(paths.workDir, 'ru_results.json');
+  try {
+    const value = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return Array.isArray(value) ? value : [];
+  } catch (_) { return []; }
+}
 
- let active;
- if(generator.running) active=generator;
- else if(progress.running) active=progress;
- else if(progress.status==='finished') active=progress;
- else active=generator.status?generator:progress;
+module.exports = function status(req, res) {
+  const results = readResults();
+  const queued = queue.load();
+  const progress = state.getProgress();
+  const counts = {};
+  for (const result of results) counts[result.status || 'unknown'] = (counts[result.status || 'unknown'] || 0) + 1;
+  const ready = results
+    .filter(result => result.status === 'built' && result.outputFile)
+    .map(result => ({
+      key: result.key,
+      name: result.name,
+      game: result.game,
+      file: path.basename(result.outputFile),
+      sha256: result.sha256 || null
+    }));
 
- const logs=[...(generator.logs||[]),...(progress.logs||[])].slice(-300);
- return res.json({
-  ok:true,
-  running:Boolean(generator.running||progress.running),
-  status:active.status||null,
-  total:active.total||0,
-  processed:active.processed||0,
-  remaining:active.remaining!=null?active.remaining:Math.max(0,(active.total||0)-(active.processed||0)),
-  current:active.current||null,
-  foundModIds:generator.foundModIds||0,
-  foundTranslations:progress.foundTranslations||0,
-  noTranslations:progress.noTranslations||0,
-  downloaded:progress.downloaded||0,
-  failed:progress.failed||0,
-  modId:active.modId||null,
-  translationId:progress.translationId||null,
-  sveDownloadUrl:'https://nexus-loader.onrender.com/api/downloadSVETranslation',
-  logs,
-  error:active.error||progress.error||generator.error||null
- });
+  return res.json({
+    ok: true,
+    version: pkg.version,
+    progress,
+    queue: { total: queued.length },
+    summary: {
+      totalResults: results.length,
+      built: counts.built || 0,
+      notFound: counts.not_found || 0,
+      multipleMatches: counts.multiple_matches || 0,
+      translationMissing: counts.translation_missing || 0,
+      needsReview: (counts.needs_review || 0) + (counts.multiple_matches || 0) + (counts.retry_exhausted || 0),
+      errors: (counts.error || 0) + (counts.retry_exhausted || 0),
+      statuses: counts
+    },
+    ready,
+    providers: listProviders(),
+    games: listGames(),
+    nexusApiKeyConfigured: Boolean(process.env.NEXUS_API_KEY)
+  });
 };
