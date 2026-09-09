@@ -20,6 +20,10 @@ async function tick() {
     await worker.start({ queue: items });
     health.mark('idle', { queued: items.length });
   } catch (error) {
+    if (error?.code === 'WORKER_BUSY') {
+      health.mark('standby', { queued: items.length, owner: error.details || null });
+      return;
+    }
     health.mark('error', { error: error.message || String(error) });
     console.error('Worker loop error:', error.stack || error.message || error);
   } finally {
@@ -46,9 +50,7 @@ function stopLoop() {
 if (require.main === module) {
   console.log(`Nexus Loader worker loop started, interval=${INTERVAL_MS}ms`);
   startLoop();
-  for (const signal of ['SIGINT', 'SIGTERM']) {
-    process.on(signal, () => { stopLoop(); process.exit(0); });
-  }
+  for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { stopLoop(); process.exit(0); });
 }
 
 module.exports = { tick, startLoop, stopLoop };

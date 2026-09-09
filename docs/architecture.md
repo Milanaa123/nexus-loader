@@ -23,6 +23,10 @@ Job identity includes provider and game. Nexus mod IDs are only unique in the co
 
 Queue, downloads, results and state are persistent. Temporary extraction directories are disposable and are never the source of truth. JSON persistence currently uses atomic temp-file + rename writes. A database can replace these modules later without changing the pipeline contracts.
 
+## Worker lease
+
+`lib/worker-lock.js` owns a persistent cross-process lease. The lease is created atomically, heartbeated as progress is saved, and released in `finally`. A second worker enters standby instead of processing the same queue concurrently. Stale leases are archived after the configured TTL (`NEXUS_LOADER_WORKER_LOCK_TTL_MS`). This protects state even when web and worker services are started independently on the same persistent volume.
+
 ## Provider contract
 
 A provider exposes capabilities for `search`, `getMod`, `download` and `validate`. `provider-registry.js` resolves providers by ID. Nexus-specific URL/API details stay in `providers/nexus-client.js` and `providers/nexus-provider.js`.
@@ -33,8 +37,8 @@ A provider exposes capabilities for `search`, `getMod`, `download` and `validate
 
 ## Failure model
 
-Network requests retry transient HTTP failures. Worker jobs have bounded attempts and move to `retry_exhausted` instead of retrying forever. Ambiguous search results and missing required metadata are terminal review states, not silent guesses.
+Network requests retry transient HTTP failures. Worker jobs have bounded attempts and move to `retry_exhausted` instead of retrying forever. `not_found`, `multiple_matches`, missing translations, and review-required jobs are terminal until user input changes the job. This prevents a polling worker from hammering Nexus for an unchanged ambiguous request.
 
 ## Security boundaries
 
-Archive entries are validated before extraction to reject absolute paths and parent-directory traversal. Downloads and finished packages are written only under configured storage roots. HTTP API handlers are path-whitelisted by filename and the server caps request body size.
+Archive entries are validated before extraction to reject absolute paths and parent-directory traversal. Downloads and finished packages are written only under configured storage roots. HTTP API handlers are path-whitelisted by filename and the server caps request body size. Ready-file downloads accept only regular ZIP files beneath the configured output root.
