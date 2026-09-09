@@ -41,19 +41,22 @@ async function run() {
     fs.mkdirSync(originalDir);
     fs.mkdirSync(translationDir);
     fs.writeFileSync(path.join(originalDir, 'base.txt'), 'base');
+    fs.writeFileSync(path.join(originalDir, 'same.txt'), 'original');
     fs.writeFileSync(path.join(translationDir, 'ru.txt'), 'ru');
-    const built = await buildReadyMod({ name: 'Universal Test', originalPath: originalDir, translationPath: translationDir, outputDir });
+    fs.writeFileSync(path.join(translationDir, 'same.txt'), 'translation');
+    const built = await buildReadyMod({ game: 'any-nexus-game', name: 'Universal Test', originalPath: originalDir, translationPath: translationDir, outputDir });
     assert.strictEqual(fs.existsSync(originalDir), true, 'builder must never delete source directories');
     assert.strictEqual(fs.existsSync(translationDir), true, 'builder must never delete translation directories');
     assert.strictEqual(built.archive.readable, true);
     assert.strictEqual(built.archive.nonEmpty, true);
-    assert.strictEqual(fs.existsSync(built.output), true);
+    assert.strictEqual(built.overwritten, 1);
+    assert.strictEqual(built.gameAdapter, 'generic');
+    const resultZip = new AdmZip(built.output);
+    assert.strictEqual(resultZip.readAsText('same.txt'), 'translation');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
 }
 
-if (require.main === module) {
-  run().then(() => console.log('archive utils test passed')).catch(error => { console.error(error); process.exitCode = 1; });
-}
+if (require.main === module) run().then(() => console.log('archive utils test passed')).catch(error => { console.error(error); process.exitCode = 1; });
 module.exports = run;

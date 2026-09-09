@@ -2,10 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const paths = require('../config/paths');
 const { findTranslation } = require('./find-translation');
-const { run: importQueue } = require('./import_mod_queue');
 const { buildReadyMod } = require('../lib/build-pipeline');
 const { STATUSES, setStatus } = require('../lib/mod-status');
 const state = require('../lib/state-store');
+const jobQueue = require('../lib/job-queue');
 const { getProvider } = require('../providers/provider-registry');
 const { createModProcessingPipeline, processingKey } = require('../lib/mod-processing-pipeline');
 const { acquireWorkerLock } = require('../lib/worker-lock');
@@ -15,7 +15,6 @@ const WORK = paths.workDir;
 const PROGRESS = path.join(WORK, 'progress.json');
 const RESULT = path.join(WORK, 'ru_results.json');
 const OUTPUT = paths.outputDir;
-const QUEUE = paths.queueFile;
 const MAX_ATTEMPTS = Math.max(1, Number(process.env.NEXUS_LOADER_MAX_ATTEMPTS || 3));
 const TERMINAL_STATUSES = new Set([
   STATUSES.BUILT,
@@ -45,11 +44,7 @@ function addLog(progress, text) {
   progress.logs.push(`${new Date().toISOString()} ${text}`);
   if (progress.logs.length > 300) progress.logs = progress.logs.slice(-300);
 }
-function loadQueue() {
-  if (!fs.existsSync(QUEUE)) importQueue();
-  const queue = readJson(QUEUE, { items: [] });
-  return Array.isArray(queue) ? queue : (queue.items || queue.mods || []);
-}
+function loadQueue() { return jobQueue.load(); }
 function upsertByKey(list, value) {
   const index = list.findIndex(item => item?.key && item.key === value.key);
   if (index >= 0) list[index] = value;
@@ -94,7 +89,10 @@ async function processQueue(items) {
       const mod = items[index];
       const key = queueKeys[index];
       const previous = records.get(key);
-      if (isTerminalStatus(previous?.status)) continue;
+      if (isTerminalStatus(previous?.status)) {
+        jobQueue.updateJob(key, { status: previous.status, attempts: previous.attempts || 0, error: previous.error || null, nexusModId: previous.nexusModId || mod.nexusModId || null });
+        continue;
+      }
 
       const attempts = Number(previous?.attempts || 0);
       if (previous?.status === STATUSES.ERROR && attempts >= MAX_ATTEMPTS) {
@@ -102,6 +100,7 @@ async function processQueue(items) {
         records.set(key, exhausted);
         upsertByKey(processed, exhausted);
         state.saveProcessed(processed);
+        jobQueue.updateJob(key, { status: exhausted.status, attempts, error: exhausted.error });
         completed += 1;
         progress.processed = completed;
         progress.remaining = Math.max(0, progress.total - completed);
@@ -113,6 +112,7 @@ async function processQueue(items) {
       progress.index = index;
       progress.attempted = Number(progress.attempted || 0) + 1;
       addLog(progress, `Processing ${progress.current} [${key}]`);
+      jobQueue.updateJob(key, { status: 'processing', attempts, error: null });
       saveProgress(progress, lease);
 
       const context = await processMod(mod);
@@ -123,13 +123,7 @@ async function processQueue(items) {
         context.result = result;
       }
       if (result.status === STATUSES.ERROR || result.status === STATUSES.RETRY_EXHAUSTED) {
-        state.appendError(new Error(result.error || result.status), {
-          key,
-          game: result.game,
-          provider: result.provider,
-          nexusModId: result.nexusModId,
-          attempt: nextAttempts
-        });
+        state.appendError(new Error(result.error || result.status), { key, game: result.game, provider: result.provider, nexusModId: result.nexusModId, attempt: nextAttempts });
       }
 
       const record = {
@@ -149,6 +143,7 @@ async function processQueue(items) {
       upsertByKey(results, result);
       state.saveProcessed(processed);
       save(RESULT, results);
+      jobQueue.updateJob(key, { name: result.name, author: result.author, game: result.game, nexusModId: result.nexusModId, status: result.status, attempts: nextAttempts, error: result.error || null, outputFile: result.outputFile || null });
       if (isTerminalStatus(result.status)) completed += 1;
       progress.processed = completed;
       progress.remaining = Math.max(0, progress.total - completed);

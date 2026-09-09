@@ -7,12 +7,12 @@ Nexus Loader separates external APIs, game-specific rules, processing state, arc
 ## Processing path
 
 1. `lib/input-parser.js` normalizes TXT, CSV and Nexus URLs.
-2. `lib/job-queue.js` persists deduplicated jobs using a provider/game-aware key.
+2. `lib/job-queue.js` persists deduplicated jobs using a provider/game-aware key and mirrors processing status back into the queue document.
 3. `scripts/free-worker-loop.js` polls the queue and invokes `scripts/ru-pack-worker.js`.
 4. `lib/mod-processing-pipeline.js` resolves the Nexus mod, finds a translation, downloads both files and invokes the builder.
 5. `providers/nexus-provider.js` isolates Nexus-specific API operations behind the provider contract.
 6. `lib/archive-utils.js` prepares archives/direct files in transient extraction directories.
-7. `lib/build-pipeline.js` merges and validates the result, then writes the final ZIP to persistent output storage.
+7. `lib/build-pipeline.js` resolves the requested game adapter, validates sources, performs deterministic translation-over-original overlay, validates the result, then writes the final ZIP to persistent output storage.
 8. `lib/state-store.js` records progress, terminal jobs and error details atomically.
 
 ## Identity
@@ -25,7 +25,7 @@ Queue, downloads, results and state are persistent. Temporary extraction directo
 
 ## Worker lease
 
-`lib/worker-lock.js` owns a persistent cross-process lease. The lease is created atomically, heartbeated as progress is saved, and released in `finally`. A second worker enters standby instead of processing the same queue concurrently. Stale leases are archived after the configured TTL (`NEXUS_LOADER_WORKER_LOCK_TTL_MS`). This protects state even when web and worker services are started independently on the same persistent volume.
+`lib/worker-lock.js` owns a persistent cross-process lease. The lease is created atomically, heartbeated as progress is saved, and released in `finally`. A second worker enters standby instead of processing the same queue concurrently. Stale leases are archived after the configured TTL (`NEXUS_LOADER_WORKER_LOCK_TTL_MS`).
 
 ## Provider contract
 
@@ -33,11 +33,15 @@ A provider exposes capabilities for `search`, `getMod`, `download` and `validate
 
 ## Game adapters
 
-`game-registry.js` resolves adapters by Nexus game domain and falls back to `games/generic.js`. Game-specific validation, translation target discovery and future merge/install rules belong in adapters.
+`game-registry.js` resolves adapters by Nexus game domain and falls back to `games/generic.js`. Builders now actively call adapter validation/output hooks. Game-specific validation, translation target discovery and future merge/install rules therefore remain outside the generic core.
+
+## Merge semantics
+
+The generic merge is a deterministic file overlay: files from the original are loaded first and files from the translation replace identical relative paths. Symlinks are rejected. The final file map is sorted before packaging, so correctness no longer depends on duplicate-entry behavior inside the ZIP library.
 
 ## Failure model
 
-Network requests retry transient HTTP failures. Worker jobs have bounded attempts and move to `retry_exhausted` instead of retrying forever. `not_found`, `multiple_matches`, missing translations, and review-required jobs are terminal until user input changes the job. This prevents a polling worker from hammering Nexus for an unchanged ambiguous request.
+Network requests retry transient HTTP failures. Worker jobs have bounded attempts and move to `retry_exhausted` instead of retrying forever. `not_found`, `multiple_matches`, missing translations, and review-required jobs are terminal until user input changes the job.
 
 ## Security boundaries
 
