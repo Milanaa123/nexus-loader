@@ -1,82 +1,61 @@
-const { URLSearchParams } = require('url');
+const { parseInput } = require('../lib/input-parser');
+require('../providers/nexus-provider');
+const { getProvider } = require('../providers/provider-registry');
 
-function parseLine(line) {
-  const value = String(line || '').trim();
-  if (!value) return null;
-  const parts = value.split(/\s+/);
-  const author = parts.pop();
-  const name = parts.join(' ');
-  if (!name || !author) return null;
-  return { input: value, name, author };
+function normalized(value = '') {
+  return String(value).trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-async function searchNexus(mod) {
-  const key = process.env.NEXUS_API_KEY;
-  if (!key) return { ...mod, status: 'error', error: 'missing_api_key' };
-
-  try {
-    const params = new URLSearchParams({ query: `${mod.name} ${mod.author}` });
-    const response = await fetch(`https://api.nexusmods.com/v1/games/stardewvalley/search.json?${params}`, {
-      headers: { APIKEY: key, 'User-Agent': 'nexus-loader-bulk-search' }
-    });
-
-    if (!response.ok) {
-      return { ...mod, status: 'error', error: `nexus_${response.status}` };
-    }
-
-    const data = Array.isArray(await response.json()) ? await response.json() : [];
-    const candidates = data.filter(x =>
-      String(x.name || '').toLowerCase().includes(mod.name.toLowerCase())
-    );
-
-    const exact = candidates.filter(x =>
-      !mod.author || String(x.author || '').toLowerCase() === mod.author.toLowerCase()
-    );
-
-    if (exact.length === 1) {
-      return {
-        ...mod,
-        status: 'found',
-        modId: exact[0].mod_id,
-        nexusName: exact[0].name,
-        nexusAuthor: exact[0].author
-      };
-    }
-
-    if (exact.length > 1 || candidates.length > 1) {
-      return {
-        ...mod,
-        status: 'multiple_matches',
-        candidates: candidates.slice(0, 10).map(x => ({
-          id: x.mod_id,
-          name: x.name,
-          author: x.author
-        }))
-      };
-    }
-
-    return { ...mod, status: 'not_found' };
-  } catch (error) {
-    return { ...mod, status: 'error', error: error.message };
-  }
+function selectMatch(mod, candidates) {
+  if (!candidates.length) return { status: 'not_found' };
+  const name = normalized(mod.name);
+  const author = normalized(mod.author);
+  const exact = candidates.filter(candidate => {
+    const nameMatches = !name || normalized(candidate.name) === name;
+    const authorMatches = !author || normalized(candidate.author) === author;
+    return nameMatches && authorMatches;
+  });
+  if (exact.length === 1) return { status: 'found', candidate: exact[0] };
+  if (exact.length > 1) return { status: 'multiple_matches', candidates: exact };
+  if (candidates.length === 1 && candidates[0].score >= 60) return { status: 'found', candidate: candidates[0] };
+  return { status: 'multiple_matches', candidates };
 }
 
 module.exports = async function bulkModSearch(req, res) {
   const body = req.body || {};
   const text = body.text || body.mods || '';
-  const mods = String(text).split(/\r?\n/).map(parseLine).filter(Boolean);
-
+  const defaultGame = body.game || req.query?.game || null;
+  const mods = parseInput(text, { defaultGame });
+  const provider = getProvider('nexus');
+  if (!provider) return res.status(500).json({ ok: false, error: 'nexus_provider_unavailable' });
   const results = [];
   for (const mod of mods) {
-    results.push(await searchNexus(mod));
+    if (!mod.game) { results.push({ ...mod, status: 'needs_review', error: 'game_required' }); continue; }
+    try {
+      if (mod.nexusModId) {
+        const metadata = await provider.getMod({ game: mod.game, modId: mod.nexusModId });
+        results.push({ ...mod, name: mod.name || metadata.name || '', author: mod.author || metadata.author || '', status: 'found', nexusName: metadata.name || null, nexusAuthor: metadata.author || null });
+        continue;
+      }
+      const candidates = await provider.search({ game: mod.game, name: mod.name, author: mod.author, limit: 40 });
+      const selected = selectMatch(mod, candidates);
+      if (selected.status === 'found') {
+        const candidate = selected.candidate;
+        results.push({ ...mod, status: 'found', nexusModId: candidate.modId, nexusName: candidate.name, nexusAuthor: candidate.author, score: candidate.score });
+      } else if (selected.status === 'multiple_matches') results.push({ ...mod, status: 'multiple_matches', candidates: selected.candidates.slice(0, 10) });
+      else results.push({ ...mod, status: 'not_found' });
+    } catch (error) {
+      results.push({ ...mod, status: 'error', error: error.message });
+    }
   }
-
-  res.json({
+  return res.json({
     ok: true,
     total: results.length,
-    found: results.filter(x => x.status === 'found').length,
-    multiple: results.filter(x => x.status === 'multiple_matches').length,
-    errors: results.filter(x => x.status === 'error').length,
+    found: results.filter(item => item.status === 'found').length,
+    multiple: results.filter(item => item.status === 'multiple_matches').length,
+    notFound: results.filter(item => item.status === 'not_found').length,
+    needsReview: results.filter(item => item.status === 'needs_review').length,
+    errors: results.filter(item => item.status === 'error').length,
     results
   });
 };

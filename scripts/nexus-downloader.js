@@ -1,55 +1,56 @@
-const fs=require('fs');
-const path=require('path');
-const crypto=require('crypto');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const paths = require('../config/paths');
+const client = require('../providers/nexus-client');
 
-const ROOT=path.join(__dirname,'..');
-const WORK=path.join(ROOT,'RU_PACK_WORK');
-const DOWNLOADS=path.join(WORK,'downloads');
+const DOWNLOADS = path.join(paths.workDir, 'downloads');
+function ensure() { fs.mkdirSync(DOWNLOADS, { recursive: true }); }
+function sha256(file) { return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'); }
+function safeFileName(value, fallback) { const cleaned = String(value || '').replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, ' ').trim(); return cleaned || fallback; }
+function validCachedFile(file) { return fs.existsSync(file) && fs.statSync(file).isFile() && fs.statSync(file).size > 0; }
 
-function ensure(){fs.mkdirSync(DOWNLOADS,{recursive:true});}
-function headers(){const key=process.env.NEXUS_API_KEY;if(!key)throw new Error('NEXUS_API_KEY missing');return {APIKEY:key,'User-Agent':'nexus-loader/2.0','Application-Name':'nexus-loader','Application-Version':'2.0'};}
-
-async function request(url,options={},retries=3){
- let last;
- for(let i=0;i<retries;i++){
-  try{
-   const r=await fetch(url,options);
-   if(r.ok)return r;
-   let body='';try{body=await r.text();}catch{}
-   last=new Error(`HTTP ${r.status}${body?`: ${body.slice(0,160)}`:''}`);
-  }catch(e){last=e;}
-  if(i<retries-1)await new Promise(r=>setTimeout(r,1000*(i+1)));
- }
- throw last||new Error('Request failed');
+async function chooseFile(game, modId) {
+  const files = await client.getFiles({ game, modId });
+  const usable = files.filter(file => file && file.file_id && !['ARCHIVED', 'REMOVED'].includes(String(file.category_name || '').toUpperCase()));
+  if (!usable.length) throw new Error(`No downloadable files for ${game} mod ${modId}`);
+  usable.sort((a, b) => {
+    const primary = Number(Boolean(b.is_primary)) - Number(Boolean(a.is_primary));
+    if (primary) return primary;
+    const main = Number(String(b.category_name || '').toUpperCase() === 'MAIN') - Number(String(a.category_name || '').toUpperCase() === 'MAIN');
+    if (main) return main;
+    return Number(b.uploaded_timestamp || 0) - Number(a.uploaded_timestamp || 0);
+  });
+  return usable[0];
 }
 
-function sha256(file){return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');}
-function isZip(file){return !!file&&fs.existsSync(file)&&fs.statSync(file).size>4&&fs.readFileSync(file).subarray(0,2).toString('hex')==='504b';}
-
-async function chooseFile(game,modId){
- const r=await request(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files.json`,{headers:headers()});
- const data=await r.json();const files=Array.isArray(data)?data:(data.files||[]);
- const usable=files.filter(f=>f&&f.file_id&&!['ARCHIVED','REMOVED'].includes(String(f.category_name||'').toUpperCase()));
- if(!usable.length)throw new Error(`No downloadable files for mod ${modId}`);
- usable.sort((a,b)=>Number(Boolean(b.is_primary))-Number(Boolean(a.is_primary))||Number(b.uploaded_timestamp||0)-Number(a.uploaded_timestamp||0));
- return usable[0];
+async function downloadMod({ game, modId, fileId }) {
+  if (!game) throw new Error('game is required for Nexus download');
+  if (!modId) throw new Error('modId missing');
+  ensure();
+  let selected;
+  if (fileId) {
+    const files = await client.getFiles({ game, modId });
+    selected = files.find(file => Number(file.file_id) === Number(fileId)) || { file_id: Number(fileId) };
+  } else selected = await chooseFile(game, modId);
+  const fid = Number(selected.file_id);
+  if (!fid) throw new Error(`No fileId for ${game} mod ${modId}`);
+  const sourceName = selected.file_name || selected.name || `${modId}-${fid}.bin`;
+  const fileName = `${safeFileName(game, 'game')}-${modId}-${fid}-${safeFileName(sourceName, 'download.bin')}`;
+  const target = path.join(DOWNLOADS, fileName);
+  if (validCachedFile(target)) {
+    return { path: target, game, modId: String(modId), fileId: String(fid), fileName: sourceName, size: fs.statSync(target).size, sha256: sha256(target), cached: true };
+  }
+  const links = await client.getDownloadLinks({ game, modId, fileId: fid });
+  const link = links[0]?.URI || links[0]?.uri;
+  if (!link) throw new Error(`No download link for ${game} mod ${modId} file ${fid}`);
+  const response = await client.request(link, {}, 3);
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (!buffer.length) throw new Error(`Downloaded empty file for ${game} mod ${modId} file ${fid}`);
+  const temp = `${target}.${process.pid}.tmp`;
+  fs.writeFileSync(temp, buffer);
+  fs.renameSync(temp, target);
+  return { path: target, game, modId: String(modId), fileId: String(fid), fileName: sourceName, size: buffer.length, sha256: sha256(target), cached: false, contentType: response.headers.get('content-type') || null };
 }
 
-async function downloadMod({game='stardewvalley',modId,fileId}){
- if(!modId)throw new Error('modId missing');
- ensure();
- const selected=fileId?{file_id:Number(fileId),name:''}:await chooseFile(game,modId);
- const fid=Number(selected.file_id);
- const r=await request(`https://api.nexusmods.com/v1/games/${game}/mods/${modId}/files/${fid}/download_link.json`,{headers:headers()});
- const links=await r.json();
- const link=links[0]?.URI||links[0]?.uri;
- if(!link)throw new Error(`No download link for mod ${modId} file ${fid}`);
- const data=await request(link,{},3);
- const buffer=Buffer.from(await data.arrayBuffer());
- const file=path.join(DOWNLOADS,`${modId}-${fid}.zip`);
- fs.writeFileSync(file,buffer);
- if(!isZip(file))throw new Error(`Downloaded file is not a valid zip: ${file}`);
- return {path:file,modId:String(modId),fileId:String(fid),size:buffer.length,sha256:sha256(file)};
-}
-
-module.exports={downloadMod,ensure,chooseFile};
+module.exports = { downloadMod, ensure, chooseFile, validCachedFile };

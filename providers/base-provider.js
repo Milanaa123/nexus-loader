@@ -1,14 +1,28 @@
-function createProvider(input = {}) {
-  return {
-    id: input.id || 'unknown',
-    search: input.search || (async () => []),
-    download: input.download || (async () => {
-      throw new Error('download is not implemented');
-    }),
-    validate: input.validate || (async () => true)
+function notImplemented(name) {
+  return async () => {
+    throw new Error(`${name} is not implemented by this provider`);
   };
 }
 
-module.exports = {
-  createProvider
-};
+function createProvider(input = {}) {
+  const id = String(input.id || '').trim();
+  if (!id) throw new Error('Provider id is required');
+
+  const provider = {
+    id,
+    search: typeof input.search === 'function' ? input.search : async () => [],
+    getMod: typeof input.getMod === 'function' ? input.getMod : notImplemented('getMod'),
+    download: typeof input.download === 'function' ? input.download : notImplemented('download'),
+    validate: typeof input.validate === 'function' ? input.validate : async () => true,
+    capabilities: Object.freeze({
+      search: typeof input.search === 'function',
+      getMod: typeof input.getMod === 'function',
+      download: typeof input.download === 'function',
+      validate: typeof input.validate === 'function'
+    })
+  };
+
+  return Object.freeze(provider);
+}
+
+module.exports = { createProvider };
