@@ -1,6 +1,6 @@
 {
   "name": "nexus-loader",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "engines": {"node": ">=20"},
   "scripts": {
@@ -9,7 +9,7 @@
     "worker": "node scripts/ru-pack-daemon.js",
     "generate-ids": "node scripts/generate-ids.js",
     "test": "node tests/pipeline-smoke-test.js && node tests/core-architecture-test.js",
-    "check": "node --check render-server.js && node --check scripts/ru-pack-worker.js && node --check scripts/nexus-downloader.js && node --check providers/nexus-client.js && node --check providers/nexus-provider.js"
+    "check": "node --check render-server.js && node --check scripts/ru-pack-worker.js && node --check scripts/nexus-downloader.js && node --check scripts/find-translation.js && node --check providers/nexus-client.js && node --check providers/nexus-provider.js && node --check lib/mod-processing-pipeline.js"
   },
   "dependencies": {
     "7zip-bin": "5.2.0",
