@@ -1,3 +1,0 @@
-https://nexus-loader.onrender.com/api/fetchTranslationArchive?modId=18092&raw=1
-https://nexus-loader.onrender.com/api/fetchTranslationArchive?modId=24334&raw=1
-https://nexus-loader.onrender.com/api/fetchTranslationArchive?modId=18728&raw=1

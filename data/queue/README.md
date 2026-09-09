@@ -1,10 +1,3 @@
-# RU Pack Queue
+# Persistent queue
 
-Stages:
-1. source list
-2. Nexus ID resolve
-3. file resolve
-4. Russian translation check
-5. ready folder
-
-Target: PC + Steam Deck.
+Runtime queue JSON is created automatically by `lib/job-queue.js` and is ignored by Git. Corrupt queue files are preserved with a `.broken-*` suffix before recovery.

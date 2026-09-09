@@ -1,11 +1,8 @@
-# Данные сборки
+# Runtime data
 
-Здесь хранится только проверяемая информация о модах и русификаторах.
+Nexus Loader keeps runtime state outside Git history.
 
-Статусы русификации:
-- `builtin_ru` — русский язык заявлен/встроен в сам мод;
-- `translation_verified` — найден отдельный совместимый русский перевод;
-- `needs_review` — наличие или совместимость перевода пока не подтверждены;
-- `no_ru_found` — после проверки русский перевод не найден.
+- `data/queue/` contains the persistent job queue at runtime.
+- `data/state/` contains worker progress, processed records, errors, health and the worker lease.
 
-Загрузчик не должен помечать мод готовым только по совпадению названия. Для отдельного перевода нужно сверять целевой мод и совместимость версии.
+JSON files in those directories are intentionally ignored. Historical Stardew-specific batch datasets were removed from the active tree; they remain available in Git history.

@@ -9,17 +9,19 @@ async function run() {
   process.env.RU_PACK_WORK = path.join(root, 'work');
   process.env.RU_PACK_QUEUE = path.join(root, 'data', 'queue');
   process.env.RU_PACK_QUEUE_FILE = path.join(root, 'data', 'queue', 'queue.json');
-  const { createServer } = require('../render-server');
+  const { createServer, ACTIVE_APIS } = require('../render-server');
   const server = createServer();
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
   const address = server.address();
   const base = `http://127.0.0.1:${address.port}`;
   try {
+    assert.strictEqual(ACTIVE_APIS.has('tractor'), false);
     const healthResponse = await fetch(`${base}/health`);
     assert.strictEqual(healthResponse.status, 200);
     const health = await healthResponse.json();
     assert.strictEqual(health.ok, true);
     assert.ok(health.providers.includes('nexus'));
+    assert.ok(health.activeApis.includes('status'));
 
     const queuedResponse = await fetch(`${base}/api/startFromInput`, {
       method: 'POST',
@@ -34,6 +36,11 @@ async function run() {
     const status = await statusResponse.json();
     assert.strictEqual(status.ok, true);
     assert.strictEqual(status.queue.total, 1);
+
+    const legacy = await fetch(`${base}/api/tractor`);
+    assert.strictEqual(legacy.status, 404);
+    const legacyBody = await legacy.json();
+    assert.strictEqual(legacyBody.error, 'api_not_found');
 
     const badJson = await fetch(`${base}/api/status`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{' });
     assert.strictEqual(badJson.status, 400);

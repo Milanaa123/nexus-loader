@@ -2,12 +2,8 @@
 .env.*
 node_modules/
 .vercel/
-RU_PACK_WORK/downloads/
-RU_PACK_WORK/output/
-RU_PACK_WORK/temp/
-RU_PACK_WORK/progress.json
-RU_PACK_WORK/ru_results.json
-RU_PACK_WORK/health.json
+RU_PACK_WORK/
 data/state/
 data/queue/*.json
 data/queue/*.broken-*
+*.tmp

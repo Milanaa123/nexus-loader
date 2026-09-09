@@ -12,6 +12,7 @@ const PORT = Number(process.env.PORT || 10000);
 const ROOT = __dirname;
 const API_DIR = path.join(ROOT, 'api');
 const MAX_BODY_BYTES = Math.max(1024, Number(process.env.MAX_BODY_BYTES || 2 * 1024 * 1024));
+const ACTIVE_APIS = new Set(['status', 'packStatus', 'startFromInput', 'jobQueue', 'downloadReady', 'bulkModSearch']);
 
 function attachResponseHelpers(res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -77,7 +78,7 @@ function sendIndex(res) {
 }
 
 async function runApi(req, res, apiName) {
-  if (!/^[a-z0-9_-]+$/i.test(apiName)) return res.status(404).json({ ok: false, error: 'not_found' });
+  if (!/^[a-z0-9_-]+$/i.test(apiName) || !ACTIVE_APIS.has(apiName)) return res.status(404).json({ ok: false, error: 'api_not_found' });
   const file = path.join(API_DIR, `${apiName}.js`);
   if (!file.startsWith(`${API_DIR}${path.sep}`) || !fs.existsSync(file)) return res.status(404).json({ ok: false, error: 'api_handler_not_found' });
   delete require.cache[require.resolve(file)];
@@ -94,6 +95,7 @@ function healthPayload() {
     node: process.version,
     providers: listProviders(),
     games: listGames(),
+    activeApis: [...ACTIVE_APIS],
     nexusApiKeyConfigured: Boolean(process.env.NEXUS_API_KEY)
   };
 }
@@ -133,4 +135,4 @@ if (require.main === module) {
   process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
-module.exports = { createServer, parseBody, healthPayload };
+module.exports = { ACTIVE_APIS, createServer, parseBody, healthPayload };
