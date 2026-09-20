@@ -1,0 +1,27 @@
+name: Fetch Stage 46 final sources
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download exact current RU sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p sources
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 -o sources/arv-current.zip 'https://nexus-loader.vercel.app/api/sourcezip?source=arv'
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 -o sources/jorts-current.zip 'https://nexus-loader.vercel.app/api/sourcezip?source=jorts'
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 -o sources/sword-current.7z 'https://nexus-loader.vercel.app/api/nexus?action=download&game=stardewvalley&modId=31849&fileId=166311'
+          ls -lh sources
+      - name: Upload sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage46-final-current-sources
+          path: sources/*
+          if-no-files-found: error
+          retention-days: 7
