@@ -90,6 +90,8 @@ Old queue/state/result documents are copied on first read, only if the correspon
 
 ## Quality gates
 
+Stardew Valley has a dedicated SMAPI/Content Patcher adapter with manifest, JSON, folder-identity and i18n key-coverage checks. Ambiguous overlays and incomplete known Russian i18n keys require review. See [Stardew validation and its limits](docs/stardew-validation.md); a successful static build is not proof of in-game compatibility or complete Russian text coverage.
+
 ```bash
 npm run check
 npm test

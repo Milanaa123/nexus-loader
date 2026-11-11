@@ -30,7 +30,11 @@ async function run() {
       fs.mkdirSync(directory, { recursive: true });
       const file = path.join(directory, modId + '.zip');
       const zip = new AdmZip();
-      zip.addFile('Example/' + (role === 'original' ? 'base.txt' : 'ru.txt'), Buffer.from(role));
+      if (role === 'original') {
+        zip.addFile('Example/manifest.json', Buffer.from(JSON.stringify({ Name: 'Example', UniqueID: 'Test.Example', Version: '1.0.0', ContentPackFor: { UniqueID: 'Pathoschild.ContentPatcher' } })));
+        zip.addFile('Example/content.json', Buffer.from('{"Format":"2.0.0","Changes":[]}'));
+      }
+      zip.addFile((String(modId) === '100' ? 'Crash/' : 'Example/') + (role === 'original' ? 'base.txt' : 'ru.txt'), Buffer.from(role));
       zip.writeZip(file);
       return { path: file };
     }
@@ -122,7 +126,9 @@ async function run() {
       "require('./scripts/ru-pack-worker').createWorker({provider:{id:'nexus',download:async({role})=>{" +
       "if(role==='translation'){process.stdout.write('source-checkpointed');await new Promise(r=>setTimeout(r,30000));}" +
       "fs.mkdirSync(p.originalsDir,{recursive:true});const f=path.join(p.originalsDir,'crash-source.zip');" +
-      "const z=new Zip();z.addFile('Crash/base.txt',Buffer.from('original'));z.writeZip(f);return {path:f};}}," +
+      "const z=new Zip();z.addFile('Crash/base.txt',Buffer.from('original'));" +
+      "z.addFile('Crash/manifest.json',Buffer.from(JSON.stringify({Name:'Crash',UniqueID:'Test.Crash',Version:'1.0.0',ContentPackFor:{UniqueID:'Pathoschild.ContentPatcher'}})));" +
+      "z.addFile('Crash/content.json',Buffer.from('{\"Format\":\"2.0.0\",\"Changes\":[]}'));z.writeZip(f);return {path:f};}}," +
       "translationFinder:async()=>({translationId:'100'})}).start().catch(e=>{console.error(e);process.exitCode=1;});"
     ], { cwd: path.join(__dirname, '..'), env: process.env });
     await new Promise((resolve, reject) => {

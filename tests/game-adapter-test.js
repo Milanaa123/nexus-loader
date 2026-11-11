@@ -31,7 +31,7 @@ async function run() {
     assert.strictEqual(built.gameAdapter, 'testgame');
     assert.strictEqual(built.gameAdapterFallback, false);
     assert.strictEqual(path.basename(built.output), 'custom-My_Mod.zip');
-    assert.strictEqual(validations, 2);
+    assert.strictEqual(validations, 3, 'adapter must validate the merged result too');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
