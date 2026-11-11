@@ -1,6 +1,4 @@
-const fs = require('fs');
 const path = require('path');
-const paths = require('../config/paths');
 const state = require('../lib/state-store');
 const queue = require('../lib/job-queue');
 const { listProviders } = require('../providers/provider-registry');
@@ -9,11 +7,7 @@ const pkg = require('../package.json');
 require('../providers/nexus-provider');
 
 function readResults() {
-  const file = path.join(paths.workDir, 'ru_results.json');
-  try {
-    const value = JSON.parse(fs.readFileSync(file, 'utf8'));
-    return Array.isArray(value) ? value : [];
-  } catch (_) { return []; }
+  return state.getResults();
 }
 
 module.exports = function status(req, res) {

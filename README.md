@@ -27,7 +27,7 @@ Core boundaries:
 ## Install
 
 ```bash
-npm install
+npm ci
 ```
 
 ## Run
@@ -76,13 +76,17 @@ https://www.nexusmods.com/skyrimspecialedition/mods/12604
 
 Runtime data is kept outside temporary extraction directories:
 
-- `data/queue/` — queue
-- `data/state/` — progress, processed jobs, errors
-- `RU_PACK_WORK/downloads/` — cached downloads
-- `RU_PACK_WORK/output/` — finished archives
+- `RU_PACK_WORK/queue/` — queue
+- `RU_PACK_WORK/state/` — progress, processed jobs, results, errors and worker lease
+- `RU_PACK_WORK/originals/` and `translations/` — role-specific source downloads
+- `RU_PACK_WORK/downloads/` — compatibility cache for downloads without a role
+- `RU_PACK_WORK/builds/` — finished archives
+- `RU_PACK_WORK/logs/` — append-only daily worker logs
 - `RU_PACK_WORK/temp/` — transient extraction only; cleaned after builds
 
-All paths can be overridden through environment variables in `config/paths.js`.
+All paths are defined in `config/paths.js`. Set `RU_PACK_WORK` to a persistent mounted disk shared by the API and worker. The default root is the repository directory, not the shell's current directory. Existing explicit path overrides remain supported.
+
+Old queue/state/result documents are copied on first read, only if the corresponding new document does not exist. Old files and archives are not deleted; downloads also support the old `RU_PACK_WORK/output/` directory. Stop old workers before upgrading and do not alternate old and new versions against the same storage. Migration is one-way: new documents are authoritative. See [persistent storage](docs/persistent-storage.md).
 
 ## Quality gates
 

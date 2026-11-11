@@ -11,9 +11,6 @@ const { createModProcessingPipeline, processingKey } = require('../lib/mod-proce
 const { acquireWorkerLock } = require('../lib/worker-lock');
 require('../providers/nexus-provider');
 
-const WORK = paths.workDir;
-const PROGRESS = path.join(WORK, 'progress.json');
-const RESULT = path.join(WORK, 'ru_results.json');
 const OUTPUT = paths.outputDir;
 const MAX_ATTEMPTS = Math.max(1, Number(process.env.NEXUS_LOADER_MAX_ATTEMPTS || 3));
 const TERMINAL_STATUSES = new Set([
@@ -26,16 +23,8 @@ const TERMINAL_STATUSES = new Set([
 ]);
 
 function isTerminalStatus(status) { return TERMINAL_STATUSES.has(status); }
-function readJson(file, fallback) { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_) { return fallback; } }
-function save(file, data) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const temp = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(temp, JSON.stringify(data, null, 2), 'utf8');
-  fs.renameSync(temp, file);
-}
 function saveProgress(data, lease) {
   const value = { ...data, updatedAt: new Date().toISOString() };
-  save(PROGRESS, value);
   state.saveProgress(value);
   if (lease) lease.touch();
 }
@@ -64,7 +53,7 @@ async function processQueue(items) {
     if (!provider) throw new Error('No mod provider configured');
     const processMod = createModProcessingPipeline({ provider, translationFinder: findTranslation, builder: buildReadyMod, outputDir: OUTPUT });
 
-    let results = readJson(RESULT, []);
+    let results = state.getResults();
     let processed = state.getProcessed();
     const records = new Map(processed.filter(item => item?.key).map(item => [item.key, item]));
     const queueKeys = items.map(item => processingKey(item, provider.id));
@@ -142,7 +131,7 @@ async function processQueue(items) {
       upsertByKey(processed, record);
       upsertByKey(results, result);
       state.saveProcessed(processed);
-      save(RESULT, results);
+      state.saveResults(results);
       jobQueue.updateJob(key, { name: result.name, author: result.author, game: result.game, nexusModId: result.nexusModId, status: result.status, attempts: nextAttempts, error: result.error || null, outputFile: result.outputFile || null });
       if (isTerminalStatus(result.status)) completed += 1;
       progress.processed = completed;

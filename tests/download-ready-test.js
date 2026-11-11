@@ -24,6 +24,13 @@ async function run() {
     assert.strictEqual(traversal.status, 400);
     const wrongType = await fetch(`${base}/api/downloadReady?name=ready.txt`);
     assert.strictEqual(wrongType.status, 400);
+    const legacyDir = require('../config/paths').legacyOutputDir;
+    fs.mkdirSync(legacyDir, { recursive: true });
+    fs.writeFileSync(path.join(legacyDir, 'legacy.zip'), 'PK-legacy');
+    assert.strictEqual((await fetch(`${base}/api/downloadReady?name=legacy.zip`)).status, 200);
+    fs.symlinkSync(path.join(root, 'private.zip'), path.join(output, 'link.zip'));
+    fs.writeFileSync(path.join(root, 'private.zip'), 'private');
+    assert.strictEqual((await fetch(`${base}/api/downloadReady?name=link.zip`)).status, 404);
   } finally {
     await new Promise(resolve => server.close(resolve));
     fs.rmSync(root, { recursive: true, force: true });
