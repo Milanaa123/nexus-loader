@@ -21,7 +21,9 @@ async function request(url, options = {}, retries = 3) {
   let lastError;
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     try {
-      const response = await fetch(url, options);
+      const configured = Number(process.env.NEXUS_LOADER_REQUEST_TIMEOUT_MS || 60_000);
+      const timeoutMs = Number.isFinite(configured) && configured > 0 ? configured : 60_000;
+      const response = await fetch(url, { ...options, signal: options.signal || AbortSignal.timeout(timeoutMs) });
       if (response.ok) return response;
       const body = await response.text().catch(() => '');
       const error = new Error(`Nexus HTTP ${response.status}${body ? `: ${body.slice(0, 200)}` : ''}`);
@@ -30,6 +32,7 @@ async function request(url, options = {}, retries = 3) {
       if (![429, 500, 502, 503, 504].includes(response.status)) break;
     } catch (error) {
       lastError = error;
+      if (options.signal?.aborted) break;
     }
     if (attempt < retries) await new Promise(resolve => setTimeout(resolve, 750 * attempt));
   }

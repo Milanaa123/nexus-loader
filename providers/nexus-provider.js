@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { createProvider } = require('./base-provider');
 const { registerProvider } = require('./provider-registry');
 const client = require('./nexus-client');
@@ -35,7 +34,7 @@ const provider = createProvider({
   },
   async validate(file) {
     const target = typeof file === 'string' ? file : file?.path;
-    return Boolean(target && fs.existsSync(target) && fs.statSync(target).size > 0);
+    return nexusDownloader.validCachedFile(target, { expectedSha256: file?.sha256 });
   }
 });
 

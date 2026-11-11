@@ -1,40 +1,23 @@
 const worker = require('./ru-pack-worker');
-const state = require('../lib/state-store');
 const health = require('../lib/runtime-health');
 
-let active = false;
-
 async function main() {
-  if (active) return;
-  active = true;
-  health.mark('starting');
-
-  const shutdown = (signal) => {
-    health.mark('stopped', { signal });
-    active = false;
-  };
-
-  process.once('SIGINT', () => shutdown('SIGINT'));
-  process.once('SIGTERM', () => shutdown('SIGTERM'));
-
   try {
-    health.mark('running');
+    health.mark('starting');
     await worker.start();
     health.mark('finished');
-  } catch (e) {
-    const p = state.getProgress();
-    state.saveProgress({
-      ...p,
-      running: false,
-      status: 'error',
-      lastError: e.message,
-      updatedAt: new Date().toISOString()
-    });
-    state.appendError(e);
-    health.mark('error', { error: e.message });
-  } finally {
-    active = false;
+  } catch (error) {
+    if (error.code === 'WORKER_BUSY') {
+      // Never overwrite the progress owned by the active worker.
+      health.mark('standby', { owner: error.details || null });
+      return;
+    }
+    health.mark('error', { error: error.message });
+    throw error;
   }
 }
-
-main();
+if (require.main === module) main().catch(error => {
+  console.error(error.stack || error.message);
+  process.exitCode = 1;
+});
+module.exports = { main };

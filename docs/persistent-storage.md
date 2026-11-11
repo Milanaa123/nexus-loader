@@ -22,3 +22,19 @@ Worker processing has its own longer lease. Storage transactions are synchronous
 Legacy queue: data/queue/ru-pack-queue.json. Legacy state: data/state/*.json. Legacy results: RU_PACK_WORK/ru_results.json. Existing ready archives remain downloadable from RU_PACK_WORK/output/. A new canonical document wins over a legacy one even when empty. Never run old workers after this migration: their later writes would update the obsolete documents.
 
 No automatic cleanup is performed on original downloads, translations, builds, error history or logs. Only short-lived extraction directories and transaction metadata are removed automatically. Test fixtures use their own disposable directories.
+
+## Worker checkpoints and retries
+
+Each completed pipeline step saves a full result to state/results.json before moving to the next step. state/processed.json and queue records are projections. On restart the worker reuses a saved mod ID, translation selection and validated source files; it does not infer success from the previous running flag.
+
+Failed jobs have nextAttemptAt persisted with exponential backoff (30 seconds by default, capped at one hour). NEXUS_LOADER_MAX_ATTEMPTS defaults to 3 and NEXUS_LOADER_RETRY_BASE_MS overrides the initial delay. Exhausted jobs are terminal and require explicit operator review; re-importing the same mod does not reset them.
+
+A ready result is skipped only after its file, SHA-256 and archive integrity pass validation. A missing or damaged build is rebuilt from saved sources. New build names include a stable identity suffix so identical mod names in different games or authors do not collide. Rebuilds use a new filename; old artifacts are retained.
+
+The local worker lease checks the owner's PID and is periodically refreshed. An existing live local process is never evicted merely because a timestamp expired. A confirmed dead local owner is reclaimable immediately. A foreign-host lease still uses its configured expiry; do not use this backend as a distributed queue.
+
+Downloads are streamed to non-authoritative partial files and published only after integrity checks. HTML/JSON error documents, empty transfers and Content-Length mismatches are rejected. ZIP validation decompresses each file and checks CRC; 7z-family validation also runs the archive test command. ZIP validation has a 1 GiB expanded-size and 100,000-entry safety limit. NEXUS_LOADER_MAX_DOWNLOAD_BYTES defaults to 1 GiB. NEXUS_LOADER_REQUEST_TIMEOUT_MS defaults to 60 seconds per request. Existing damaged cache files are preserved under their existing names; replacements get separate paths.
+
+## Verification scope
+
+The automated tests include four-process concurrent queue imports, corrupt-state preservation, independent-process state reads, retries with a controlled clock, forced process death during a real pipeline checkpoint, lock recovery, download body truncation, CRC corruption, checksum mismatch, and build repair. Test source files and a mock Nexus transport are used: these are not evidence of a live Nexus API integration or a mod running in Stardew Valley/SMAPI.

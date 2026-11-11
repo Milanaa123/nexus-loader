@@ -13,6 +13,10 @@ async function run() {
     assert.strictEqual(fs.existsSync(file), true);
     assert.throws(() => acquireWorkerLock({ file, ttlMs: 60_000 }), error => error?.code === 'WORKER_BUSY');
     assert.strictEqual(first.touch(), true);
+    const live = JSON.parse(fs.readFileSync(file, 'utf8'));
+    live.heartbeatAt = '2000-01-01T00:00:00.000Z';
+    fs.writeFileSync(file, JSON.stringify(live));
+    assert.throws(() => acquireWorkerLock({ file, ttlMs: 1000 }), error => error?.code === 'WORKER_BUSY', 'an expired heartbeat must not evict a live local process');
     assert.strictEqual(first.release(), true);
     assert.strictEqual(fs.existsSync(file), false);
 
