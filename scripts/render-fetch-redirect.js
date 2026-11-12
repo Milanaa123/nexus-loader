@@ -1,7 +1,8 @@
 const OLD='https://nexus-loader.vercel.app/';
 const NEW='https://nexus-loader.onrender.com/';
 
-if (!global.__renderFetchRedirectInstalled && typeof global.fetch === 'function') {
+// Old deployments may still preload this file. Global URL rewriting is opt-in.
+if (process.env.NEXUS_LOADER_ENABLE_LEGACY_REDIRECT === 'true' && !global.__renderFetchRedirectInstalled && typeof global.fetch === 'function') {
   const nativeFetch = global.fetch.bind(global);
   global.fetch = function redirectedFetch(input, init) {
     let url = null;

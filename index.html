@@ -29,8 +29,23 @@ function showInput(value,isError=false){const el=$('inputResult');el.hidden=fals
 async function api(url,options){const response=await fetch(url,options);let data;try{data=await response.json()}catch{data={ok:false,error:'invalid_server_response'}}if(!response.ok)throw new Error(data.error||`HTTP ${response.status}`);return data}
 async function enqueue(){try{let text=$('mods').value;const file=$('file').files[0];if(file)text=await file.text();const data=await api('/api/startFromInput',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text,game:$('game').value.trim()||null})});showInput(data);await refresh()}catch(error){showInput(error.message,true)}}
 function renderReady(items){const root=$('downloads');root.replaceChildren();if(!items.length){const empty=document.createElement('span');empty.className='muted';empty.textContent='Пока нет готовых архивов';root.append(empty);return}for(const item of items){const row=document.createElement('div');row.className='ready-item';const label=document.createElement('div');label.textContent=`${item.name||'Мод'}${item.game?' · '+item.game:''}`;const link=document.createElement('a');link.href='/api/downloadReady?name='+encodeURIComponent(item.file);link.textContent='Скачать ZIP';row.append(label,link);root.append(row)}}
-async function refresh(){try{const data=await api('/api/status');$('queued').textContent=data.queue?.total??0;$('built').textContent=data.summary?.built??0;$('review').textContent=data.summary?.needsReview??0;$('errors').textContent=data.summary?.errors??0;$('progress').textContent=JSON.stringify(data.progress||{},null,2);renderReady(data.ready||[])}catch(error){$('progress').textContent='Ошибка статуса: '+error.message}}
-$('queueButton').addEventListener('click',enqueue);$('refreshButton').addEventListener('click',refresh);refresh();setInterval(refresh,5000);
+let refreshTimer=null;
+let refreshing=false;
+let refreshDelay=30000;
+function scheduleRefresh(){clearTimeout(refreshTimer);if(!document.hidden)refreshTimer=setTimeout(refresh,refreshDelay)}
+async function refresh(){
+  if(refreshing)return;
+  refreshing=true;
+  clearTimeout(refreshTimer);
+  try{
+    const data=await api('/api/status');
+    refreshDelay=data.storage?.workspace==='supabase'?30000:5000;
+    $('queued').textContent=data.queue?.total??0;$('built').textContent=data.summary?.built??0;$('review').textContent=data.summary?.needsReview??0;$('errors').textContent=data.summary?.errors??0;$('progress').textContent=JSON.stringify(data.progress||{},null,2);renderReady(data.ready||[]);
+  }catch(error){$('progress').textContent='Ошибка статуса: '+error.message}
+  finally{refreshing=false;scheduleRefresh()}
+}
+document.addEventListener('visibilitychange',()=>{clearTimeout(refreshTimer);if(!document.hidden)refresh()});
+$('queueButton').addEventListener('click',enqueue);$('refreshButton').addEventListener('click',refresh);refresh();
 </script>
 </body>
 </html>
