@@ -22,7 +22,7 @@ Core boundaries:
 
 - Node.js 20+
 - A Nexus Mods API key in `NEXUS_API_KEY`
-- Persistent disk for production deployments
+- Persistent storage: a shared local disk, or the opt-in Supabase backend with its documented limits
 
 ## Install
 
@@ -43,6 +43,8 @@ Worker in a second process/service:
 ```bash
 npm run worker
 ```
+
+For the cloud configuration and the single-process Render option, see [Supabase persistence](docs/supabase-storage.md). Do not enable cloud mode on a nonempty local installation without migrating its records and archives first.
 
 One worker pass:
 
@@ -88,7 +90,9 @@ All paths are defined in `config/paths.js`. Set `RU_PACK_WORK` to a persistent m
 
 Old queue/state/result documents are copied on first read, only if the corresponding new document does not exist. Old files and archives are not deleted; downloads also support the old `RU_PACK_WORK/output/` directory. Stop old workers before upgrading and do not alternate old and new versions against the same storage. Migration is one-way: new documents are authoritative. See [persistent storage](docs/persistent-storage.md).
 
-An opt-in [Google Drive blob transport](docs/google-drive-storage.md) supports checked, resumable file transfers with application-specific OAuth credentials. It is not yet connected to queue/state persistence or startup recovery. Free Render hosting still does not provide durable local storage; do not treat the adapter alone as a completed cloud deployment.
+The opt-in [Supabase backend](docs/supabase-storage.md) persists queue/state and verified archive chunks outside Render and supports worker recovery from an empty local cache. Free hosting has small-batch quotas and sleep/pause limitations; it is not an unlimited or always-on production service.
+
+The older opt-in [Google Drive blob transport](docs/google-drive-storage.md) is an independent utility, not the application's queue backend. Google Drive OAuth is not needed for Supabase mode.
 
 ## Quality gates
 

@@ -4,7 +4,7 @@
 
 The opt-in adapter in `lib/google-drive-store.js` uploads and restores individual immutable files. It does **not** yet mirror `RU_PACK_WORK`, commit queue/state snapshots, rewrite stored local paths, restore a workspace at boot, or run a worker inside the web process. Do not use it as evidence that a free Render instance can preserve a running job across restarts. `runtimeIntegration: false` is intentionally reported by the CLI, `/health`, and `/api/status`, even when credentials are present.
 
-The API and worker still use the local filesystem described in [persistent storage](persistent-storage.md). No storage mode, Render plan, disk, background service, or paid subscription is changed by installing this code. A free Render web service's disposable disk is still not a durable queue or artifact store.
+Installing this adapter does not change the API/worker's storage backend. They use the local filesystem by default, or the separate [Supabase backend](supabase-storage.md) when explicitly configured. Google Drive is not a queue backend in either mode. No Render plan, disk, background service, or paid subscription is changed by installing this adapter; a free Render web service's disposable disk alone is not durable storage.
 
 ## Credentials and access
 

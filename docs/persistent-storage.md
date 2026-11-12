@@ -2,6 +2,8 @@
 
 Set RU_PACK_WORK to an absolute persistent-volume mount before starting both processes. A directory in a container's disposable filesystem is not persistent just because it is named RU_PACK_WORK. The API and worker must see the same disk and path configuration. This local-filesystem backend is designed for one host, not distributed network filesystems.
 
+The above shared-disk requirement applies to the default local backend. With the opt-in [Supabase backend](supabase-storage.md), PostgreSQL and private archive chunks are authoritative; local directories are a verified cache and may be rebuilt on another host. Its distributed lease replaces the local processing lease.
+
 The optional [Google Drive transport](google-drive-storage.md) currently transfers individual blobs only. It does not make the queue/state backend durable on free Render, and does not replace the shared-disk requirement above.
 
 ## Documents

@@ -6,6 +6,7 @@ const pkg = require('./package.json');
 const { listProviders } = require('./providers/provider-registry');
 const { listGames } = require('./lib/game-registry');
 const { configurationStatus } = require('./config/storage');
+const { cloudStatus, selectedBackend } = require('./config/cloud');
 require('./providers/nexus-provider');
 
 const HOST = process.env.HOST || '0.0.0.0';
@@ -98,7 +99,7 @@ function healthPayload() {
     games: listGames(),
     activeApis: [...ACTIVE_APIS],
     nexusApiKeyConfigured: Boolean(process.env.NEXUS_API_KEY),
-    storage: { workspace: 'local-filesystem', googleDrive: configurationStatus() }
+    storage: { workspace: selectedBackend() === 'supabase' ? 'supabase' : 'local-filesystem', googleDrive: configurationStatus(), supabase: cloudStatus() }
   };
 }
 
@@ -128,8 +129,11 @@ function createServer() {
 if (require.main === module) {
   const server = createServer();
   server.listen(PORT, HOST, () => console.log(`nexus-loader ${pkg.version} listening on http://${HOST}:${PORT}`));
+  const embedded = process.env.NEXUS_LOADER_EMBEDDED_WORKER === 'true' ? require('./scripts/free-worker-loop') : null;
+  if (embedded) embedded.startLoop();
   const shutdown = signal => {
     console.log(`Received ${signal}, shutting down`);
+    if (embedded) embedded.stopLoop();
     server.close(() => process.exit(0));
     setTimeout(() => process.exit(1), 10000).unref();
   };

@@ -7,3 +7,4 @@ data/state/
 data/queue/*.json
 data/queue/*.broken-*
 *.tmp
+supabase/.temp/

@@ -5,8 +5,7 @@ const { findTranslation } = require('./find-translation');
 const { buildReadyMod } = require('../lib/build-pipeline');
 const { validateArchiveFile } = require('../lib/archive-utils');
 const { STATUSES } = require('../lib/mod-status');
-const state = require('../lib/state-store');
-const jobQueue = require('../lib/job-queue');
+const { getWorkerStores } = require('../lib/runtime-storage');
 const { getProvider } = require('../providers/provider-registry');
 const { createModProcessingPipeline, processingKey } = require('../lib/mod-processing-pipeline');
 const { acquireWorkerLock } = require('../lib/worker-lock');
@@ -40,54 +39,58 @@ async function validBuiltResult(result) {
 }
 
 function createWorker(options = {}) {
+  const stores = options.stores || getWorkerStores();
+  const state = stores.state;
+  const jobQueue = stores.queue;
   const maxAttempts = positive(options.maxAttempts || process.env.NEXUS_LOADER_MAX_ATTEMPTS, 3);
   const retryBaseMs = positive(options.retryBaseMs || process.env.NEXUS_LOADER_RETRY_BASE_MS, 30_000);
   const now = options.now || Date.now;
 
-  async function processQueue(items = jobQueue.load()) {
+  async function processQueue(items) {
+    items = items === undefined ? await jobQueue.load() : await items;
     if (!Array.isArray(items)) throw new Error('Worker queue must be an array');
-    const lease = acquireWorkerLock();
+    const lease = await (stores.acquireLock ? stores.acquireLock() : acquireWorkerLock());
     let heartbeatError = null;
     const heartbeat = setInterval(() => {
-      try { lease.touch(); } catch (error) { heartbeatError = error; }
+      Promise.resolve().then(() => lease.touch()).catch(error => { heartbeatError = error; });
     }, 20_000);
     heartbeat.unref();
     let progress = null;
-    function assertOwner() {
+    async function assertOwner() {
       if (heartbeatError) throw heartbeatError;
-      lease.touch();
+      await lease.touch();
     }
-    function saveProgress(value) {
-      assertOwner();
-      state.saveProgress({ ...value, updatedAt: new Date(now()).toISOString() });
+    async function saveProgress(value) {
+      await assertOwner();
+      await state.saveProgress({ ...value, updatedAt: new Date(now()).toISOString() });
     }
     try {
       const provider = options.provider || getProvider('nexus');
       if (!provider) throw new Error('No mod provider configured');
       // Also persist explicitly supplied jobs before doing any external work.
-      if (items.length) jobQueue.addJobs(items, provider.id);
-      const results = state.getResults();
-      const processed = state.getProcessed();
+      if (items.length) await jobQueue.addJobs(items, provider.id);
+      const results = await state.getResults();
+      const processed = await state.getProcessed();
       const resultsByKey = new Map(results.filter(item => item?.key).map(item => [item.key, item]));
       const oldRecords = new Map(processed.filter(item => item?.key).map(item => [item.key, item]));
 
       async function checkpoint(result) {
-        assertOwner();
+        await assertOwner();
         if (result.status === STATUSES.BUILT && !await validBuiltResult(result)) throw new Error('Builder did not produce a verified archive');
         resultsByKey.set(result.key, result);
         upsertByKey(results, result);
         // Results are authoritative; the other two documents are projections.
-        state.saveResults(results);
+        await state.saveResults(results);
         upsertByKey(processed, result);
-        state.saveProcessed(processed);
-        jobQueue.updateJob(result.key, {
+        await state.saveProcessed(processed);
+        await jobQueue.updateJob(result.key, {
           nexusModId: result.nexusModId, status: result.status, attempts: result.attempts,
           error: result.error || null, nextAttemptAt: result.nextAttemptAt || null,
           outputFile: result.outputFile || null
         });
       }
-      function summarize(extra = {}) {
-        const queued = jobQueue.load();
+      async function summarize(extra = {}) {
+        const queued = await jobQueue.load();
         const counts = {};
         for (const job of queued) {
           const status = resultsByKey.get(job.key)?.status || job.status || 'queued';
@@ -101,12 +104,12 @@ function createWorker(options = {}) {
           failed: counts.retry_exhausted || 0, queue: counts
         };
       }
-      progress = summarize({
+      progress = await summarize({
         running: true, status: 'processing', attempted: 0, current: null,
         logs: [], startedAt: new Date(now()).toISOString(), finishedAt: null,
         worker: { pid: process.pid, lease: lease.token }, error: null
       });
-      saveProgress(progress);
+      await saveProgress(progress);
       const processMod = createModProcessingPipeline({
         provider, translationFinder: options.translationFinder || findTranslation,
         builder: options.builder || buildReadyMod, outputDir: paths.outputDir,
@@ -114,11 +117,12 @@ function createWorker(options = {}) {
       });
 
       for (const input of items) {
-        assertOwner();
+        await assertOwner();
         const key = processingKey(input, provider.id);
         // The queue may have been enriched by a concurrent import.
-        const mod = jobQueue.load().find(item => item.key === key) || { ...input, key };
+        const mod = (await jobQueue.load()).find(item => item.key === key) || { ...input, key };
         let previous = resultsByKey.get(key) || oldRecords.get(key);
+        if (previous && stores.hydrateResult) await stores.hydrateResult(previous);
         if (isTerminalStatus(previous?.status)) {
           if (previous.status !== STATUSES.BUILT || await validBuiltResult(previous)) {
             await checkpoint(previous);
@@ -144,8 +148,8 @@ function createWorker(options = {}) {
         await checkpoint(started);
         progress.current = mod.name || mod.nexusModId || key;
         progress.attempted += 1;
-        state.appendLog('info', 'Processing job', { key, attempt: started.attempts });
-        saveProgress(summarize());
+        await state.appendLog('info', 'Processing job', { key, attempt: started.attempts });
+        await saveProgress(await summarize());
         const context = await processMod({ ...mod, key }, started);
         let result = { ...context.result, attempts: started.attempts, updatedAt: new Date(now()).toISOString() };
         if (result.status === STATUSES.ERROR) {
@@ -154,36 +158,37 @@ function createWorker(options = {}) {
             ...result, status: exhausted ? STATUSES.RETRY_EXHAUSTED : STATUSES.ERROR,
             nextAttemptAt: exhausted ? null : new Date(now() + Math.min(retryBaseMs * 2 ** (result.attempts - 1), 60 * 60 * 1000)).toISOString()
           };
-          state.appendError(new Error(result.error || result.status), { key, game: result.game, attempt: result.attempts });
+          await state.appendError(new Error(result.error || result.status), { key, game: result.game, attempt: result.attempts });
         }
         await checkpoint(result);
-        state.appendLog(result.status === STATUSES.ERROR || result.status === STATUSES.RETRY_EXHAUSTED ? 'error' : 'info', 'Job checkpoint committed', { key, status: result.status });
-        progress = summarize();
-        saveProgress(progress);
+        await state.appendLog(result.status === STATUSES.ERROR || result.status === STATUSES.RETRY_EXHAUSTED ? 'error' : 'info', 'Job checkpoint committed', { key, status: result.status });
+        progress = await summarize();
+        await saveProgress(progress);
       }
-      progress = summarize({ running: false, current: null, worker: null, finishedAt: new Date(now()).toISOString() });
+      progress = await summarize({ running: false, current: null, worker: null, finishedAt: new Date(now()).toISOString() });
       progress.status = progress.total === 0 ? 'empty_queue' : progress.remaining === 0 ? 'finished' : 'waiting_retry';
-      saveProgress(progress);
+      await saveProgress(progress);
       return results;
     } catch (error) {
       // A lost lease must not overwrite the new owner's state.
       if (error.code !== 'WORKER_BUSY') {
         try {
-          saveProgress({ ...progress, running: false, status: 'error', current: null, worker: null, error: error.message });
-          state.appendLog('error', 'Worker stopped', { error: error.message });
+          await saveProgress({ ...progress, running: false, status: 'error', current: null, worker: null, error: error.message });
+          await state.appendLog('error', 'Worker stopped', { error: error.message });
         } catch (_) { /* Preserve the original storage/processing failure. */ }
       }
       throw error;
     } finally {
       clearInterval(heartbeat);
-      lease.release();
+      await lease.release();
     }
   }
 
   return {
     processQueue,
-    start: (settings = {}) => processQueue(Array.isArray(settings.queue) ? settings.queue : jobQueue.load())
+    start: (settings = {}) => processQueue(Array.isArray(settings.queue) ? settings.queue : undefined),
+    loadQueue: () => jobQueue.load()
   };
 }
 const worker = createWorker();
-module.exports = { ...worker, createWorker, loadQueue: jobQueue.load, isTerminalStatus, TERMINAL_STATUSES, validBuiltResult };
+module.exports = { ...worker, createWorker, isTerminalStatus, TERMINAL_STATUSES, validBuiltResult };

@@ -15,6 +15,12 @@ module.exports = async function downloadReady(req, res) {
   if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return res.status(400).json({ ok: false, error: 'invalid_path' });
 
   let stat;
+  if (require('../config/cloud').selectedBackend() === 'supabase') {
+    const stores = require('../lib/runtime-storage').getStores();
+    const ready = (await stores.state.getResults()).find(row => row.status === 'built' && row.outputFile && path.basename(row.outputFile) === safeName);
+    if (!ready?.remoteAssets?.outputFile) return res.status(404).json({ ok: false, error: 'archive_not_found' });
+    await stores.restoreFile(ready.remoteAssets.outputFile, { repair: true });
+  }
   for (const directory of [...new Set([outputDir, paths.legacyOutputDir])]) {
     const candidate = path.resolve(directory, safeName);
     try {

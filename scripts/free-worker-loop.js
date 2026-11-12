@@ -1,8 +1,8 @@
 const worker = require('./ru-pack-worker');
-const queue = require('../lib/job-queue');
+const queue = require('../lib/runtime-storage').getStores().queue;
 const health = require('../lib/runtime-health');
 
-const INTERVAL_MS = Math.max(1000, Number(process.env.NEXUS_LOADER_WORKER_INTERVAL_MS || 5000));
+const INTERVAL_MS = Math.max(1000, Number(process.env.NEXUS_LOADER_WORKER_INTERVAL_MS || (process.env.NEXUS_LOADER_STORAGE_BACKEND === 'supabase' ? 30000 : 5000)));
 let busy = false;
 let timer = null;
 let stopping = false;
@@ -10,19 +10,18 @@ let verifyOnNextPass = true;
 
 async function tick() {
   if (busy || stopping) return;
-  const items = queue.load();
-  if (!items.length) {
-    health.mark('idle', { queued: 0 });
-    return;
-  }
-  const runnable = items.some(item => !worker.isTerminalStatus(item.status) && (!item.nextAttemptAt || Date.parse(item.nextAttemptAt) <= Date.now()));
-  if (!verifyOnNextPass && !runnable) {
-    health.mark(items.some(item => item.nextAttemptAt) ? 'waiting_retry' : 'idle', { queued: items.length });
-    return;
-  }
+  // Set before the first network await, including queue reads.
   busy = true;
-  health.mark('working', { queued: items.length });
+  let items = [];
   try {
+    items = await queue.load();
+    if (!items.length) { health.mark('idle', { queued: 0 }); return; }
+    const runnable = items.some(item => !worker.isTerminalStatus(item.status) && (!item.nextAttemptAt || Date.parse(item.nextAttemptAt) <= Date.now()));
+    if (!verifyOnNextPass && !runnable) {
+      health.mark(items.some(item => item.nextAttemptAt) ? 'waiting_retry' : 'idle', { queued: items.length });
+      return;
+    }
+    health.mark('working', { queued: items.length });
     await worker.start({ queue: items });
     verifyOnNextPass = false;
     health.mark('idle', { queued: items.length });

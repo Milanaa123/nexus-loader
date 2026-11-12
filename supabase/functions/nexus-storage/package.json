@@ -1,0 +1,7 @@
+{
+  "name": "nexus-storage-function",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "2.119.0"
+  }
+}

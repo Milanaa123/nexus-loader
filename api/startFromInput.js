@@ -1,5 +1,5 @@
 const { parseInput } = require('../lib/input-parser');
-const queue = require('../lib/job-queue');
+const { getStores } = require('../lib/runtime-storage');
 
 module.exports = async function startFromInput(req, res) {
   try {
@@ -9,7 +9,7 @@ module.exports = async function startFromInput(req, res) {
     if (!text.trim()) return res.status(400).json({ ok: false, error: 'input_text_empty' });
     const mods = parseInput(text, { defaultGame: body.game || null });
     if (!mods.length) return res.status(400).json({ ok: false, error: 'no_valid_mods' });
-    const queued = queue.addJobs(mods, body.provider || 'nexus');
+    const queued = await getStores().queue.addJobs(mods, body.provider || 'nexus');
     return res.status(202).json({
       ok: true,
       status: 'queued',
@@ -20,6 +20,6 @@ module.exports = async function startFromInput(req, res) {
       mods
     });
   } catch (error) {
-    return res.status(500).json({ ok: false, error: error.message || 'queue_failed' });
+    return res.status(error.statusCode || 500).json({ ok: false, error: error.message || 'queue_failed' });
   }
 };

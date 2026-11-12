@@ -1,20 +1,15 @@
 const path = require('path');
-const state = require('../lib/state-store');
-const queue = require('../lib/job-queue');
+const { getStores } = require('../lib/runtime-storage');
+const { cloudStatus, selectedBackend } = require('../config/cloud');
 const { listProviders } = require('../providers/provider-registry');
 const { listGames } = require('../lib/game-registry');
 const pkg = require('../package.json');
 const { configurationStatus } = require('../config/storage');
 require('../providers/nexus-provider');
 
-function readResults() {
-  return state.getResults();
-}
-
-module.exports = function status(req, res) {
-  const results = readResults();
-  const queued = queue.load();
-  const progress = state.getProgress();
+module.exports = async function status(req, res) {
+  const { state, queue } = getStores();
+  const [results, queued, progress] = await Promise.all([state.getResults(), queue.load(), state.getProgress()]);
   const counts = {};
   for (const result of results) counts[result.status || 'unknown'] = (counts[result.status || 'unknown'] || 0) + 1;
   const ready = results
@@ -46,6 +41,6 @@ module.exports = function status(req, res) {
     providers: listProviders(),
     games: listGames(),
     nexusApiKeyConfigured: Boolean(process.env.NEXUS_API_KEY),
-    storage: { workspace: 'local-filesystem', googleDrive: configurationStatus() }
+    storage: { workspace: selectedBackend() === 'supabase' ? 'supabase' : 'local-filesystem', googleDrive: configurationStatus(), supabase: cloudStatus() }
   });
 };
