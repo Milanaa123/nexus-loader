@@ -5,6 +5,7 @@ const { URL } = require('url');
 const pkg = require('./package.json');
 const { listProviders } = require('./providers/provider-registry');
 const { listGames } = require('./lib/game-registry');
+const { configurationStatus } = require('./config/storage');
 require('./providers/nexus-provider');
 
 const HOST = process.env.HOST || '0.0.0.0';
@@ -96,7 +97,8 @@ function healthPayload() {
     providers: listProviders(),
     games: listGames(),
     activeApis: [...ACTIVE_APIS],
-    nexusApiKeyConfigured: Boolean(process.env.NEXUS_API_KEY)
+    nexusApiKeyConfigured: Boolean(process.env.NEXUS_API_KEY),
+    storage: { workspace: 'local-filesystem', googleDrive: configurationStatus() }
   };
 }
 

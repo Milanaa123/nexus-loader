@@ -2,6 +2,8 @@
 
 Set RU_PACK_WORK to an absolute persistent-volume mount before starting both processes. A directory in a container's disposable filesystem is not persistent just because it is named RU_PACK_WORK. The API and worker must see the same disk and path configuration. This local-filesystem backend is designed for one host, not distributed network filesystems.
 
+The optional [Google Drive transport](google-drive-storage.md) currently transfers individual blobs only. It does not make the queue/state backend durable on free Render, and does not replace the shared-disk requirement above.
+
 ## Documents
 
 Queue mutations are serialized with a short filesystem transaction lock. Writes use a uniquely named sibling file, flush its contents, then rename atomically. A stopped writer's incomplete sibling is never used as state.

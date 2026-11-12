@@ -88,6 +88,8 @@ All paths are defined in `config/paths.js`. Set `RU_PACK_WORK` to a persistent m
 
 Old queue/state/result documents are copied on first read, only if the corresponding new document does not exist. Old files and archives are not deleted; downloads also support the old `RU_PACK_WORK/output/` directory. Stop old workers before upgrading and do not alternate old and new versions against the same storage. Migration is one-way: new documents are authoritative. See [persistent storage](docs/persistent-storage.md).
 
+An opt-in [Google Drive blob transport](docs/google-drive-storage.md) supports checked, resumable file transfers with application-specific OAuth credentials. It is not yet connected to queue/state persistence or startup recovery. Free Render hosting still does not provide durable local storage; do not treat the adapter alone as a completed cloud deployment.
+
 ## Quality gates
 
 Stardew Valley has a dedicated SMAPI/Content Patcher adapter with manifest, JSON, folder-identity and i18n key-coverage checks. Ambiguous overlays and incomplete known Russian i18n keys require review. See [Stardew validation and its limits](docs/stardew-validation.md); a successful static build is not proof of in-game compatibility or complete Russian text coverage.

@@ -4,6 +4,7 @@ const queue = require('../lib/job-queue');
 const { listProviders } = require('../providers/provider-registry');
 const { listGames } = require('../lib/game-registry');
 const pkg = require('../package.json');
+const { configurationStatus } = require('../config/storage');
 require('../providers/nexus-provider');
 
 function readResults() {
@@ -44,6 +45,7 @@ module.exports = function status(req, res) {
     ready,
     providers: listProviders(),
     games: listGames(),
-    nexusApiKeyConfigured: Boolean(process.env.NEXUS_API_KEY)
+    nexusApiKeyConfigured: Boolean(process.env.NEXUS_API_KEY),
+    storage: { workspace: 'local-filesystem', googleDrive: configurationStatus() }
   });
 };

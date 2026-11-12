@@ -9,6 +9,8 @@ async function run() {
   process.env.RU_PACK_WORK = path.join(root, 'work');
   process.env.RU_PACK_QUEUE = path.join(root, 'data', 'queue');
   process.env.RU_PACK_QUEUE_FILE = path.join(root, 'data', 'queue', 'queue.json');
+  const fakeRefreshToken = 'fixture-refresh-token-not-a-credential';
+  process.env.GOOGLE_DRIVE_REFRESH_TOKEN = fakeRefreshToken;
   const { createServer, ACTIVE_APIS } = require('../render-server');
   const server = createServer();
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
@@ -22,6 +24,10 @@ async function run() {
     assert.strictEqual(health.ok, true);
     assert.ok(health.providers.includes('nexus'));
     assert.ok(health.activeApis.includes('status'));
+    assert.strictEqual(health.storage.workspace, 'local-filesystem');
+    assert.strictEqual(health.storage.googleDrive.runtimeIntegration, false);
+    assert.strictEqual(typeof health.storage.googleDrive.configured, 'boolean');
+    assert.ok(!JSON.stringify(health.storage).includes(fakeRefreshToken));
 
     const queuedResponse = await fetch(`${base}/api/startFromInput`, {
       method: 'POST',
@@ -36,6 +42,7 @@ async function run() {
     const status = await statusResponse.json();
     assert.strictEqual(status.ok, true);
     assert.strictEqual(status.queue.total, 1);
+    assert.deepStrictEqual(status.storage, health.storage);
 
     const legacy = await fetch(`${base}/api/tractor`);
     assert.strictEqual(legacy.status, 404);
