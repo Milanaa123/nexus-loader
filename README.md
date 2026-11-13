@@ -20,7 +20,7 @@ Core boundaries:
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 22+ (CI runs Node 22)
 - A Nexus Mods API key in `NEXUS_API_KEY`
 - Persistent storage: a shared local disk, or the opt-in Supabase backend with its documented limits
 
@@ -97,6 +97,8 @@ The older opt-in [Google Drive blob transport](docs/google-drive-storage.md) is 
 ## Quality gates
 
 Stardew Valley has a dedicated SMAPI/Content Patcher adapter with manifest, JSON, folder-identity and i18n key-coverage checks. Ambiguous overlays and incomplete known Russian i18n keys require review. See [Stardew validation and its limits](docs/stardew-validation.md); a successful static build is not proof of in-game compatibility or complete Russian text coverage.
+
+Nexus lookups verify names/authors instead of auto-selecting the highest score. Translation candidates require an unambiguous match and an original-page link; failures and incomplete searches are not silently treated as missing translations. Read-only lookup APIs, file-ID inputs, retry behavior and free-account download limitations are documented in [Nexus resolution](docs/nexus-resolution.md).
 
 ```bash
 npm run check

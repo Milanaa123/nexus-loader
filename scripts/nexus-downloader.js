@@ -31,16 +31,21 @@ async function validCachedFile(file, options = {}) {
     throw error;
   }
 }
+function activeFile(file) { return file && file.file_id && !/^(?:ARCHIVED|REMOVED|OLD[_ ]?(?:VERSION|FILES))$/i.test(String(file.category_name || '')); }
+function selectionError(game, modId, files) {
+  return client.failure('NEXUS_FILE_SELECTION', 'More than one active file requires an explicit fileId', false, {
+    action: { type: 'select_nexus_file', game, modId: String(modId), candidates: files.slice(0, 20).map(file => ({ fileId: String(file.file_id), name: file.file_name || file.name || '', category: file.category_name || null, version: file.version || null })) }
+  });
+}
 async function chooseFile(game, modId) {
   const files = await client.getFiles({ game, modId });
-  const usable = files.filter(file => file && file.file_id && !['ARCHIVED', 'REMOVED'].includes(String(file.category_name || '').toUpperCase()));
-  if (!usable.length) throw new Error('No downloadable files for ' + game + ' mod ' + modId);
-  usable.sort((a, b) =>
-    Number(Boolean(b.is_primary)) - Number(Boolean(a.is_primary)) ||
-    Number(String(b.category_name || '').toUpperCase() === 'MAIN') - Number(String(a.category_name || '').toUpperCase() === 'MAIN') ||
-    Number(b.uploaded_timestamp || 0) - Number(a.uploaded_timestamp || 0)
-  );
-  return usable[0];
+  const usable = files.filter(activeFile);
+  if (!usable.length) throw client.failure('NEXUS_FILE_UNAVAILABLE', 'No active downloadable files for this mod');
+  const primary = usable.filter(file => file.is_primary === true || file.is_primary === 1);
+  const main = usable.filter(file => String(file.category_name || '').toUpperCase() === 'MAIN');
+  const preferred = primary.length ? primary : main.length ? main : usable;
+  if (preferred.length !== 1) throw selectionError(game, modId, preferred);
+  return preferred[0];
 }
 function identity(value, label) {
   const normalized = String(value || '');
@@ -55,7 +60,8 @@ async function downloadMod({ game, modId, fileId, role }) {
   let selected;
   if (fileId) {
     const files = await client.getFiles({ game, modId });
-    selected = files.find(file => String(file.file_id) === String(fileId)) || { file_id: fileId };
+    selected = files.find(file => String(file.file_id) === String(fileId));
+    if (!activeFile(selected)) throw client.failure('NEXUS_FILE_UNAVAILABLE', 'The selected Nexus file is missing or inactive');
   } else selected = await chooseFile(game, modId);
   const fid = identity(selected.file_id, 'fileId');
   const sourceName = selected.file_name || selected.name || (modId + '-' + fid + '.bin');
@@ -75,6 +81,8 @@ async function downloadMod({ game, modId, fileId, role }) {
   const links = await client.getDownloadLinks({ game, modId, fileId: fid });
   const link = links[0]?.URI || links[0]?.uri;
   if (!link) throw new Error('No download link for ' + game + ' mod ' + modId + ' file ' + fid);
+  let url; try { url = new URL(link); } catch { /* Invalid link is rejected below. */ }
+  if (!url || url.protocol !== 'https:' || url.username || url.password) throw client.failure('NEXUS_RESPONSE_INVALID', 'Nexus returned an unsafe download URL');
   let lastError;
   const maxBytes = Number(process.env.NEXUS_LOADER_MAX_DOWNLOAD_BYTES || 1024 * 1024 * 1024);
   if (!Number.isFinite(maxBytes) || maxBytes <= 0) throw new Error('Invalid NEXUS_LOADER_MAX_DOWNLOAD_BYTES');
@@ -113,14 +121,18 @@ async function downloadMod({ game, modId, fileId, role }) {
       return result;
     } catch (error) {
       lastError = error;
-      if (error.code === 'INVALID_DOWNLOAD' || (error.statusCode >= 400 && error.statusCode < 500 && error.statusCode !== 429)) break;
-      if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+      if (error.retryable === false || error.retryAfterMs > 3000 || error.code === 'INVALID_DOWNLOAD' || (error.statusCode >= 400 && error.statusCode < 500 && error.statusCode !== 429)) break;
+      if (attempt < 3) await new Promise(resolve => setTimeout(resolve, Math.max(250 * attempt, error.retryAfterMs || 0)));
     } finally {
       try { fs.unlinkSync(temporary); } catch (error) { if (error.code !== 'ENOENT') throw error; }
     }
   }
-  const error = new Error('Download failed for ' + game + ' mod ' + modId + ' file ' + fid + ': ' + (lastError?.message || 'unknown error'), { cause: lastError });
+  const safeMessage = lastError?.code?.startsWith('NEXUS_') || /^(?:Download returned|Download exceeds|Downloaded empty file|Incomplete download|Downloaded archive is invalid)/.test(lastError?.message || '') ? lastError.message : 'Archive transfer failed';
+  const error = new Error('Download failed for ' + game + ' mod ' + modId + ' file ' + fid + ': ' + safeMessage);
   error.code = lastError?.code || 'DOWNLOAD_FAILED';
+  error.retryable = lastError?.retryable ?? true;
+  error.action = lastError?.action || null;
+  error.retryAfterMs = lastError?.retryAfterMs || null;
   throw error;
 }
 module.exports = { downloadMod, ensure, chooseFile, validCachedFile };

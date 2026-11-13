@@ -85,7 +85,7 @@ function createWorker(options = {}) {
         await state.saveProcessed(processed);
         await jobQueue.updateJob(result.key, {
           nexusModId: result.nexusModId, status: result.status, attempts: result.attempts,
-          error: result.error || null, nextAttemptAt: result.nextAttemptAt || null,
+          error: result.error || null, errorCode: result.errorCode || null, action: result.action || null, nextAttemptAt: result.nextAttemptAt || null,
           outputFile: result.outputFile || null
         });
       }
@@ -143,7 +143,7 @@ function createWorker(options = {}) {
           ...previous, key, name: mod.name, author: mod.author, game: mod.game,
           provider: provider.id, nexusModId: mod.nexusModId || previous?.nexusModId || null,
           status: 'processing', attempts: attempts + 1, nextAttemptAt: null,
-          error: null, updatedAt: new Date(now()).toISOString()
+          error: null, errorCode: null, action: null, retryAfterMs: null, updatedAt: new Date(now()).toISOString()
         };
         await checkpoint(started);
         progress.current = mod.name || mod.nexusModId || key;
@@ -156,9 +156,9 @@ function createWorker(options = {}) {
           const exhausted = result.attempts >= maxAttempts;
           result = {
             ...result, status: exhausted ? STATUSES.RETRY_EXHAUSTED : STATUSES.ERROR,
-            nextAttemptAt: exhausted ? null : new Date(now() + Math.min(retryBaseMs * 2 ** (result.attempts - 1), 60 * 60 * 1000)).toISOString()
+            nextAttemptAt: exhausted ? null : new Date(now() + Math.max(Math.min(retryBaseMs * 2 ** (result.attempts - 1), 60 * 60 * 1000), Math.min(positive(result.retryAfterMs, 0), 86400000))).toISOString()
           };
-          await state.appendError(new Error(result.error || result.status), { key, game: result.game, attempt: result.attempts });
+          await state.appendError(Object.assign(new Error(result.error || result.status), { code: result.errorCode || null }), { key, game: result.game, attempt: result.attempts });
         }
         await checkpoint(result);
         await state.appendLog(result.status === STATUSES.ERROR || result.status === STATUSES.RETRY_EXHAUSTED ? 'error' : 'info', 'Job checkpoint committed', { key, status: result.status });

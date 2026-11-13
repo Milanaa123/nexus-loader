@@ -24,7 +24,7 @@ const provider = createProvider({
   id: 'nexus',
   async search(query = {}) {
     const candidates = await client.searchMods(query);
-    return candidates.map(candidate => ({ ...candidate, score: scoreCandidate(query, candidate) })).sort((a, b) => b.score - a.score);
+    return Object.assign(candidates.map(candidate => ({ ...candidate, score: scoreCandidate(query, candidate) })).sort((a, b) => b.score - a.score), { search: candidates.search });
   },
   async getMod(options = {}) {
     return client.getMod(options);

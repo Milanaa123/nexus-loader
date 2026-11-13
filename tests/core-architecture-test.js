@@ -38,7 +38,7 @@ async function run() {
   const fakeProvider = {
     id: 'fake',
     capabilities: { getMod: true, search: true },
-    async getMod() { return { name: 'Resolved By Id', author: 'Author' }; },
+    async getMod({ modId }) { return { mod_id: modId, name: String(modId) === '11' ? 'No Translation' : 'Resolved By Id', author: 'Author' }; },
     async search() { return [{ modId: '10', name: 'Example', author: 'Author', score: 180 }]; },
     async download(options) { downloads.push(options); return { path: `/persistent/${options.game}-${options.modId}.zip` }; }
   };

@@ -14,7 +14,7 @@ const PORT = Number(process.env.PORT || 10000);
 const ROOT = __dirname;
 const API_DIR = path.join(ROOT, 'api');
 const MAX_BODY_BYTES = Math.max(1024, Number(process.env.MAX_BODY_BYTES || 2 * 1024 * 1024));
-const ACTIVE_APIS = new Set(['status', 'packStatus', 'startFromInput', 'jobQueue', 'downloadReady', 'bulkModSearch']);
+const ACTIVE_APIS = new Set(['status', 'packStatus', 'startFromInput', 'jobQueue', 'downloadReady', 'bulkModSearch', 'translationSearch', 'nexusCapabilities']);
 
 function attachResponseHelpers(res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
